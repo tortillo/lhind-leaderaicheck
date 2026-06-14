@@ -129,6 +129,8 @@ const STR = {
     avatarPlaceholder: "z. B. Falcon-7, Captain Nova …",
     excludeLeadLabel: "Führungs-spezifische Fragen ausschließen",
     excludeLeadHint: "Wenn aktiviert, werden Fragen zur Personalführung in diesem Durchlauf nicht gestellt. Sinnvoll für Fach- oder Projektrollen ohne disziplinarische Führung.",
+    includeCompanyLabel: "LHIND-spezifische Fragen einbeziehen",
+    includeCompanyHint: "Wenn aktiviert, werden zusätzlich Fragen zum LHIND-Portfolio (AI Services, ASE, verantwortungsvolle KI) gestellt. Standardmäßig deaktiviert.",
     progressTitle: "Deine Entwicklung",
     progressIntro: "Frühere Durchläufe unter diesem Avatar-Namen:",
     progressDelta: "Veränderung zum letzten Mal",
@@ -250,6 +252,8 @@ const STR = {
     avatarPlaceholder: "e.g. Falcon-7, Captain Nova …",
     excludeLeadLabel: "Exclude leadership-specific questions",
     excludeLeadHint: "If enabled, people-leadership questions won't be asked in this run. Useful for expert or project roles without line-management duties.",
+    includeCompanyLabel: "Include LHIND-specific questions",
+    includeCompanyHint: "If enabled, questions on the LHIND portfolio (AI services, ASE, responsible AI) are added. Disabled by default.",
     progressTitle: "Your development",
     progressIntro: "Earlier runs under this avatar name:",
     progressDelta: "Change since last time",
@@ -276,6 +280,7 @@ const DIMS = {
   ethics: { de: "Ethik", en: "Ethics", color: C.violet },
   lead: { de: "Führung", en: "Leadership", color: C.green },
   practice: { de: "Praxis", en: "Practice", color: C.red },
+  company: { de: "Firmenwissen", en: "Company Knowledge", color: C.gold },
 };
 
 // ---- onboarding option sets (value keys are stable; labels via lang) ----
@@ -451,7 +456,11 @@ export default function App() {
   const TIME_PER_Q = 25;
 
   function beginTest() {
-    const excludeDims = profile.excludeLead ? ["lead"] : [];
+    const excludeDims = [];
+    if (profile.excludeLead) excludeDims.push("lead");
+    // Company-specific (LHIND) questions are OPT-IN: excluded unless the
+    // person actively enables them.
+    if (!profile.includeCompany) excludeDims.push("company");
     const drawn = drawItems(POOL, NQ, profile.area, Date.now() % 2147483647, excludeDims)
       .map((it) => ({ ...it, key: hashItem(it) }));
     setItems(drawn);
@@ -826,6 +835,17 @@ function Onboard({ t, lang, profile, setProfile, onDone }) {
         </span>
       </label>
 
+      {/* Optional opt-in: include LHIND company-specific questions (off by default) */}
+      <label style={{ display: "flex", gap: 12, alignItems: "flex-start", marginTop: 12, cursor: "pointer", background: C.panel, border: `1px solid ${profile.includeCompany ? C.gold : C.line}`, borderRadius: 12, padding: "14px 16px" }}>
+        <input type="checkbox" checked={!!profile.includeCompany}
+          onChange={(e) => setProfile((p) => ({ ...p, includeCompany: e.target.checked }))}
+          style={{ marginTop: 3, width: 17, height: 17, accentColor: C.gold, cursor: "pointer" }} />
+        <span>
+          <span style={{ fontSize: 14, fontWeight: 600 }}>{t.includeCompanyLabel}</span>
+          <span style={{ display: "block", color: C.inkDim, fontSize: 13, marginTop: 3, lineHeight: 1.5 }}>{t.includeCompanyHint}</span>
+        </span>
+      </label>
+
       <button disabled={!complete} onClick={onDone} style={{ ...btnPrimary, marginTop: 24, opacity: complete ? 1 : 0.4, cursor: complete ? "pointer" : "not-allowed" }}>{t.toTest}</button>
     </div>
   );
@@ -1071,6 +1091,15 @@ function buildRecs(dimScores) {
         { label: "DeepLearning.AI: Short Courses (frei)", url: "https://www.deeplearning.ai/courses/" },
       ],
     },
+    company: {
+      training: { de: ["LHIND AI-Services-Überblick (intern)", "ASE — Agentic Software Engineering kennenlernen"], en: ["LHIND AI services overview (internal)", "Get to know ASE — Agentic Software Engineering"] },
+      skills: { de: ["LHIND-Portfolio von Strategie bis Betrieb kennen", "AI Services (Plug-and-Play) im Kundengespräch platzieren"], en: ["Know the LHIND portfolio from strategy to operations", "Position AI services (plug-and-play) in customer talks"] },
+      books: { de: ["Interne Vertriebs- & Portfolio-Unterlagen", "LHIND AI-Services-Seiten im Intranet"], en: ["Internal sales & portfolio materials", "LHIND AI services pages on the intranet"] },
+      resources: [
+        { label: "LHIND AI Services (SharePoint, intern)", url: "https://lufthansagroup.sharepoint.com/sites/LHIND_EF/SitePages/de/AI-Services(1).aspx" },
+        { label: "Bei Fragen: ase@lhind.dlh.de", url: "mailto:ase@lhind.dlh.de" },
+      ],
+    },
   };
   const order = Object.entries(dimScores).sort((a, b) => a[1].pct - b[1].pct).map(([k]) => k);
   return order.slice(0, 2).map((k) => ({ dim: k, pct: dimScores[k].pct, ...lib[k] }));
@@ -1134,6 +1163,10 @@ function buildTop3(dimScores, sen, integrity, traps) {
     practice: {
       de: (p) => `Komm ins Tun (${p}%): Baue eine wiederverwendbare Routine — etwa ein automatisiertes Wochen-Briefing mit fester Quelle und kurzem menschlichem Check vor Versand.`,
       en: (p) => `Get hands-on (${p}%): build one reusable routine — e.g. an automated weekly briefing with a fixed source and a brief human check before sending.`,
+    },
+    company: {
+      de: (p) => `Schärfe dein LHIND-Wissen (${p}%): Mach dich mit dem End-to-End-Portfolio (Strategie bis Betrieb), den AI Services und dem ASE-Programm vertraut, um KI im Kundengespräch souverän zu positionieren.`,
+      en: (p) => `Sharpen your LHIND knowledge (${p}%): get familiar with the end-to-end portfolio (strategy to operations), the AI services and the ASE program to position AI confidently with customers.`,
     },
   };
   const order = Object.entries(dimScores).sort((a, b) => a[1].pct - b[1].pct);

@@ -1198,19 +1198,42 @@ export function drawItems(pool, n, area, rngSeed, excludeDims) {
     }
     return a;
   };
+
   const traps = shuffle(base.filter((q) => q.trap));
   const nonTraps = base.filter((q) => !q.trap);
-  const ctxMatch = shuffle(nonTraps.filter((q) => q.ctx === area));
-  const rest = shuffle(nonTraps.filter((q) => q.ctx !== area));
   const wantTraps = Math.min(traps.length, Math.max(3, Math.round(n * 0.2)));
-  const picked = [...traps.slice(0, wantTraps)];
-  const ordered = [...ctxMatch, ...rest];
-  for (const q of ordered) { if (picked.length >= n) break; picked.push(q); }
-  const chosen = shuffle(picked).slice(0, n);
+  const trapPick = traps.slice(0, wantTraps);
+  const need = n - trapPick.length;
 
-  // Shuffle the answer options within each question and remap `correct`.
+  // Dimension-balanced selection: round-robin across dimensions so a single
+  // 20-question test spans all areas instead of over-sampling one. Context-
+  // matching questions for the user's area are preferred within each dimension.
+  const byDim = {};
+  for (const q of nonTraps) { (byDim[q.dim] = byDim[q.dim] || []).push(q); }
+  const dims = shuffle(Object.keys(byDim));
+  for (const d of dims) {
+    const ctxFirst = shuffle(byDim[d].filter((q) => q.ctx === area));
+    const others = shuffle(byDim[d].filter((q) => q.ctx !== area));
+    byDim[d] = [...ctxFirst, ...others];
+  }
+  const picked = [];
+  let added = true;
+  while (picked.length < need && added) {
+    added = false;
+    for (const d of dims) {
+      if (picked.length >= need) break;
+      if (byDim[d].length) { picked.push(byDim[d].shift()); added = true; }
+    }
+  }
+
+  // Interleave traps among the picked questions, then shuffle order.
+  const chosen = shuffle([...picked, ...trapPick]).slice(0, n);
+
+  // Shuffle answer options within each question and remap `correct`.
   // Traps are skipped — several depend on option position by design.
-  return chosen.map((q) => {
+  // After shuffling, apply light anti-clustering so the correct position
+  // does not land on the same letter many times in a row across the test.
+  const out = chosen.map((q) => {
     if (q.trap) return q;
     const idx = q.a.map((_, i) => i);
     for (let i = idx.length - 1; i > 0; i--) {
@@ -1219,4 +1242,969 @@ export function drawItems(pool, n, area, rngSeed, excludeDims) {
     }
     return { ...q, a: idx.map((i) => q.a[i]), correct: idx.indexOf(q.correct) };
   });
+
+  // Anti-clustering: if a non-trap question's correct letter equals the two
+  // previous non-trap correct letters, rotate its options by one to break the run.
+  const recent = [];
+  for (const q of out) {
+    if (q.trap) continue;
+    if (recent.length >= 2 && recent[recent.length - 1] === q.correct && recent[recent.length - 2] === q.correct) {
+      const shift = 1; // rotate options by one position
+      const rotated = q.a.map((_, i) => q.a[(i - shift + q.a.length) % q.a.length]);
+      q.correct = (q.correct + shift) % q.a.length;
+      q.a = rotated;
+    }
+    recent.push(q.correct);
+  }
+  return out;
 }
+
+// ============================================================
+// COMPANY KNOWLEDGE — LHIND (Lufthansa Industry Solutions)
+// Factual, company-specific. Distractors are plausible but wrong.
+// Sources: internal AI Services pages, Q4-2024 sales/portfolio deck.
+// ============================================================
+POOL.push(
+  {
+    dim: "company", diff: 2,
+    q: I("Welche Bandbreite bietet LHIND im Bereich KI-Beratung?",
+         "What breadth does LHIND offer in AI consulting?"),
+    a: [
+      I("Ausschließlich strategische Beratung, ohne eigene technische Umsetzung", "Strategy consulting only, without own technical implementation"),
+      I("End-to-End: von Strategie über Use Case und Umsetzung bis zum Betrieb", "End-to-end: from strategy through use case and implementation to operations"),
+      I("Reine Umsetzung zugekaufter Modelle, ohne Strategie- oder Betriebsanteil", "Pure implementation of bought-in models, without strategy or operations"),
+      I("Nur Schulungen und Trainings, ohne Projektgeschäft oder Betrieb", "Only courses and training, without project business or operations"),
+    ], correct: 1,
+    expl: I("LHIND deckt die gesamte Kette ab: Strategie → Use Case → Umsetzung → Betrieb, als Kombination aus Business Consulting, Data/AI, IT-Architektur und Umsetzung — ergänzt um produktisierte AI Services (Plug & Play) zur schnellen Skalierung.",
+            "LHIND covers the whole chain: strategy → use case → implementation → operations, combining business consulting, data/AI, IT architecture and delivery — complemented by productized AI services (plug & play) for fast scaling."),
+  },
+  {
+    dim: "company", diff: 3,
+    q: I("Wodurch unterscheidet sich LHIND vor allem von vielen anderen KI-Beratungen?",
+         "What mainly distinguishes LHIND from many other AI consultancies?"),
+    a: [
+      I("Durch den ausschließlichen Fokus auf Forschung statt produktive Umsetzung", "By an exclusive focus on research rather than productive delivery"),
+      I("Durch Branchen-Know-how plus AI Engineering und den Weg bis in den Betrieb", "By industry know-how plus AI engineering and the path into operations"),
+      I("Durch den Verzicht auf jegliche Branchenspezialisierung im Angebot", "By forgoing any industry specialization in its offering"),
+      I("Durch reines Wiederverkaufen großer Modelle ohne eigene Lösungen", "By merely reselling large models without own solutions"),
+    ], correct: 1,
+    expl: I("LHIND kombiniert Branchen-Know-how (v. a. Aviation, Industry) mit AI Engineering, geht von der Strategie direkt in die produktive Umsetzung und setzt auf skalierbare, wiederverwendbare Lösungen sowie verantwortungsvolle KI (EU AI Act).",
+            "LHIND combines industry know-how (esp. aviation, industry) with AI engineering, moves from strategy straight into productive delivery and focuses on scalable, reusable solutions plus responsible AI (EU AI Act)."),
+  },
+  {
+    dim: "company", diff: 2,
+    q: I("Welche konkreten KI-Angebote hat LHIND heute im Portfolio?",
+         "Which concrete AI offerings does LHIND have in its portfolio today?"),
+    a: [
+      I("Ausschließlich generische Chatbots ohne weitere Anpassungsmöglichkeiten", "Only generic off-the-shelf chatbots without any further customization at all"),
+      I("Custom-AI-Projekte, AI Services, AI Enablement und Prozessoptimierung", "Custom AI projects, AI services, AI enablement and process optimization"),
+      I("Nur den Weiterverkauf fremder Modell-Lizenzen an Endkunden", "Only the resale of third-party model licenses to end customers"),
+      I("Lediglich klassische IT-Wartung ohne eigenständigen KI-Bezug", "Merely classic IT maintenance without any genuine AI relation"),
+    ], correct: 1,
+    expl: I("Das Portfolio umfasst Custom-AI-Projekte (z. B. Computer Vision, Process Automation, GenAI), produktisierte AI Services (Plug-and-Play, etwa automatisierte Mailbearbeitung), AI Enablement & Training (AI-Literacy-Programme) sowie KI-getriebene End-to-End-Prozessoptimierung.",
+            "The portfolio spans custom AI projects (e.g. computer vision, process automation, GenAI), productized AI services (plug-and-play, e.g. automated mail handling), AI enablement & training (AI literacy programs) and AI-driven end-to-end process optimization."),
+  },
+  {
+    dim: "company", diff: 3,
+    q: I("Wie kann LHIND KI-Use-Cases vergleichsweise schnell produktiv umsetzen?",
+         "How can LHIND deliver AI use cases to production comparatively fast?"),
+    a: [
+      I("Indem jeder Use Case komplett neu und ohne Vorarbeit aufgebaut wird", "By building each use case entirely from scratch without prior work"),
+      I("Über Vorlagen, Plattformen und wiederverwendbare, standardisierte Komponenten", "Via templates, platforms and reusable, standardized components"),
+      I("Durch möglichst lange Konzeptphasen vor jeder technischen Umsetzung", "Through the longest possible concept phases before any implementation"),
+      I("Durch Verzicht auf Proof-of-Concepts zugunsten sofortiger Vollausrollung", "By skipping proofs of concept in favor of immediate full rollout"),
+    ], correct: 1,
+    expl: I("Tempo entsteht durch Vorlagen, Plattformen, wiederverwendbare Komponenten und standardisierte Pipelines/Services — mit Fokus auf PoC → Skalierung → Betrieb statt langwieriger Konzeptphasen.",
+            "Speed comes from templates, platforms, reusable components and standardized pipelines/services — with a focus on PoC → scaling → operations instead of lengthy concept phases."),
+  },
+  {
+    dim: "company", diff: 3,
+    q: I("Wie geht LHIND mit der Skalierung von KI-Lösungen um?",
+         "How does LHIND approach scaling AI solutions?"),
+    a: [
+      I("Durch maßgeschneiderte Einzellösungen, die jeweils isoliert betrieben werden", "Through bespoke one-off solutions each run in isolation"),
+      I("Über wiederverwendbare Services, Integration und End-to-End-Workflows mit Agenten", "Via reusable services, integration and end-to-end workflows with agents"),
+      I("Indem KI bewusst von bestehenden Systemen und Prozessen getrennt bleibt", "By deliberately keeping AI separate from existing systems and processes"),
+      I("Durch einmalige Prototypen, die nicht für den Dauerbetrieb gedacht sind", "Through one-off prototypes not intended for continuous operation"),
+    ], correct: 1,
+    expl: I("LHIND setzt auf wiederverwendbare Services statt Einzellösungen, integriert KI in bestehende Systeme und Prozesse und nutzt Agenten, Plattformen und End-to-End-Workflows (z. B. ASE / Agentic Efficiency).",
+            "LHIND focuses on reusable services rather than one-offs, integrates AI into existing systems and processes and uses agents, platforms and end-to-end workflows (e.g. ASE / agentic efficiency)."),
+  },
+  {
+    dim: "company", diff: 2,
+    q: I("Welche Rolle spielt KI intern bei LHIND entlang der Wertschöpfung?",
+         "What role does AI play internally at LHIND along the value chain?"),
+    a: [
+      I("KI wird intern bislang bewusst gemieden und ausschließlich extern bei Kunden eingesetzt", "AI is deliberately avoided internally and only used externally at clients"),
+      I("KI wird breit eingesetzt: Softwareentwicklung, Projektmanagement, Analyse & Design", "AI is used broadly: software development, project management, analysis & design"),
+      I("KI dient bei LHIND ausschließlich der Erstellung von Marketingmaterial", "AI serves exclusively to create marketing material"),
+      I("KI kommt nur in einer einzigen Pilotabteilung versuchsweise zum Einsatz", "AI is used only experimentally in a single pilot department"),
+    ], correct: 1,
+    expl: I("KI wird entlang der gesamten Wertschöpfung eingesetzt — in der Softwareentwicklung (Code, Testing, Doku), im Projektmanagement und in Analyse & Design — mit dem Ziel von Produktivitätssteigerung und neuen Delivery-Modellen.",
+            "AI is used along the entire value chain — in software development (code, testing, docs), project management and analysis & design — aiming at productivity gains and new delivery models."),
+  },
+  {
+    dim: "company", diff: 3,
+    q: I("Wie stellt LHIND verantwortungsvollen KI-Einsatz sicher?",
+         "How does LHIND ensure responsible use of AI?"),
+    a: [
+      I("Durch den Verzicht auf formale Vorgaben zugunsten maximaler Flexibilität", "By forgoing any formal rules entirely in favor of maximum flexibility"),
+      I("Über EU-AI-Act-Orientierung, AI-Literacy-Aufbau sowie Governance und Absicherung", "Via EU-AI-Act alignment, AI literacy build-up plus governance and safeguards"),
+      I("Indem die Verantwortung vollständig an die jeweiligen Kunden übertragen wird", "By transferring responsibility entirely to the respective customers"),
+      I("Durch rein technische Maßnahmen ohne Schulungs- oder Governance-Anteil", "Through purely technical measures without training or governance"),
+    ], correct: 1,
+    expl: I("Verantwortungsvoller Einsatz beruht auf Orientierung am EU AI Act und ethischen Leitlinien, dem Aufbau von AI Literacy (intern wie bei Kunden) und einer Kombination aus Governance, Training und technischer Absicherung.",
+            "Responsible use rests on alignment with the EU AI Act and ethical guidelines, building AI literacy (internally and with customers) and a combination of governance, training and technical safeguards."),
+  },
+  {
+    dim: "company", diff: 2,
+    q: I("Welche Mehrwerte liefert LHIND konkret für Kunden?",
+         "What concrete value does LHIND deliver for customers?"),
+    a: [
+      I("Vor allem isolierte Einzellösungen ohne Anbindung an bestehende Systeme", "Mainly isolated one-off solutions without ties to existing systems"),
+      I("Weniger manuelle Prozesse, schnellere Entscheidungen, Skalierbarkeit und Integration", "Fewer manual processes, faster decisions, scalability and integration"),
+      I("In erster Linie eine spürbare Reduktion der reinen Lizenzkosten für KI-Modelle", "Primarily a reduction of the pure license cost for AI models"),
+      I("Hauptsächlich kreative Inhalte ohne messbaren Bezug zum Geschäftsprozess", "Mostly creative content without a measurable link to the business process"),
+    ], correct: 1,
+    expl: I("Der Kundennutzen liegt in der Reduktion manueller Prozesse (z. B. automatisierte Kommunikation, Analyse), schnellerer datengetriebener Entscheidungsfindung, Skalierbarkeit statt Einzellösungen und Integration in bestehende IT-Landschaften.",
+            "Customer value lies in reducing manual processes (e.g. automated communication, analysis), faster data-driven decisions, scalability instead of one-offs and integration into existing IT landscapes."),
+  },
+  {
+    dim: "company", diff: 3,
+    q: I("Welche aktuellen KI-Trends adressiert LHIND schwerpunktmäßig?",
+         "Which current AI trends does LHIND primarily address?"),
+    a: [
+      I("Vor allem rückwärtsgewandte, klassische Statistik ohne generative Verfahren", "Mainly backward-looking classic statistics without generative methods"),
+      I("Generative & multimodale KI, Small Language Models, Future Work, Agenten", "Generative & multimodal AI, small language models, future work, agents"),
+      I("Ausschließlich Hardware-Themen wie eigene Rechenzentren und Chips", "Exclusively hardware topics like own data centers and chips"),
+      I("Lediglich einzelne Nischenthemen ohne Bezug zu generativer KI", "Merely isolated niche topics unrelated to generative AI"),
+    ], correct: 1,
+    expl: I("LHIND adressiert u. a. generative AI und multimodale Systeme, Small Language Models für spezifische Use Cases, KI im Arbeitsplatz der Zukunft und agentenbasierte Automatisierung.",
+            "LHIND addresses, among others, generative AI and multimodal systems, small language models for specific use cases, AI in the future workplace and agent-based automation."),
+  },
+  {
+    dim: "company", diff: 3,
+    q: I("Wie positioniert sich LHIND strategisch im KI-Markt?",
+         "How does LHIND position itself strategically in the AI market?"),
+    a: [
+      I("Als reiner Technologielieferant ohne Beratungs- oder Betriebsanteil", "As a pure technology supplier entirely without consulting or operations services"),
+      I("Als End-to-End-KI-Partner mit Branchen-, Umsetzungs- und Verantwortungskompetenz", "As an end-to-end AI partner with industry, delivery and responsibility competence"),
+      I("Als reiner Schulungs- und Trainingsanbieter ohne eigene Umsetzungsprojekte", "As a pure training provider without own implementation projects"),
+      I("Als Anbieter, der sich bewusst nicht von Wettbewerbern differenziert", "As a provider that deliberately does not differentiate from competitors"),
+    ], correct: 1,
+    expl: I("LHIND positioniert sich als End-to-End-KI-Partner (Strategie bis Betrieb) mit klarer Differenzierung über Branchenexpertise, technische Umsetzungskompetenz und verantwortungsvollen KI-Einsatz.",
+            "LHIND positions itself as an end-to-end AI partner (strategy to operations) with clear differentiation via industry expertise, technical delivery competence and responsible use of AI."),
+  },
+  {
+    dim: "company", diff: 2,
+    q: I("Wie heißt das aktuelle AI-Enablement-Programm der LHIND und wozu dient es?",
+         "What is LHIND's current AI enablement program called and what is its purpose?"),
+    a: [
+      I("AICOE — eine zentrale Stabsstelle ausschließlich zur internen KI-Verwaltung und -Kontrolle", "AICOE — a central staff unit set up purely for internal AI administration and control"),
+      I("ASE (Agentic Software Engineering) — Aufbau von AI-Capabilities in Entwicklung und Beratung", "ASE (Agentic Software Engineering) — building AI capabilities in development and consulting"),
+      I("GenAI-Lab — ein reines Forschungsprogramm ohne Bezug zur Delivery", "GenAI Lab — a purely internal research program largely unrelated to delivery work"),
+      I("AItrain — ein allgemeiner Online-Kurs ohne spezifischen Engineering-Fokus", "AItrain — a generic online course without a specific engineering focus"),
+    ], correct: 1,
+    expl: I("Das aktuelle Programm heißt ASE — Agentic Software Engineering. Es dient dem Aufbau von AI-Capabilities im Bereich Softwareentwicklung und Beratung. Bei Fragen: ase@lhind.dlh.de.",
+            "The current program is called ASE — Agentic Software Engineering. It serves to build AI capabilities in software development and consulting. For questions: ase@lhind.dlh.de."),
+  },
+);
+
+// ============================================================
+// ADDITIONAL QUESTIONS (v2.6) — +10 per category, plausible & length-balanced
+// ============================================================
+POOL.push(
+  // ---------- UNDERSTAND +10 ----------
+  {
+    dim: "understand", diff: 3,
+    q: I("Was passiert technisch, wenn ein Gespräch das Kontextfenster des Modells überschreitet?",
+         "What technically happens when a conversation exceeds the model's context window?"),
+    a: [
+      I("Das Modell speichert den Überhang automatisch dauerhaft auf dem Server", "The model permanently stores the overflow on the server automatically"),
+      I("Frühere Inhalte fallen aus dem Sichtfeld und werden nicht mehr berücksichtigt", "Earlier content drops out of view and is no longer taken into account"),
+      I("Das Modell lernt den älteren Teil dauerhaft und merkt ihn sich für später", "The model permanently learns the older part and remembers it for later"),
+      I("Die Verarbeitung bricht mit einer Fehlermeldung vollständig und endgültig ab", "Processing aborts completely and finally with an error message"),
+    ], correct: 1,
+    expl: I("Was nicht mehr ins Kontextfenster passt, 'sieht' das Modell nicht mehr — frühe Inhalte fallen heraus. Es speichert nichts dauerhaft und lernt nichts; deshalb 'vergessen' lange Chats ihren Anfang.",
+            "What no longer fits the context window is no longer 'seen' — early content drops out. It stores nothing permanently and learns nothing; that's why long chats 'forget' their beginning."),
+  },
+  {
+    dim: "understand", diff: 3,
+    q: I("Was ist mit 'Token' bei Sprachmodellen gemeint?",
+         "What is meant by 'tokens' in language models?"),
+    a: [
+      I("Einzelne vollständige Sätze, die das Modell als Einheit verarbeitet", "Whole sentences the model processes as a single unit"),
+      I("Wort- oder Wortteil-Bausteine, in die Text vor der Verarbeitung zerlegt wird", "Word or sub-word chunks text is split into before processing"),
+      I("Sicherheitsschlüssel, mit denen sich Nutzer beim Modell anmelden", "Security keys with which users log in to the model"),
+      I("Kleine Belohnungspunkte, die das Modell pro richtiger Antwort sammelt", "Small reward points the model collects per correct answer"),
+    ], correct: 1,
+    expl: I("Token sind die Bausteine, in die Text zerlegt wird — grob ein Token ≈ ¾ Wort. Modelle rechnen und verrechnen in Token; sie sind weder ganze Sätze noch Schlüssel oder Punkte.",
+            "Tokens are the chunks text is split into — roughly one token ≈ ¾ of a word. Models compute and bill in tokens; they're neither whole sentences nor keys or points."),
+  },
+  {
+    dim: "understand", diff: 4,
+    q: I("Ein Modell wird als 'quantisiert' beschrieben. Welcher Trade-off ist damit typischerweise verbunden?",
+         "A model is described as 'quantized'. Which trade-off does this typically involve?"),
+    a: [
+      I("Höhere Genauigkeit bei gleichzeitig deutlich größerem Speicherbedarf", "Higher accuracy together with significantly larger memory needs"),
+      I("Kleiner und schneller, dafür möglicher leichter Qualitätsverlust", "Smaller and faster, at the cost of a possible slight quality loss"),
+      I("Vollständige Immunität gegen Halluzinationen ohne jeden Nachteil", "Full immunity to hallucinations with no downside at all"),
+      I("Ausschließlich für die Bildgenerierung nutzbar statt für Text", "Usable only for image generation rather than for text"),
+    ], correct: 1,
+    expl: I("Quantisierung reduziert die Präzision der Modellgewichte, um Speicher und Rechenbedarf zu senken — das Modell wird kleiner und schneller, kann aber leicht an Qualität verlieren. Mit Halluzinationen oder Bild/Text hat das nichts zu tun.",
+            "Quantization reduces the precision of model weights to cut memory and compute — the model gets smaller and faster but may lose a little quality. It has nothing to do with hallucinations or image/text."),
+  },
+  {
+    dim: "understand", diff: 2,
+    q: I("Was beschreibt 'Latenz' im Zusammenhang mit KI-Modellen?",
+         "What does 'latency' describe in the context of AI models?"),
+    a: [
+      I("Die Menge an Daten, mit der ein Modell ursprünglich trainiert wurde", "The amount of data a model was originally trained on"),
+      I("Die Zeit, bis ein Modell auf eine Anfrage zu antworten beginnt", "The time until a model begins to respond to a request"),
+      I("Die Anzahl der Parameter, über die ein Modell insgesamt verfügt", "The number of parameters a model has in total"),
+      I("Den Anteil der Antworten, die sachlich korrekt ausfallen", "The share of answers that turn out factually correct"),
+    ], correct: 1,
+    expl: I("Latenz ist die Reaktionszeit — wie schnell eine Antwort beginnt bzw. fertig ist. Sie ist unabhängig von Trainingsdatenmenge, Parameterzahl oder Korrektheit und besonders bei interaktiven Anwendungen wichtig.",
+            "Latency is the response time — how quickly an answer starts or completes. It's independent of training data size, parameter count or correctness, and matters especially in interactive applications."),
+  },
+  {
+    dim: "understand", diff: 3,
+    q: I("Warum liefert dieselbe KI bei einer Faktenfrage manchmal richtige, manchmal falsche Antworten?",
+         "Why does the same AI sometimes give right, sometimes wrong answers to a factual question?"),
+    a: [
+      I("Weil sie ihre Meinung je nach Tageszeit bewusst und gezielt ändert", "Because it deliberately changes its opinion depending on the time of day"),
+      I("Weil sie Wahrscheinlichkeiten ausgibt statt eine Wahrheit nachzuschlagen", "Because it outputs probabilities instead of looking up a truth"),
+      I("Weil sie auf eine zentrale, stets aktuelle Faktendatenbank zugreift", "Because it accesses a central, always-current fact database"),
+      I("Weil die Internetverbindung die Korrektheit direkt beeinflusst", "Because the internet connection directly affects correctness"),
+    ], correct: 1,
+    expl: I("Ein LLM 'schlägt' Fakten nicht nach, sondern erzeugt wahrscheinliche Token-Folgen. Plausibel und korrekt sind nicht dasselbe — deshalb können Antworten schwanken. Es gibt keine eingebaute Faktendatenbank.",
+            "An LLM doesn't 'look up' facts but generates likely token sequences. Plausible and correct aren't the same — so answers can vary. There is no built-in fact database."),
+  },
+  {
+    dim: "understand", diff: 4,
+    q: I("Was beschreibt der Begriff 'Grounding' bei KI-Anwendungen am besten?",
+         "What does the term 'grounding' best describe in AI applications?"),
+    a: [
+      I("Das absichtliche Verlangsamen des Modells zur Kostenkontrolle", "Deliberately slowing the model down to control cost"),
+      I("Das Verankern von Antworten in konkreten, überprüfbaren Quellen", "Anchoring answers in concrete, verifiable sources"),
+      I("Das vollständige Abschalten der Kreativität des Modells", "Fully switching off the model's creativity"),
+      I("Das Training des Modells ausschließlich mit Bilddaten", "Training the model exclusively on image data"),
+    ], correct: 1,
+    expl: I("Grounding bedeutet, Antworten an belegbare Quellen oder Daten zu binden (z. B. via RAG), statt das Modell frei 'aus dem Gedächtnis' antworten zu lassen. Das senkt Halluzinationen — es ist kein Tempo- oder Kreativitätsregler.",
+            "Grounding means tying answers to evidence sources or data (e.g. via RAG) rather than letting the model answer freely 'from memory'. It lowers hallucinations — it's not a speed or creativity dial."),
+  },
+  {
+    dim: "understand", diff: 3,
+    q: I("Was unterscheidet einen 'KI-Agenten' von einem einfachen Chatbot?",
+         "What distinguishes an 'AI agent' from a simple chatbot?"),
+    a: [
+      I("Ein Agent ist lediglich ein Chatbot mit einer freundlicheren Oberfläche", "An agent is merely a chatbot with a friendlier interface"),
+      I("Ein Agent kann mehrstufig planen und Werkzeuge eigenständig nutzen", "An agent can plan in multiple steps and use tools autonomously"),
+      I("Ein Agent antwortet grundsätzlich nur mit vorgefertigten Textbausteinen", "An agent only ever replies with pre-written text snippets"),
+      I("Ein Agent funktioniert ausschließlich offline ohne jede Anbindung", "An agent works exclusively offline without any connectivity"),
+    ], correct: 1,
+    expl: I("Ein Agent geht über reines Antworten hinaus: Er kann Aufgaben in Schritte zerlegen, Werkzeuge (Suche, Code, APIs) aufrufen und Zwischenergebnisse nutzen, um ein Ziel zu verfolgen — nicht nur Text zurückgeben.",
+            "An agent goes beyond mere replying: it can break tasks into steps, invoke tools (search, code, APIs) and use intermediate results to pursue a goal — not just return text."),
+  },
+  {
+    dim: "understand", diff: 3,
+    q: I("Was bedeutet es, wenn ein Modell als 'Open Weights' bezeichnet wird?",
+         "What does it mean when a model is described as 'open weights'?"),
+    a: [
+      I("Dass der Anbieter jederzeit Einblick in alle Eingaben der Nutzer hat", "That the vendor can always see all user inputs"),
+      I("Dass die trainierten Modellgewichte herunterladbar und selbst betreibbar sind", "That the trained model weights are downloadable and self-hostable"),
+      I("Dass das Modell ausschließlich kostenlos und ohne Bedingungen nutzbar ist", "That the model is usable only for free and without any conditions"),
+      I("Dass die Trainingsdaten vollständig und öffentlich einsehbar vorliegen", "That the training data is fully and publicly viewable"),
+    ], correct: 1,
+    expl: I("'Open Weights' heißt: die trainierten Gewichte sind verfügbar, das Modell lässt sich herunterladen und selbst betreiben. Das sagt nichts über Lizenzkosten und bedeutet nicht, dass die Trainingsdaten offen sind.",
+            "'Open weights' means the trained weights are available, so the model can be downloaded and self-hosted. It says nothing about license cost and does not mean the training data is open."),
+  },
+  {
+    dim: "understand", diff: 4,
+    q: I("Ein Modell erzielt auf einem öffentlichen Benchmark Spitzenwerte. Welche Skepsis ist fachlich berechtigt?",
+         "A model tops a public benchmark. Which skepticism is technically warranted?"),
+    a: [
+      I("Keine, denn ein Spitzenplatz im Benchmark belegt reale Überlegenheit eindeutig", "None, since topping a benchmark clearly proves real-world superiority"),
+      I("Dass der Benchmark im Training enthalten gewesen sein könnte (Contamination)", "That the benchmark may have been in the training data (contamination)"),
+      I("Dass öffentliche Benchmarks generell zu schwer für heutige Modelle sind", "That public benchmarks are generally too hard for today's models"),
+      I("Dass Benchmark-Ergebnisse rechtlich nicht verwendet werden dürfen", "That benchmark results may not be used for legal reasons"),
+    ], correct: 1,
+    expl: I("Ein Risiko ist 'Benchmark Contamination': Wenn der Test (oder ähnliche Daten) im Training enthalten war, glänzt das Modell, ohne wirklich besser zu generalisieren. Spitzenwerte sind daher mit Vorsicht zu lesen.",
+            "One risk is 'benchmark contamination': if the test (or similar data) was in training, the model shines without truly generalizing better. Top scores should therefore be read with caution."),
+  },
+  {
+    dim: "understand", diff: 3,
+    q: I("Was beschreibt 'Prompt Injection' am treffendsten?",
+         "What best describes 'prompt injection'?"),
+    a: [
+      I("Eine Methode, mit der man Prompts besonders höflich formuliert", "A method to phrase prompts especially politely"),
+      I("Versteckte Anweisungen in Inhalten, die das Modellverhalten manipulieren", "Hidden instructions in content that manipulate the model's behavior"),
+      I("Das automatische Einfügen von Beispielen in einen Prompt", "The automatic insertion of examples into a prompt"),
+      I("Eine bestimmte Technik, um Modelle insgesamt schneller antworten zu lassen", "A particular technique used to make models respond noticeably faster"),
+    ], correct: 1,
+    expl: I("Prompt Injection schmuggelt Anweisungen in scheinbar harmlose Inhalte (Webseiten, Dokumente, E-Mails), die ein KI-System dann fälschlich befolgt — ein zentrales Sicherheitsrisiko bei Agenten mit Werkzeugzugriff.",
+            "Prompt injection smuggles instructions into seemingly harmless content (web pages, documents, emails) that an AI system then wrongly follows — a key security risk for agents with tool access."),
+  },
+
+  // ---------- APPLY +10 ----------
+  {
+    dim: "apply", diff: 3,
+    q: I("Du willst messen, ob ein KI-Pilot wirklich Wert schafft. Welche Kennzahl ist am aussagekräftigsten?",
+         "You want to measure whether an AI pilot truly creates value. Which metric is most meaningful?"),
+    a: [
+      I("Die Anzahl der insgesamt abgesetzten Prompts pro Woche im Team", "The number of prompts the team sends per week in total"),
+      I("Das Ergebnis pro Vorgang gegen die Baseline, inklusive Nacharbeit", "Outcome per case against the baseline, including rework"),
+      I("Wie begeistert das Team beim Ausprobieren des Tools wirkt", "How enthusiastic the team seems when trying the tool"),
+      I("Wie viele verschiedene KI-Funktionen das Tool insgesamt bietet", "How many different AI features the tool offers in total"),
+    ], correct: 1,
+    expl: I("Aussagekräftig ist das Ergebnis pro Vorgang gegen die vorher gemessene Baseline — inklusive der Nacharbeit für Fehler. Prompt-Mengen, Begeisterung oder Feature-Zahl sagen nichts über den echten Wertbeitrag.",
+            "What's meaningful is outcome per case against the pre-measured baseline — including rework for errors. Prompt counts, enthusiasm or feature numbers say nothing about real value."),
+  },
+  {
+    dim: "apply", diff: 4,
+    q: I("Ein Use-Case spart pro Vorgang 2 Minuten, läuft aber 50.000-mal im Monat. Wie ordnest du das ein?",
+         "A use case saves 2 minutes per case but runs 50,000 times a month. How do you assess this?"),
+    a: [
+      I("Vernachlässigbar, da zwei Minuten pro Vorgang generell zu wenig sind", "Negligible, since two minutes per case is generally too little"),
+      I("Potenziell sehr wertvoll, da kleine Zeitgewinne sich stark summieren", "Potentially very valuable, since small savings add up strongly"),
+      I("Nur dann relevant, wenn ein besonders teures Modell genutzt wird", "Relevant only if a particularly expensive model is used"),
+      I("Grundsätzlich nachrangig gegenüber jedem einzelnen großen Use-Case", "Fundamentally secondary to any single large use case"),
+    ], correct: 1,
+    expl: I("2 Minuten × 50.000 = rund 1.667 Stunden pro Monat. Kleine Zeitgewinne in hohen Stückzahlen summieren sich zu erheblichem Wert — solche Volumen-Use-Cases werden oft unterschätzt.",
+            "2 minutes × 50,000 = roughly 1,667 hours per month. Small savings at high volume add up to substantial value — such volume use cases are often underrated."),
+  },
+  {
+    dim: "apply", diff: 3, ctx: "Operations",
+    q: I("KI soll eingehende Tickets automatisch kategorisieren. Wie startest du am robustesten?",
+         "AI should auto-categorize incoming tickets. How do you start most robustly?"),
+    a: [
+      I("Sofort vollautomatisch ausrollen und auf nachträgliche Korrekturen vertrauen", "Roll out fully automated at once and rely on later corrections"),
+      I("Erst im Schattenbetrieb mitlaufen lassen und gegen Menschen vergleichen", "First run it in shadow mode and compare it against humans"),
+      I("Ausschließlich die seltensten und kompliziertesten Tickets damit testen", "Test it only on the rarest and most complicated tickets"),
+      I("Die Kategorien vom Modell selbst frei und ungeprüft festlegen lassen", "Let the model define the categories itself, freely and unchecked"),
+    ], correct: 1,
+    expl: I("Robuster Start = Schattenbetrieb: Die KI kategorisiert parallel, ohne produktiv zu wirken, und man vergleicht mit den menschlichen Entscheidungen. So misst man Qualität risikofrei, bevor man Verantwortung übergibt.",
+            "Robust start = shadow mode: the AI categorizes in parallel without acting in production, and you compare with human decisions. This measures quality risk-free before handing over responsibility."),
+  },
+  {
+    dim: "apply", diff: 3,
+    q: I("Wann ist ein menschlicher Freigabeschritt ('Human-in-the-Loop') besonders wichtig?",
+         "When is a human approval step ('human-in-the-loop') especially important?"),
+    a: [
+      I("Bei rein internen Entwürfen ganz ohne jede Außenwirkung", "For purely internal drafts with no external effect at all"),
+      I("Bei Entscheidungen mit hoher Tragweite oder schwer umkehrbaren Folgen", "For decisions with high stakes or hard-to-reverse consequences"),
+      I("Immer dann, wenn das verwendete Modell besonders schnell antwortet", "Whenever the model used responds particularly fast"),
+      I("Nur bei Aufgaben, die mit Bildern statt mit Text zu tun haben", "Only for tasks dealing with images rather than text"),
+    ], correct: 1,
+    expl: I("Je größer Tragweite und Irreversibilität, desto wichtiger ist die menschliche Freigabe vor der Wirkung. Bei harmlosen internen Entwürfen ist sie verzichtbar; Tempo oder Datentyp sind kein Kriterium.",
+            "The greater the stakes and irreversibility, the more important human approval before effect. For harmless internal drafts it's dispensable; speed or data type are not criteria."),
+  },
+  {
+    dim: "apply", diff: 4, ctx: "Sales / Account",
+    q: I("Ein KI-Tool soll Verkaufschancen 'scoren'. Was ist die wichtigste Voraussetzung für Verlässlichkeit?",
+         "An AI tool should 'score' sales opportunities. What's the key prerequisite for reliability?"),
+    a: [
+      I("Eine möglichst ansprechende und farbenfrohe Darstellung der Scores", "A visually appealing and colorful display of the scores"),
+      I("Repräsentative, saubere Trainingsdaten und regelmäßiges Nachjustieren", "Representative, clean training data and regular recalibration"),
+      I("Eine möglichst hohe Anzahl an Eingabefeldern im Tool", "As high a number of input fields in the tool as possible"),
+      I("Dass der Score stets als exakte ganze Zahl ausgegeben wird", "That the score is always output as an exact whole number"),
+    ], correct: 1,
+    expl: I("Ein Scoring ist nur so gut wie seine Datenbasis. Repräsentative, saubere Daten und regelmäßiges Nachjustieren (gegen Drift) sind entscheidend — Darstellung, Feldanzahl oder Zahlenformat sind nebensächlich.",
+            "A scoring is only as good as its data. Representative, clean data and regular recalibration (against drift) are decisive — display, field count or number format are secondary."),
+  },
+  {
+    dim: "apply", diff: 3, ctx: "HR / People",
+    q: I("KI soll Bewerbungen vorsortieren. Welcher Einsatz ist verantwortbar?",
+         "AI should pre-sort applications. Which use is defensible?"),
+    a: [
+      I("Die KI trifft die Auswahlentscheidung vollständig und ohne menschliche Prüfung", "The AI makes the selection decision fully and without human review"),
+      I("Die KI unterstützt, der Mensch entscheidet und Bias wird aktiv geprüft", "The AI assists, a human decides and bias is actively checked"),
+      I("Die KI lehnt Kandidaten eigenständig endgültig ab, um Zeit zu sparen", "The AI autonomously rejects candidates for good, to save time"),
+      I("Die KI bewertet ausschließlich anhand des Bewerbungsfotos", "The AI evaluates solely based on the application photo"),
+    ], correct: 1,
+    expl: I("Verantwortbar ist KI als Unterstützung mit menschlicher Letztentscheidung und aktiver Bias-Prüfung. Vollautomatische Ablehnungen oder Bewertung nach Foto sind rechtlich (Antidiskriminierung) und ethisch hochriskant.",
+            "Defensible is AI as support with a human final decision and active bias checking. Fully automatic rejections or photo-based evaluation are legally (anti-discrimination) and ethically high-risk."),
+  },
+  {
+    dim: "apply", diff: 3,
+    q: I("Du erhältst von einer KI eine Tabelle mit Zahlen aus einem hochgeladenen Dokument. Was ist der erste Schritt vor der Nutzung?",
+         "You receive a table of figures from an AI based on an uploaded document. What's the first step before using it?"),
+    a: [
+      I("Die Tabelle direkt weiterverwenden, da sie aus dem Dokument stammt", "Use the table directly, since it comes from the document"),
+      I("Stichproben der Zahlen gegen das Originaldokument abgleichen", "Spot-check the figures against the original document"),
+      I("Nur prüfen, ob die Tabelle sauber und einheitlich formatiert ist", "Only check whether the table is cleanly and consistently formatted"),
+      I("Die Tabelle zur Sicherheit in eine andere Software kopieren", "Copy the table into another piece of software to be safe"),
+    ], correct: 1,
+    expl: I("Auch beim Extrahieren aus Dokumenten kann KI Zahlen verwechseln oder erfinden. Ein Stichprobenabgleich gegen das Original ist Pflicht — Formatierung oder Umkopieren sagt nichts über Korrektheit.",
+            "Even when extracting from documents, AI can swap or fabricate figures. A spot-check against the original is mandatory — formatting or copying says nothing about correctness."),
+  },
+  {
+    dim: "apply", diff: 4,
+    q: I("Zwei Teams wollen denselben KI-Use-Case unabhängig bauen. Was ist die wirtschaftlich klügste Reaktion?",
+         "Two teams want to build the same AI use case independently. What's the economically smartest response?"),
+    a: [
+      I("Beide parallel bauen lassen, um anschließend die bessere Lösung zu wählen", "Let both build in parallel to then pick the better solution"),
+      I("Bündeln zu einer wiederverwendbaren Lösung mit gemeinsamem Standard", "Consolidate into one reusable solution with a shared standard"),
+      I("Dem Team mit dem größeren Budget den alleinigen Zuschlag geben", "Award it solely to the team with the larger budget"),
+      I("Den Use-Case ganz streichen, da Doppelarbeit immer Verschwendung ist", "Drop the use case entirely, since duplicate work is always waste"),
+    ], correct: 1,
+    expl: I("Doppelte Eigenentwicklung ist teuer und führt zu Insellösungen. Klüger ist, zu einer wiederverwendbaren Lösung mit gemeinsamem Standard zu bündeln — das spart Kosten und ermöglicht Skalierung über Teams hinweg.",
+            "Duplicate in-house builds are costly and create silos. Smarter is consolidating into one reusable solution with a shared standard — saving cost and enabling scaling across teams."),
+  },
+  {
+    dim: "apply", diff: 3, ctx: "Finance",
+    q: I("KI soll Rechnungen automatisch prüfen und freigeben. Welche Schwelle ist sinnvoll?",
+         "AI should auto-check and approve invoices. Which threshold is sensible?"),
+    a: [
+      I("Alle Rechnungen unabhängig vom Betrag vollautomatisch freigeben lassen", "Auto-approve all invoices regardless of amount"),
+      I("Kleinbeträge automatisch, höhere Beträge mit menschlicher Freigabe", "Small amounts automatically, higher amounts with human approval"),
+      I("Ausschließlich die höchsten Beträge automatisiert freigeben lassen", "Auto-approve only the very highest invoice amounts and nothing else"),
+      I("Die Freigabegrenze allein vom Modell selbst festlegen lassen", "Let the model alone set the approval limit"),
+    ], correct: 1,
+    expl: I("Eine risikobasierte Schwelle ist Standard: geringe Beträge automatisch, höhere ab einer Grenze mit menschlicher Freigabe. So bleibt das maximale Risiko begrenzt — die Grenze gehört in menschliche Governance, nicht ins Modell.",
+            "A risk-based threshold is standard: low amounts automatically, higher ones above a limit with human approval. This caps the maximum risk — the limit belongs in human governance, not in the model."),
+  },
+  {
+    dim: "apply", diff: 3,
+    q: I("Was ist ein realistischer erster Schritt, um KI im eigenen Arbeitsalltag zu verankern?",
+         "What's a realistic first step to embed AI in your own daily work?"),
+    a: [
+      I("Sofort den gesamten Arbeitsablauf vollständig auf KI umzustellen", "Switching the entire workflow to AI all at once"),
+      I("Eine wiederkehrende, klar umrissene Teilaufgabe gezielt auszulagern", "Targeting one recurring, well-defined sub-task to delegate"),
+      I("Zu warten, bis ein offizielles unternehmensweites Großprojekt startet", "Waiting until an official company-wide mega-project starts"),
+      I("Ausschließlich die komplexesten Sonderfälle zuerst zu automatisieren", "Automating only the most complex edge cases first"),
+    ], correct: 1,
+    expl: I("Realistisch ist, mit einer wiederkehrenden, klar umrissenen Teilaufgabe zu beginnen — schnell sichtbarer Nutzen, geringes Risiko. 'Alles auf einmal', Abwarten oder mit den schwersten Fällen starten scheitert meist.",
+            "Realistic is starting with one recurring, well-defined sub-task — quick visible value, low risk. 'All at once', waiting or starting with the hardest cases usually fails."),
+  },
+
+  // ---------- EVALUATE +10 ----------
+  {
+    dim: "evaluate", diff: 3,
+    q: I("Eine KI liefert eine Antwort mit konkreten Prozentzahlen ohne Quellenangabe. Wie gehst du damit um?",
+         "An AI gives an answer with concrete percentages but no source. How do you handle it?"),
+    a: [
+      I("Die Zahlen übernehmen, da konkrete Prozentwerte auf Belastbarkeit hindeuten", "Adopt the figures, since concrete percentages suggest reliability"),
+      I("Die Zahlen als unbelegt behandeln und vor Nutzung verifizieren", "Treat the figures as unsupported and verify before use"),
+      I("Die Zahlen leicht runden, damit sie seriöser und glaubwürdiger wirken", "Round the figures slightly so they look more serious and credible"),
+      I("Die KI bitten, dieselben Zahlen zur Sicherheit noch einmal zu nennen", "Ask the AI to restate the same figures for safety"),
+    ], correct: 1,
+    expl: I("Konkrete Zahlen wirken überzeugend, sind aber ohne Quelle nicht belastbar — KI kann präzise Werte erfinden. Vor der Nutzung verifizieren; Runden oder Wiederholen-lassen schafft keine Belege.",
+            "Concrete figures look convincing but are unsupported without a source — AI can fabricate precise values. Verify before use; rounding or re-asking creates no evidence."),
+  },
+  {
+    dim: "evaluate", diff: 4,
+    q: I("Eine KI-Zusammenfassung eines langen Berichts klingt schlüssig. Worauf prüfst du besonders?",
+         "An AI summary of a long report sounds coherent. What do you check especially?"),
+    a: [
+      I("Ob die Zusammenfassung sprachlich angenehm und gut lesbar ist", "Whether the summary is linguistically pleasant and readable"),
+      I("Ob zentrale Aussagen ausgelassen, verzerrt oder hinzugedichtet wurden", "Whether key points were omitted, distorted or invented"),
+      I("Ob die Zusammenfassung kürzer ist als das ursprüngliche Dokument", "Whether the summary is shorter than the original document"),
+      I("Ob die Zusammenfassung dieselbe Schriftart wie das Original nutzt", "Whether the summary uses the same font as the original"),
+    ], correct: 1,
+    expl: I("Zusammenfassungen können wichtige Punkte weglassen, gewichten oder Dinge hinzudichten, ohne dass es auffällt. Geprüft wird die inhaltliche Treue zum Original — nicht Lesbarkeit, Kürze oder Schriftart.",
+            "Summaries can drop, reweight or invent points without it being obvious. You check fidelity to the original — not readability, brevity or font."),
+  },
+  {
+    dim: "evaluate", diff: 3,
+    q: I("Was ist der sinnvollste Umgang mit einer KI-Antwort, die du fachlich nicht selbst beurteilen kannst?",
+         "What's the most sensible way to handle an AI answer you can't judge yourself?"),
+    a: [
+      I("Sie übernehmen, da die KI vermutlich mehr Wissen hat als man selbst", "Adopt it, since the AI probably knows more than you do"),
+      I("Eine fachkundige Person oder eine verlässliche Quelle hinzuziehen", "Bring in a knowledgeable person or a reliable source"),
+      I("Sie ablehnen, da KI-Antworten ohne Eigenwissen wertlos sind", "Reject it, since AI answers are worthless without own knowledge"),
+      I("Die Antwort einfach mehrfach erneut generieren und vergleichen", "Simply regenerate the answer several times and compare"),
+    ], correct: 1,
+    expl: I("Fehlt eigenes Fachwissen, ersetzt das Vertrauen in die KI keine Prüfung. Sinnvoll ist, Fachkundige oder verlässliche Quellen hinzuzuziehen. Mehrfaches Generieren erhöht nur die Scheinsicherheit, nicht die Wahrheit.",
+            "Without own expertise, trusting the AI is no substitute for verification. The sensible move is to bring in experts or reliable sources. Regenerating only raises false confidence, not truth."),
+  },
+  {
+    dim: "evaluate", diff: 4,
+    q: I("Zwei Quellen widersprechen sich, eine davon ist die KI selbst. Wie gewichtest du methodisch?",
+         "Two sources contradict, one of them is the AI itself. How do you weigh them methodically?"),
+    a: [
+      I("Der KI folgen, da sie alle Quellen gleichzeitig überblicken kann", "Follow the AI, since it can survey all sources at once"),
+      I("Die nachprüfbare, primäre Quelle höher gewichten als die KI-Aussage", "Weigh the verifiable, primary source above the AI's statement"),
+      I("Stets der jeweils neueren der beiden Quellen den Vorzug geben", "Always prefer whichever of the two sources is more recent"),
+      I("Beide ignorieren und allein nach eigener Erfahrung entscheiden", "Ignore both and decide solely from own experience"),
+    ], correct: 1,
+    expl: I("Eine KI-Aussage ist eine Behauptung ohne eigene Quellenautorität. Eine nachprüfbare Primärquelle wiegt schwerer. 'Neuer' ist nicht automatisch richtiger, und die eigene Erfahrung allein ist kein Ersatz für Belege.",
+            "An AI statement is a claim with no source authority of its own. A verifiable primary source weighs more. 'Newer' isn't automatically more correct, and own experience alone is no substitute for evidence."),
+  },
+  {
+    dim: "evaluate", diff: 3,
+    q: I("Eine KI bewertet selbst, wie sicher sie sich bei ihrer Antwort ist ('95 % sicher'). Wie verlässlich ist das?",
+         "An AI states how confident it is in its own answer ('95% sure'). How reliable is that?"),
+    a: [
+      I("Sehr verlässlich, da das Modell seinen eigenen Wissensstand genau kennt", "Very reliable, since the model knows its own knowledge precisely"),
+      I("Nur begrenzt, da solche Selbsteinschätzungen oft fehlkalibriert sind", "Only limited, since such self-assessments are often miscalibrated"),
+      I("Verlässlich, sofern die Prozentangabe besonders hoch ausfällt", "Reliable, provided the percentage stated is particularly high"),
+      I("Verlässlich, weil Modelle Wahrscheinlichkeiten generell exakt angeben", "Reliable, because models generally state probabilities exactly"),
+    ], correct: 1,
+    expl: I("Selbst geäußerte 'Sicherheit' ist nur begrenzt aussagekräftig — Modelle sind oft überconfident und schlecht kalibriert. Eine hohe Prozentzahl ist kein Wahrheitsbeweis; entscheidend bleibt externe Verifikation.",
+            "Self-stated 'confidence' is only of limited value — models are often overconfident and poorly calibrated. A high percentage is no proof of truth; external verification remains decisive."),
+  },
+  {
+    dim: "evaluate", diff: 3,
+    q: I("Welche Frage entlarvt am ehesten eine zu optimistische KI-Anbieter-Demo?",
+         "Which question best exposes an overly optimistic AI vendor demo?"),
+    a: [
+      I("Wie modern und ansprechend die Benutzeroberfläche gestaltet ist", "How modern and appealing the user interface is designed"),
+      I("Wie das Tool bei den eigenen, realen und unsauberen Daten abschneidet", "How the tool performs on your own real, messy data"),
+      I("Wie viele Auszeichnungen der Anbieter bislang erhalten hat", "How many awards the vendor has received so far"),
+      I("Wie groß das Entwicklungsteam hinter dem Produkt insgesamt ist", "How large the development team behind the product is"),
+    ], correct: 1,
+    expl: I("Demos laufen auf kuratierten Idealdaten. Die entscheidende Frage ist die Leistung auf den eigenen, realen, unsauberen Daten — daran scheitern viele Tools. Oberfläche, Awards oder Teamgröße sagen wenig aus.",
+            "Demos run on curated ideal data. The decisive question is performance on your own real, messy data — where many tools fail. Interface, awards or team size say little."),
+  },
+  {
+    dim: "evaluate", diff: 4,
+    q: I("Ein KI-Modell hat bei einer Aufgabe 90 % Genauigkeit. Welche Zusatzinfo ist für die Praxis am wichtigsten?",
+         "An AI model has 90% accuracy on a task. Which additional info matters most in practice?"),
+    a: [
+      I("Wie elegant das Modell seine Ergebnisse sprachlich formuliert", "How elegantly and fluently the model phrases its results overall"),
+      I("Welche Folgen die 10 % Fehler haben und wie sie sich verteilen", "What the 10% errors cause and how they are distributed"),
+      I("Wie viele Parameter das zugrunde liegende Modell besitzt", "How many parameters the underlying model has"),
+      I("Wie schnell das Modell die 90 % im Test erreicht hat", "How fast the model reached the 90% in the test"),
+    ], correct: 1,
+    expl: I("Entscheidend sind die Konsequenzen der Fehler: 10 % harmlose Fehler sind etwas anderes als 10 %, die teuer oder gefährlich sind. Auch die Verteilung zählt (treffen sie eine Gruppe systematisch?). Eleganz oder Parameterzahl sind nebensächlich.",
+            "What's decisive is the consequence of the errors: 10% harmless errors differ from 10% that are costly or dangerous. Distribution matters too (do they systematically hit one group?). Elegance or parameter count are secondary."),
+  },
+  {
+    dim: "evaluate", diff: 3,
+    q: I("Du sollst eine KI-generierte Quellenliste prüfen. Was ist der effizienteste verlässliche Schritt?",
+         "You must check an AI-generated list of sources. What's the most efficient reliable step?"),
+    a: [
+      I("Darauf achten, ob die Titel der Quellen seriös und plausibel klingen", "Checking whether the source titles sound serious and plausible"),
+      I("Jede Quelle direkt aufrufen und Existenz und Inhalt abgleichen", "Opening each source directly and verifying existence and content"),
+      I("Prüfen, ob die Liste eine angemessene Gesamtzahl an Quellen enthält", "Checking whether the list contains a reasonable number of sources"),
+      I("Die KI fragen, ob die genannten Quellen tatsächlich existieren", "Asking the AI whether the cited sources actually exist"),
+    ], correct: 1,
+    expl: I("Seriöse Titel sind leicht erfunden, und die KE zu sich selbst zu befragen bringt keine Sicherheit. Verlässlich ist nur, jede Quelle aufzurufen und Existenz wie Inhalt direkt abzugleichen.",
+            "Serious-sounding titles are easily fabricated, and asking the AI about itself gives no certainty. The only reliable step is to open each source and directly verify existence and content."),
+  },
+  {
+    dim: "evaluate", diff: 4,
+    q: I("Ein Dashboard zeigt, dass die KI-Lösung 'die Bearbeitungszeit halbiert' hat. Welche Rückfrage ist am wichtigsten?",
+         "A dashboard shows the AI solution 'halved processing time'. Which follow-up matters most?"),
+    a: [
+      I("In welcher Farbgebung und welchem Layout das Dashboard erstellt wurde", "In what color scheme and layout the dashboard was built"),
+      I("Ob auch Qualität und Nacharbeit gleich blieben oder sich verschlechterten", "Whether quality and rework stayed equal or worsened"),
+      I("Über wie viele Bildschirmseiten sich das Dashboard erstreckt", "How many screen pages the dashboard spans"),
+      I("Wie häufig das Dashboard pro Tag aktualisiert wird", "How often the dashboard is refreshed per day"),
+    ], correct: 1,
+    expl: I("Halbe Zeit ist nur dann ein Gewinn, wenn Qualität und Nacharbeit nicht leiden — sonst verlagert man Aufwand nur nach hinten. Die wichtigste Rückfrage gilt also der Ergebnisqualität, nicht der Dashboard-Optik.",
+            "Half the time is only a gain if quality and rework don't suffer — otherwise you just shift effort downstream. The key follow-up concerns outcome quality, not dashboard looks."),
+  },
+  {
+    dim: "evaluate", diff: 3,
+    q: I("Welche Haltung gegenüber KI-Ausgaben ist auf Dauer am gesündesten für gute Entscheidungen?",
+         "Which stance toward AI output is healthiest over time for good decisions?"),
+    a: [
+      I("Grundsätzliches Misstrauen, das jede KI-Nutzung praktisch verhindert", "Fundamental distrust that practically prevents any AI use"),
+      I("Konstruktive Skepsis: nutzen, aber zentrale Aussagen gezielt prüfen", "Constructive skepticism: use it, but check key claims deliberately"),
+      I("Grundsätzliches Vertrauen, da die Ausgaben meistens stimmen werden", "A stance of fundamental trust, since the output will mostly be right"),
+      I("Vertrauen abhängig davon, wie überzeugend die Antwort formuliert ist", "Trust depending on how convincingly the answer is phrased"),
+    ], correct: 1,
+    expl: I("Gesund ist konstruktive Skepsis: KI als starkes Werkzeug nutzen, aber die entscheidenden Aussagen gezielt verifizieren. Pauschales Misstrauen verschenkt Nutzen, pauschales Vertrauen (erst recht nach Überzeugungskraft) ist riskant.",
+            "Healthy is constructive skepticism: use AI as a strong tool but deliberately verify the decisive claims. Blanket distrust wastes value; blanket trust (especially by persuasiveness) is risky."),
+  },
+);
+
+POOL.push(
+  // ---------- ETHICS +10 ----------
+  {
+    dim: "ethics", diff: 3,
+    q: I("Ein Kollege lädt einen vertraulichen Kundenvertrag in einen öffentlichen KI-Chatbot. Wie ordnest du das ein?",
+         "A colleague uploads a confidential customer contract into a public AI chatbot. How do you assess this?"),
+    a: [
+      I("Unproblematisch, solange der Vertrag anschließend wieder gelöscht wird", "Unproblematic as long as the contract is deleted afterwards"),
+      I("Potenzieller Datenschutzverstoß, da Inhalte das kontrollierte Umfeld verlassen", "A potential data breach, as content leaves the controlled environment"),
+      I("Unbedenklich, da der Anbieter solche Daten ohnehin nicht einsehen kann", "Harmless, since the vendor can't see such data anyway"),
+      I("Akzeptabel, sofern der betreffende Vertrag bereits rechtsgültig unterschrieben vorliegt", "Acceptable as long as the contract in question is already legally signed"),
+    ], correct: 1,
+    expl: I("Vertrauliche Inhalte in ein öffentliches Tool zu geben, kann ein Datenschutzverstoß sein — die Daten verlassen das kontrollierte Umfeld und können gespeichert oder verarbeitet werden. Nachträgliches Löschen oder ein Unterschriftsstatus ändert das nicht.",
+            "Putting confidential content into a public tool can be a data breach — the data leaves the controlled environment and may be stored or processed. Later deletion or a signature status doesn't change that."),
+  },
+  {
+    dim: "ethics", diff: 4,
+    q: I("Eine KI erstellt Texte, die unbeabsichtigt urheberrechtlich geschützte Passagen enthalten. Wer trägt das Risiko?",
+         "An AI produces text that unintentionally contains copyrighted passages. Who bears the risk?"),
+    a: [
+      I("Allein der KI-Anbieter, da dessen Modell die Passagen erzeugt hat", "Solely the AI vendor, since its model generated the passages"),
+      I("Das nutzende Unternehmen, das den Inhalt veröffentlicht und verwendet", "The using company that publishes and uses the content"),
+      I("Niemand, da KI-generierte Inhalte generell gemeinfrei sind", "Nobody, since AI-generated content is generally public domain"),
+      I("Ausschließlich der ursprüngliche Urheber der geschützten Passage", "Solely the original author of the protected passage"),
+    ], correct: 1,
+    expl: I("Wer Inhalte veröffentlicht, verantwortet sie — auch wenn eine KI sie erzeugt hat. KI-Output ist nicht automatisch gemeinfrei und kann fremde Werke reproduzieren; deshalb braucht es eine Prüfung vor der Nutzung.",
+            "Whoever publishes content is responsible for it — even if an AI produced it. AI output is not automatically public domain and can reproduce others' works; hence a check before use is needed."),
+  },
+  {
+    dim: "ethics", diff: 3,
+    q: I("Was ist beim Einsatz von KI im Umgang mit besonders schützenswerten Daten (z. B. Gesundheit) zentral?",
+         "What's central when using AI with especially sensitive data (e.g. health)?"),
+    a: [
+      I("Dass das Modell möglichst groß und leistungsfähig gewählt wird", "Choosing the largest and most capable available model possible for it"),
+      I("Strengere Rechtsgrundlagen, Datenminimierung und besondere Schutzmaßnahmen", "Stricter legal bases, data minimization and special safeguards"),
+      I("Dass die Verarbeitung möglichst schnell und automatisiert abläuft", "That processing runs as fast and automated as possible"),
+      I("Dass die ausgegebenen Ergebnisse besonders ansprechend und übersichtlich dargestellt werden", "That the results are presented especially attractively"),
+    ], correct: 1,
+    expl: I("Besondere Datenkategorien (Gesundheit, Biometrie u. a.) unterliegen strengeren Anforderungen: belastbare Rechtsgrundlage, Datenminimierung und zusätzliche Schutzmaßnahmen. Modellgröße, Tempo oder Darstellung sind hier zweitrangig.",
+            "Special data categories (health, biometrics, etc.) face stricter requirements: a solid legal basis, data minimization and extra safeguards. Model size, speed or presentation are secondary here."),
+  },
+  {
+    dim: "ethics", diff: 3,
+    q: I("Ein KI-Bewerbungstool wurde an historischen Einstellungsdaten trainiert. Welches ethische Risiko ist am größten?",
+         "An AI recruiting tool was trained on historical hiring data. What's the biggest ethical risk?"),
+    a: [
+      I("Dass das Tool für die Bedienung zu kompliziert und unübersichtlich ist", "That the tool is too complicated and confusing to operate"),
+      I("Dass es vergangene Verzerrungen lernt und unbemerkt fortschreibt", "That it learns past biases and perpetuates them unnoticed"),
+      I("Dass es zu wenige Bewerbungen pro Tag verarbeiten kann", "That it can process too few applications per day"),
+      I("Dass es die Daten in einem veralteten Format ausgibt", "That it outputs the data in an outdated format"),
+    ], correct: 1,
+    expl: I("Historische Daten spiegeln vergangene (auch diskriminierende) Muster. Ein darauf trainiertes Modell kann diese Verzerrungen lernen und unbemerkt fortschreiben — das zentrale Fairness-Risiko, weit gravierender als Bedienung oder Format.",
+            "Historical data reflects past (including discriminatory) patterns. A model trained on it can learn and silently perpetuate these biases — the central fairness risk, far more serious than usability or format."),
+  },
+  {
+    dim: "ethics", diff: 2,
+    q: I("Was bedeutet 'Datenminimierung' im KI-Kontext?",
+         "What does 'data minimization' mean in the AI context?"),
+    a: [
+      I("Daten nach der Verarbeitung möglichst stark zu komprimieren", "Compressing data as much as possible after processing"),
+      I("Nur so viele Daten zu verarbeiten, wie für den Zweck wirklich nötig sind", "Processing only as much data as is truly needed for the purpose"),
+      I("Die Anzahl der genutzten KI-Modelle so gering wie möglich zu halten", "Keeping the number of AI models used as low as possible"),
+      I("Daten ausschließlich in verkleinerter, niedrig aufgelöster Form zu speichern", "Storing all of the data only in a reduced, low-resolution form"),
+    ], correct: 1,
+    expl: I("Datenminimierung heißt: nur die Daten erheben und verarbeiten, die für den konkreten Zweck wirklich erforderlich sind. Das senkt Risiko und Angriffsfläche — es geht nicht um Kompression oder Modellanzahl.",
+            "Data minimization means collecting and processing only the data truly necessary for the specific purpose. This lowers risk and attack surface — it's not about compression or number of models."),
+  },
+  {
+    dim: "ethics", diff: 4,
+    q: I("Ein KI-System verweigert einem Kunden eine Leistung. Was schuldet das Unternehmen dem Kunden ethisch und zunehmend rechtlich?",
+         "An AI system denies a customer a service. What does the company owe the customer ethically and increasingly legally?"),
+    a: [
+      I("Nichts, da die Entscheidung von einem objektiven System getroffen wurde", "Nothing, since the decision was made by an objective system"),
+      I("Eine nachvollziehbare Begründung und eine Möglichkeit zum Widerspruch", "An understandable explanation and a way to object"),
+      I("Lediglich den Hinweis, dass eine KI die Entscheidung getroffen hat", "Merely a notice that an AI made the decision"),
+      I("Einen Rabatt als Ausgleich für die abgelehnte Leistung", "A discount to compensate for the denied service"),
+    ], correct: 1,
+    expl: I("Bei automatisierten Entscheidungen mit Wirkung auf Personen wachsen die Anforderungen an Transparenz und Anfechtbarkeit (vgl. DSGVO, EU AI Act): nachvollziehbare Begründung und Widerspruchsmöglichkeit. 'Objektiv' ist kein Freibrief, ein bloßer Hinweis genügt nicht.",
+            "For automated decisions affecting individuals, requirements for transparency and contestability are growing (cf. GDPR, EU AI Act): an understandable explanation and a way to object. 'Objective' is no free pass, and a mere notice is not enough."),
+  },
+  {
+    dim: "ethics", diff: 3,
+    q: I("Dürfen Mitarbeitende KI nutzen, um Texte von Kollegen ohne deren Wissen zu analysieren oder zu bewerten?",
+         "May employees use AI to analyze or rate colleagues' texts without their knowledge?"),
+    a: [
+      I("Ja, solange das Ergebnis intern bleibt und niemand davon erfährt", "Yes, as long as the result stays internal and nobody finds out"),
+      I("Nein, das berührt Persönlichkeitsrechte, Transparenz und Vertrauen", "No, this touches personal rights, transparency and trust"),
+      I("Ja, da öffentlich geteilte Texte ohnehin frei verwertbar sind", "Yes, since publicly shared texts are freely usable anyway"),
+      I("Ja, sofern dafür ein besonders zuverlässiges Modell verwendet wird", "Yes, provided a particularly reliable model is used"),
+    ], correct: 1,
+    expl: I("Die heimliche Analyse/Bewertung von Kollegen berührt Persönlichkeitsrechte, Transparenz und Vertrauen — unabhängig davon, wie zuverlässig das Modell ist oder ob das Ergebnis intern bleibt.",
+            "Covertly analyzing/rating colleagues touches personal rights, transparency and trust — regardless of how reliable the model is or whether the result stays internal."),
+  },
+  {
+    dim: "ethics", diff: 3,
+    q: I("Was ist ein verantwortungsvoller Umgang mit KI-generierten Inhalten gegenüber Kunden?",
+         "What's a responsible way to handle AI-generated content toward customers?"),
+    a: [
+      I("KI-Inhalte grundsätzlich als rein menschliche Arbeit auszugeben", "Generally passing off all AI content as if it were purely human work"),
+      I("Wo es relevant ist, Transparenz schaffen und Inhalte vor Versand prüfen", "Where relevant, being transparent and checking content before sending"),
+      I("KI-Inhalte grundsätzlich ungeprüft zu versenden, da sie meistens schon gut genug sind", "Sending AI content unchecked, since it's mostly good enough"),
+      I("Den KI-Einsatz immer und unter allen Umständen zu verheimlichen", "Always and under all circumstances concealing the use of AI"),
+    ], correct: 1,
+    expl: I("Verantwortungsvoll heißt: dort, wo es relevant ist, transparent mit dem KI-Einsatz umgehen und Inhalte vor dem Versand prüfen. Täuschung oder ungeprüftes Versenden untergräbt Vertrauen und kann schaden.",
+            "Responsible means being transparent about AI use where relevant and checking content before sending. Deception or sending unchecked undermines trust and can cause harm."),
+  },
+  {
+    dim: "ethics", diff: 4,
+    q: I("Eine Abteilung will KI nutzen, um Kündigungswahrscheinlichkeiten einzelner Mitarbeiter vorherzusagen. Wie bewertest du das?",
+         "A department wants to use AI to predict individual employees' likelihood of quitting. How do you assess this?"),
+    a: [
+      I("Unproblematisch, da es sich nur um eine statistische Prognose handelt", "Unproblematic, since this is really only a statistical forecast of behavior"),
+      I("Hochsensibel: Datenschutz, Mitbestimmung und Vertrauensfolgen sind zu klären", "Highly sensitive: data protection, co-determination and trust impact must be clarified"),
+      I("Empfehlenswert, da man so rechtzeitig Gegenmaßnahmen einleiten kann", "Recommended overall, since it lets you take suitable countermeasures in good time"),
+      I("Akzeptabel, sofern die Prognosen anonymisiert ausgewertet werden", "Acceptable, provided the forecasts are evaluated anonymously"),
+    ], correct: 1,
+    expl: I("Individuelle Kündigungsprognosen sind hochsensibel: Sie berühren Datenschutz, Mitbestimmung und das Vertrauensverhältnis massiv. 'Nur Statistik' verharmlost; auch vermeintliche Anonymität ist bei Einzelprognosen kaum haltbar.",
+            "Individual attrition forecasts are highly sensitive: they heavily touch data protection, co-determination and the trust relationship. 'Just statistics' trivializes it; alleged anonymity is hardly tenable for individual forecasts."),
+  },
+  {
+    dim: "ethics", diff: 3,
+    q: I("Welche Maßnahme stärkt am ehesten das Vertrauen der Belegschaft in einen fairen KI-Einsatz?",
+         "Which measure best strengthens the workforce's trust in fair use of AI?"),
+    a: [
+      I("Den KI-Einsatz weitgehend unkommentiert und im Stillen einzuführen", "Introducing AI across the team largely uncommented and very quietly"),
+      I("Transparente Regeln, Mitbestimmung und offene Kommunikation über Grenzen", "Transparent rules, co-determination and open communication about limits"),
+      I("Möglichst wenig über die Funktionsweise der Systeme preiszugeben", "Disclosing as little as possible about how the systems work"),
+      I("Den Mitarbeitenden die Verantwortung für alle KI-Ergebnisse zu übertragen", "Shifting responsibility for all AI results onto the employees"),
+    ], correct: 1,
+    expl: I("Vertrauen entsteht durch Transparenz, Mitbestimmung und offene Kommunikation — auch über Grenzen und Risiken. Stilles Einführen, Verschweigen oder das Abwälzen von Verantwortung bewirkt das Gegenteil.",
+            "Trust grows from transparency, co-determination and open communication — including about limits and risks. Quiet introduction, withholding or offloading responsibility achieves the opposite."),
+  },
+
+  // ---------- LEAD +10 ----------
+  {
+    dim: "lead", diff: 3,
+    q: I("Dein Team hat Angst, durch KI-Transparenz 'überwacht' zu werden. Wie reagierst du als Führungskraft am besten?",
+         "Your team fears being 'monitored' through AI transparency. How do you best respond as a leader?"),
+    a: [
+      I("Die Sorge ignorieren und die Einführung unverändert durchziehen", "Ignoring the concern and pushing the rollout unchanged"),
+      I("Zweck und Grenzen offenlegen und das Team in die Ausgestaltung einbeziehen", "Disclosing purpose and limits and involving the team in shaping it"),
+      I("Die Transparenzfunktionen heimlich aktivieren, um Widerstand zu vermeiden", "Secretly enabling the transparency features to avoid resistance"),
+      I("Die Einführung unbegründet verschieben, bis die Sorgen von selbst abklingen", "Postponing without reason until the concerns fade on their own"),
+    ], correct: 1,
+    expl: I("Vertrauen entsteht, wenn Zweck und Grenzen offengelegt werden und das Team mitgestaltet. Ignorieren oder heimliches Aktivieren bestätigt die schlimmste Befürchtung; grundloses Verschieben löst nichts.",
+            "Trust grows when purpose and limits are disclosed and the team helps shape it. Ignoring or secretly enabling confirms the worst fear; postponing without reason solves nothing."),
+  },
+  {
+    dim: "lead", diff: 4,
+    q: I("Du sollst KI-Ziele für dein Team setzen. Welche Zielsetzung ist am wirksamsten?",
+         "You must set AI goals for your team. Which goal-setting is most effective?"),
+    a: [
+      I("Eine feste Quote an täglichen KI-Interaktionen pro Person vorzugeben", "Mandating a fixed quota of daily AI interactions per person"),
+      I("Ergebnisbezogene Ziele an echten Aufgaben statt reiner Nutzungszahlen", "Outcome-based goals on real tasks rather than pure usage counts"),
+      I("Das Ziel, möglichst viele verschiedene KI-Tools auszuprobieren", "The goal of trying as many different AI tools as possible"),
+      I("Die Vorgabe, KI in jedem einzelnen Arbeitsschritt einzusetzen", "The requirement to use AI in every single work step"),
+    ], correct: 1,
+    expl: I("Wirksam sind ergebnisbezogene Ziele an echten Aufgaben ('diesen Prozess um X verbessern') statt Aktivitätskennzahlen. Nutzungsquoten oder 'KI überall' erzeugen Scheinaktivität ohne echten Wert.",
+            "Effective are outcome-based goals on real tasks ('improve this process by X') rather than activity metrics. Usage quotas or 'AI everywhere' create busywork without real value."),
+  },
+  {
+    dim: "lead", diff: 3,
+    q: I("Ein Teammitglied ist beim Thema KI deutlich weiter als du selbst. Wie gehst du als Führungskraft damit um?",
+         "A team member is clearly further ahead on AI than you are. How do you handle this as a leader?"),
+    a: [
+      I("Das Wissensgefälle herunterspielen, um die eigene Autorität zu wahren", "Downplaying the knowledge gap to preserve your own authority"),
+      I("Die Expertise anerkennen, gezielt nutzen und Wissensteilen ermöglichen", "Acknowledging the expertise, using it and enabling knowledge sharing"),
+      I("Dem Teammitglied das Thema KI künftig vorsichtshalber zu entziehen", "Removing the whole AI topic from that team member as a precaution"),
+      I("So zu tun, als hätte man selbst denselben Wissensstand", "Pretending to have the same level of knowledge yourself"),
+    ], correct: 1,
+    expl: I("Souveräne Führung erkennt Stärken im Team an und nutzt sie — etwa indem die Person Wissen teilt und andere befähigt. Herunterspielen, Entziehen oder Vortäuschen schadet Vertrauen und Lernkultur.",
+            "Confident leadership acknowledges strengths in the team and uses them — e.g. by having the person share knowledge and enable others. Downplaying, removing or pretending harms trust and learning culture."),
+  },
+  {
+    dim: "lead", diff: 3,
+    q: I("Wie gehst du als Führungskraft mit einem KI-Fehler um, der einem Mitarbeiter beim Einsatz unterlaufen ist?",
+         "How do you as a leader handle an AI mistake a team member made while using it?"),
+    a: [
+      I("Den Fehler öffentlich benennen, damit alle daraus eine Lehre ziehen", "Naming the mistake publicly so everyone learns from it"),
+      I("Den Fehler als Lernchance behandeln und Prozesse daraus verbessern", "Treating the mistake as a learning opportunity and improving processes"),
+      I("Künftig jede eigenständige KI-Nutzung im Team komplett zu untersagen", "Banning any independent AI use in the team going forward"),
+      I("Den Vorfall ohne weitere Konsequenz oder Reflexion auf sich beruhen lassen", "Letting the incident rest without any consequence or reflection"),
+    ], correct: 1,
+    expl: I("Eine gesunde Fehlerkultur behandelt den Vorfall als Lernchance und verbessert Prozesse (z. B. Prüfschritte). Öffentliches Bloßstellen, ein Pauschalverbot oder folgenloses Ignorieren behindern Lernen und Vertrauen.",
+            "A healthy error culture treats the incident as a learning opportunity and improves processes (e.g. check steps). Public shaming, a blanket ban or consequence-free ignoring hinder learning and trust."),
+  },
+  {
+    dim: "lead", diff: 4,
+    q: I("Die Geschäftsführung verlangt schnelle KI-Erfolge, dein Team ist überlastet. Wie handelst du verantwortungsvoll?",
+         "Management demands quick AI wins, your team is overloaded. How do you act responsibly?"),
+    a: [
+      I("Dem Druck nachgeben und zusätzliche KI-Projekte ungefiltert annehmen", "Giving in to pressure and taking on extra AI projects unfiltered"),
+      I("Einen fokussierten, machbaren Use-Case priorisieren und Erwartungen klären", "Prioritizing one focused, feasible use case and managing expectations"),
+      I("Sämtliche KI-Initiativen ablehnen, bis das Team entlastet ist", "Rejecting all AI initiatives until the team is relieved"),
+      I("Die Mehrbelastung still hinzunehmen und das Team nicht zu informieren", "Quietly absorbing the extra load without informing the team"),
+    ], correct: 1,
+    expl: I("Verantwortungsvoll ist, einen fokussierten, machbaren Use-Case zu priorisieren und die Erwartungen nach oben offen zu managen. Ungefiltert annehmen überlastet weiter; pauschal ablehnen oder stillschweigend schlucken hilft niemandem.",
+            "Responsible is prioritizing one focused, feasible use case and openly managing expectations upward. Taking on unfiltered overloads further; blanket rejection or silently absorbing helps no one."),
+  },
+  {
+    dim: "lead", diff: 3,
+    q: I("Was ist der wirksamste Weg, KI-Kompetenz im Team sichtbar zu machen und zu würdigen?",
+         "What's the most effective way to make AI competence in the team visible and valued?"),
+    a: [
+      I("Ausschließlich diejenigen zu loben, die die meisten Tools verwenden", "Publicly praising only those who happen to use the most tools"),
+      I("Geteiltes Lernen fördern: gute Beispiele zeigen und voneinander lernen", "Fostering shared learning: showcasing good examples and learning from each other"),
+      I("Eine interne Rangliste der aktivsten KI-Nutzer zu veröffentlichen", "Publishing an internal leaderboard ranking the most active AI users by volume"),
+      I("KI-Kompetenz als Privatsache zu behandeln und nicht zu thematisieren", "Treating AI competence as a private matter and not addressing it"),
+    ], correct: 1,
+    expl: I("Wirksam ist eine Kultur des geteilten Lernens: gute Beispiele sichtbar machen und voneinander lernen. Reine Nutzungs-Ranglisten belohnen Aktivität statt Wirkung; Verschweigen verschenkt das Potenzial ganz.",
+            "Effective is a culture of shared learning: making good examples visible and learning from each other. Pure usage rankings reward activity over impact; staying silent wastes the potential entirely."),
+  },
+  {
+    dim: "lead", diff: 3,
+    q: I("Wie balancierst du als Führungskraft Tempo und Sorgfalt bei der KI-Einführung am besten?",
+         "How do you best balance speed and care in AI rollout as a leader?"),
+    a: [
+      I("Maximales Tempo, da Sorgfalt die Einführung nur unnötig verlangsamt", "Maximum speed, since care only slows the rollout needlessly"),
+      I("Schnell in kleinen, reversiblen Schritten mit Lernschleifen vorgehen", "Moving fast in small, reversible steps with learning loops"),
+      I("Erst dann starten, wenn jedes denkbare Risiko ausgeschlossen ist", "Starting only once every conceivable risk has been ruled out"),
+      I("Tempo und Sorgfalt strikt voneinander getrennt nacheinander behandeln", "Treating speed and care strictly separately, one after the other"),
+    ], correct: 1,
+    expl: I("Die Balance gelingt durch schnelle, kleine und reversible Schritte mit eingebauten Lernschleifen — so bleibt man zügig, ohne große Risiken einzugehen. Reines Vollgas ist riskant, das Warten auf Nullrisiko lähmt.",
+            "The balance works through fast, small, reversible steps with built-in learning loops — staying quick without taking big risks. Pure full-throttle is risky; waiting for zero risk is paralyzing."),
+  },
+  {
+    dim: "lead", diff: 4,
+    q: I("Ein Teil deines Teams will KI gar nicht nutzen und beruft sich auf Qualitätsbedenken. Beste Reaktion?",
+         "Part of your team refuses to use AI at all, citing quality concerns. Best response?"),
+    a: [
+      I("Die Bedenken übergehen und die Nutzung schlicht verpflichtend machen", "Overriding the concerns and simply making use mandatory"),
+      I("Bedenken ernst nehmen, gemeinsam an einem Beispiel Qualität prüfen", "Taking concerns seriously and jointly testing quality on an example"),
+      I("Diesem Teil künftig die anspruchsvolleren Aufgaben zu entziehen", "Removing the more demanding tasks from that part going forward"),
+      I("Die Skeptiker bis zur freiwilligen Einsicht komplett gewähren lassen", "Letting the skeptics fully be until they voluntarily come around"),
+    ], correct: 1,
+    expl: I("Qualitätsbedenken sind oft berechtigt und ein guter Einstieg: gemeinsam an einem realen Beispiel prüfen, wo KI hilft und wo nicht. Zwang erzeugt Widerstand, Aufgabenentzug bestraft, reines Gewährenlassen vergibt die Chance.",
+            "Quality concerns are often valid and a good entry point: jointly test on a real example where AI helps and where not. Coercion breeds resistance, removing tasks punishes, pure laissez-faire wastes the chance."),
+  },
+  {
+    dim: "lead", diff: 3, ctx: "HR / People",
+    q: I("Wie sollte eine Führungskraft KI-Tools für Mitarbeitergespräche (z. B. Feedback-Entwürfe) einsetzen?",
+         "How should a leader use AI tools for employee conversations (e.g. feedback drafts)?"),
+    a: [
+      I("Das gesamte Gespräch inklusive Bewertung vollständig der KI überlassen", "Leaving the entire conversation including assessment fully to the AI"),
+      I("Als Hilfe beim Strukturieren, aber mit eigener, persönlicher Verantwortung", "As help with structuring, but keeping own, personal responsibility"),
+      I("KI-Tools für solche Gespräche grundsätzlich und vollständig zu meiden", "Avoiding AI tools for such conversations fundamentally and entirely"),
+      I("Die KI-Entwürfe unverändert und ungeprüft an Mitarbeitende weiterzugeben", "Passing AI drafts on to staff unchanged and unchecked"),
+    ], correct: 1,
+    expl: I("KI darf beim Strukturieren und Formulieren helfen, aber Einschätzung und Verantwortung bleiben persönlich. Komplettes Auslagern entwertet das Gespräch, ungeprüftes Weitergeben ist riskant, völliges Meiden verschenkt nützliche Unterstützung.",
+            "AI may help structure and phrase, but assessment and responsibility stay personal. Full outsourcing devalues the conversation, passing on unchecked is risky, total avoidance wastes useful support."),
+  },
+  {
+    dim: "lead", diff: 4,
+    q: I("Welche Kennzahl sollte eine Führungskraft beim KI-Einsatz im Team am ehesten im Blick behalten?",
+         "Which metric should a leader most keep an eye on regarding AI use in the team?"),
+    a: [
+      I("Die reine Anzahl der KI-Interaktionen pro Mitarbeiter und Woche", "The mere number of AI interactions per employee per week"),
+      I("Wertbeitrag und Qualität der Ergebnisse, plus Wohlbefinden des Teams", "Value contribution and result quality, plus the team's wellbeing"),
+      I("Die Zahl der gleichzeitig im Einsatz befindlichen KI-Tools", "The sheer number of different AI tools in use simultaneously"),
+      I("Wie viele Stunden insgesamt mit KI-Tools verbracht wurden", "How many hours in total were spent with AI tools"),
+    ], correct: 1,
+    expl: I("Sinnvoll sind Wertbeitrag und Ergebnisqualität — und das Wohlbefinden des Teams (Überlastung, Vertrauen). Reine Aktivitätszahlen (Interaktionen, Tools, Stunden) messen Geschäftigkeit, nicht Nutzen.",
+            "Meaningful are value contribution and result quality — and the team's wellbeing (overload, trust). Pure activity counts (interactions, tools, hours) measure busyness, not benefit."),
+  },
+
+  // ---------- PRACTICE +10 ----------
+  {
+    dim: "practice", diff: 3,
+    q: I("Du willst dieselbe Analyse jede Woche reproduzierbar von KI erstellen lassen. Was ist die beste Grundlage?",
+         "You want AI to reproducibly produce the same analysis every week. What's the best basis?"),
+    a: [
+      I("Jede Woche einen frei aus dem Gedächtnis formulierten Prompt zu nutzen", "Using a freshly improvised prompt from memory each week"),
+      I("Ein dokumentiertes Template mit festen Vorgaben, Quellen und Format", "A documented template with fixed instructions, sources and format"),
+      I("Die KI jede Woche selbst entscheiden zu lassen, was relevant ist", "Letting the AI itself decide afresh each week what is relevant"),
+      I("Wöchentlich ein anderes Modell zu verwenden, um Vielfalt zu erzeugen", "Using a different model each week to create variety"),
+    ], correct: 1,
+    expl: I("Reproduzierbarkeit kommt von einem dokumentierten Template mit festen Vorgaben, Quellen und Ausgabeformat. Freies Improvisieren, wechselnde Modelle oder 'KI entscheidet' erzeugen Schwankungen statt Konsistenz.",
+            "Reproducibility comes from a documented template with fixed instructions, sources and output format. Improvising, switching models or 'AI decides' create variance instead of consistency."),
+  },
+  {
+    dim: "practice", diff: 3,
+    q: I("Welche Angewohnheit verbessert die Qualität deiner KI-Ergebnisse über die Zeit am meisten?",
+         "Which habit most improves the quality of your AI results over time?"),
+    a: [
+      I("Prompts möglichst kurz und knapp zu halten, um Zeit zu sparen", "Keeping prompts as short as possible to save time"),
+      I("Gute Prompts zu speichern, wiederzuverwenden und schrittweise zu verfeinern", "Saving good prompts, reusing and iteratively refining them"),
+      I("Immer das jeweils neueste verfügbare Modell zu verwenden", "Always switching to the latest available model on the market"),
+      I("Auf konkrete Beispiele im Prompt grundsätzlich und immer zu verzichten", "Generally avoiding examples in the prompt"),
+    ], correct: 1,
+    expl: I("Wer gute Prompts speichert, wiederverwendet und schrittweise verfeinert, baut eine wachsende Bibliothek auf — der größte Hebel über die Zeit. Kürze um jeden Preis, das neueste Modell oder fehlende Beispiele helfen nicht per se.",
+            "Saving, reusing and iteratively refining good prompts builds a growing library — the biggest lever over time. Brevity at all costs, the newest model or missing examples don't help per se."),
+  },
+  {
+    dim: "practice", diff: 4,
+    q: I("Du baust einen Agenten, der Dokumente liest und Aufgaben anlegt. Wo lauert das größte praktische Risiko?",
+         "You build an agent that reads documents and creates tasks. Where's the biggest practical risk?"),
+    a: [
+      I("Dass die angelegten Aufgaben optisch nicht einheitlich formatiert sind", "That the created tasks aren't visually formatted consistently"),
+      I("Dass versteckte Anweisungen in Dokumenten den Agenten manipulieren", "That hidden instructions in documents manipulate the agent"),
+      I("Dass das Lesen der Dokumente etwas länger dauert als erwartet", "That reading the documents takes a bit longer than expected"),
+      I("Dass der Agent gelegentlich zu viele Aufgaben auf einmal anlegt", "That the agent occasionally creates too many tasks at once"),
+    ], correct: 1,
+    expl: I("Ein Agent, der fremde Dokumente liest und handelt, ist anfällig für Prompt Injection: versteckte Anweisungen im Dokument können ungewollte Aktionen auslösen. Das ist das gravierendste Risiko — weit ernster als Formatierung oder Tempo.",
+            "An agent that reads external documents and acts is vulnerable to prompt injection: hidden instructions in a document can trigger unwanted actions. That's the most serious risk — far beyond formatting or speed."),
+  },
+  {
+    dim: "practice", diff: 2,
+    q: I("Du bekommst von einer KI eine lange Antwort, brauchst aber nur das Wesentliche. Was ist der beste Folgeschritt?",
+         "You get a long answer from an AI but need only the essentials. What's the best next step?"),
+    a: [
+      I("Die ganze Antwort unverändert übernehmen und selbst nichts kürzen", "Adopting the whole answer unchanged and shortening nothing yourself"),
+      I("Gezielt nachfassen: um eine kurze Zusammenfassung der Kernpunkte bitten", "Following up specifically: asking for a brief summary of the key points"),
+      I("Die Anfrage komplett neu und von Grund auf anders zu formulieren", "Reformulating the request completely from scratch"),
+      I("Zu einem anderen Modell zu wechseln, das kürzere Antworten gibt", "Switching to another model that gives shorter answers"),
+    ], correct: 1,
+    expl: I("Im Dialog ist gezieltes Nachfassen am effizientesten: um eine kurze Zusammenfassung der Kernpunkte bitten. Komplett neu formulieren oder das Modell wechseln ist unnötiger Aufwand für ein einfaches Ziel.",
+            "In a dialogue, a targeted follow-up is most efficient: ask for a brief summary of the key points. Reformulating from scratch or switching models is needless effort for a simple goal."),
+  },
+  {
+    dim: "practice", diff: 3,
+    q: I("Was ist eine sinnvolle 'Sicherheitsgewohnheit' beim Arbeiten mit KI und vertraulichen Inhalten?",
+         "What's a sensible 'safety habit' when working with AI and confidential content?"),
+    a: [
+      I("Vertrauliche Inhalte einfach am Ende der Sitzung wieder zu löschen", "Just deleting confidential content at the end of the session"),
+      I("Vor dem Einfügen prüfen, ob das Tool für solche Daten freigegeben ist", "Before pasting, checking whether the tool is approved for such data"),
+      I("Vertrauliche Inhalte vor dem Einfügen leicht umzuformulieren", "Slightly rephrasing confidential content before pasting"),
+      I("Solche Inhalte nur außerhalb der üblichen Arbeitszeiten zu verarbeiten", "Processing such content only outside normal working hours"),
+    ], correct: 1,
+    expl: I("Die wirksame Gewohnheit ist die Vorab-Prüfung: Ist dieses Tool für diese Datenkategorie überhaupt freigegeben? Nachträgliches Löschen, Umformulieren oder die Uhrzeit ändern nichts daran, dass Daten das Haus verlassen können.",
+            "The effective habit is the upfront check: is this tool even approved for this data category? Later deletion, rephrasing or the time of day don't change that data may leave the building."),
+  },
+  {
+    dim: "practice", diff: 4,
+    q: I("Dein automatisierter KI-Workflow lieferte diese Woche ein abwegiges Ergebnis. Was ist der beste erste Schritt zur Ursachensuche?",
+         "Your automated AI workflow produced an odd result this week. What's the best first step to find the cause?"),
+    a: [
+      I("Den gesamten Workflow sofort komplett neu von Grund auf aufzubauen", "Immediately rebuilding the entire workflow from scratch"),
+      I("Die Zwischenergebnisse Schritt für Schritt prüfen, um den Bruch zu finden", "Checking the intermediate results step by step to find the break"),
+      I("Den Workflow unverändert erneut laufen zu lassen und zu hoffen", "Running the whole workflow again unchanged and simply hoping for the best"),
+      I("Das Ergebnis zu ignorieren, da einzelne Ausreißer normal sind", "Ignoring the result, since single outliers are normal"),
+    ], correct: 1,
+    expl: I("In einer Kette findet man die Ursache am schnellsten, indem man die Zwischenergebnisse Schritt für Schritt prüft und so den Bruch lokalisiert. Komplett-Neubau ist verschwenderisch, blindes Wiederholen oder Ignorieren riskant.",
+            "In a chain you find the cause fastest by checking intermediate results step by step to localize the break. A full rebuild is wasteful, blind repetition or ignoring is risky."),
+  },
+  {
+    dim: "practice", diff: 3,
+    q: I("Was hilft am meisten, damit ein im Team geteilter KI-Prompt auch bei anderen funktioniert?",
+         "What helps most so a team-shared AI prompt also works for others?"),
+    a: [
+      I("Den Prompt so knapp wie möglich und ohne Erklärungen zu halten", "Keeping the prompt as terse as possible and without explanation"),
+      I("Zweck, erwartete Eingaben und ein Beispielergebnis mitzudokumentieren", "Documenting the purpose, expected inputs and an example result"),
+      I("Den Prompt nur mündlich und nicht schriftlich weiterzugeben", "Passing the prompt on only verbally, not in writing"),
+      I("Im Prompt möglichst viele Fachbegriffe und Abkürzungen zu verwenden", "Using as many technical terms and abbreviations as possible in the prompt"),
+    ], correct: 1,
+    expl: I("Ein geteilter Prompt funktioniert bei anderen, wenn Zweck, erwartete Eingaben und ein Beispielergebnis mitdokumentiert sind. Knappheit ohne Kontext, mündliche Weitergabe oder Fachjargon-Überladung führen zu Fehlanwendung.",
+            "A shared prompt works for others when purpose, expected inputs and an example result are documented. Terseness without context, verbal-only handover or jargon overload lead to misuse."),
+  },
+  {
+    dim: "practice", diff: 3,
+    q: I("Welcher Umgang mit KI-Vorschlägen für Entscheidungen ist im Alltag am gesündesten?",
+         "Which way of handling AI suggestions for decisions is healthiest day-to-day?"),
+    a: [
+      I("Den Vorschlägen einfach folgen, da die KI die Optionen meist objektiv abwägt", "Following the suggestions, since AI usually weighs options objectively"),
+      I("Vorschläge als Optionen behandeln und die Entscheidung selbst verantworten", "Treating suggestions as options and owning the decision yourself"),
+      I("KI-Vorschläge grundsätzlich abzulehnen, um unabhängig zu bleiben", "Rejecting AI suggestions on principle to stay independent"),
+      I("Nur den Vorschlägen zu folgen, die die eigene Meinung bestätigen", "Following only the suggestions that confirm your own opinion"),
+    ], correct: 1,
+    expl: I("Gesund ist, KI-Vorschläge als erweiterten Optionsraum zu nutzen und die Entscheidung selbst zu verantworten. Blind folgen überschätzt die 'Objektivität', pauschal ablehnen verschenkt Nutzen, nur Bestätigung suchen ist Bestätigungsfehler.",
+            "Healthy is using AI suggestions as an expanded option space and owning the decision. Blindly following overrates 'objectivity', blanket rejection wastes value, seeking only confirmation is confirmation bias."),
+  },
+  {
+    dim: "practice", diff: 4,
+    q: I("Du willst KI-Kosten in einem produktiven System unter Kontrolle halten. Welcher Hebel ist am wirksamsten?",
+         "You want to keep AI costs under control in a production system. Which lever is most effective?"),
+    a: [
+      I("Grundsätzlich immer das größte Modell zu nutzen, um Nacharbeit zu sparen", "Always using the largest model to save on rework"),
+      I("Aufgaben passend routen und einfache Fälle an kleine Modelle geben", "Routing tasks appropriately and sending simple cases to small models"),
+      I("Die Antworten des Modells künstlich zu verlängern für mehr Gehalt", "Artificially lengthening the model's answers for more substance"),
+      I("Alle Anfragen aus Konsistenzgründen über ein einziges großes Modell zu führen", "Routing all requests through a single large model for consistency"),
+    ], correct: 1,
+    expl: I("Der wirksamste Kostenhebel ist Model-Routing: einfache, häufige Fälle an kleine/günstige Modelle, nur schwere an teure. 'Immer groß' oder 'alles über ein großes Modell' verschwendet Geld, künstliche Länge sowieso.",
+            "The most effective cost lever is model routing: simple, frequent cases to small/cheap models, only hard ones to expensive ones. 'Always large' or 'everything through one big model' wastes money, artificial length even more."),
+  },
+  {
+    dim: "practice", diff: 2,
+    q: I("Was ist ein guter erster Schritt, um eine wiederkehrende manuelle Aufgabe mit KI zu automatisieren?",
+         "What's a good first step to automate a recurring manual task with AI?"),
+    a: [
+      I("Die gesamte Aufgabe sofort vollständig und unbeaufsichtigt zu automatisieren", "Automating the whole task at once, fully and unsupervised"),
+      I("Die Aufgabe in klare Schritte zerlegen und einen Schritt zuerst testen", "Breaking the task into clear steps and testing one step first"),
+      I("Zu warten, bis ein Spezialwerkzeug genau für diese Aufgabe erscheint", "Waiting until a special tool appears exactly for this task"),
+      I("Die kompliziertesten Ausnahmen der Aufgabe zuerst zu automatisieren", "Automating the most complicated exceptions of the task first"),
+    ], correct: 1,
+    expl: I("Gut ist, die Aufgabe in klare Schritte zu zerlegen und zunächst einen davon zu testen — schneller Lerneffekt bei geringem Risiko. Alles auf einmal, Abwarten oder mit den Ausnahmen zu starten scheitert meist.",
+            "Good is breaking the task into clear steps and testing one of them first — fast learning at low risk. All at once, waiting or starting with the exceptions usually fails."),
+  },
+);

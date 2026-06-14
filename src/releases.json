@@ -1,27 +1,44 @@
 [
   {
-    "version": "2.5.1",
+    "version": "2.6.1",
     "date": "2026-06-14",
-    "title": {
-      "de": "Schwierigkeit der Fragen erhöht durch vergleichbare Alternativantworten",
-      "en": "Schwierigkeit der Fragen erhöht durch vergleichbare Alternativantworten"
-    },
+    "title": { "de": "LHIND-Fragen jetzt opt-in", "en": "LHIND questions now opt-in" },
     "notes": {
       "de": [
-        "Schwierigkeit der Fragen erhöht durch vergleichbare Alternativantworten"
+        "Die LHIND-spezifischen Firmenwissen-Fragen sind jetzt standardmäßig deaktiviert.",
+        "Über eine neue Checkbox im Onboarding lassen sie sich bei Bedarf aktiv hinzuschalten."
       ],
       "en": [
-        "Schwierigkeit der Fragen erhöht durch vergleichbare Alternativantworten"
+        "The LHIND-specific company-knowledge questions are now disabled by default.",
+        "A new checkbox in onboarding lets you actively switch them on when wanted."
+      ]
+    }
+  },
+  {
+    "version": "2.6.0",
+    "date": "2026-06-14",
+    "title": { "de": "Firmenwissen-Kategorie & 60 neue Fragen", "en": "Company knowledge category & 60 new questions" },
+    "notes": {
+      "de": [
+        "Neue Kategorie 'Firmenwissen' mit LHIND-spezifischen Fragen (Portfolio, AI Services, ASE, verantwortungsvolle KI).",
+        "Pro Kategorie 10 zusätzliche Fragen — der Fragenpool ist von rund 90 auf über 150 gewachsen.",
+        "Gleichmäßigere Mischung: Jeder Test deckt jetzt alle Kategorien ausgewogen ab.",
+        "Antwortposition entzerrt: Die richtige Antwort landet nicht mehr auffällig oft auf demselben Buchstaben.",
+        "Alle neuen Distraktoren sind plausibel und gleich lang — kein Erraten über die Länge."
+      ],
+      "en": [
+        "New 'Company knowledge' category with LHIND-specific questions (portfolio, AI services, ASE, responsible AI).",
+        "10 additional questions per category — the pool grew from around 90 to over 150.",
+        "More even mix: every test now covers all categories in a balanced way.",
+        "Answer position de-clustered: the correct answer no longer lands on the same letter conspicuously often.",
+        "All new distractors are plausible and equal in length — no guessing by length."
       ]
     }
   },
   {
     "version": "2.5.0",
     "date": "2026-06-14",
-    "title": {
-      "de": "Plausiblere, gleich lange Antwortoptionen",
-      "en": "Plausible, length-balanced answer options"
-    },
+    "title": { "de": "Plausiblere, gleich lange Antwortoptionen", "en": "Plausible, length-balanced answer options" },
     "notes": {
       "de": [
         "Alle Fragen überarbeitet: Distraktoren sind jetzt fachlich plausible Fehlannahmen statt offensichtlich falscher Optionen.",
@@ -38,10 +55,7 @@
   {
     "version": "2.4.0",
     "date": "2026-06-14",
-    "title": {
-      "de": "Profil-Ansicht & dynamische Einstufung",
-      "en": "Profile view & dynamic tier"
-    },
+    "title": { "de": "Profil-Ansicht & dynamische Einstufung", "en": "Profile view & dynamic tier" },
     "notes": {
       "de": [
         "Neu: Profil-Ansicht — über den Avatar-Namen lassen sich frühere Ergebnisse jederzeit wieder aufrufen (Verlauf, Bestwert, Entwicklung).",
@@ -58,10 +72,7 @@
   {
     "version": "2.3.0",
     "date": "2026-06-14",
-    "title": {
-      "de": "Antwortmischung & schwerere Fragen",
-      "en": "Answer shuffling & harder questions"
-    },
+    "title": { "de": "Antwortmischung & schwerere Fragen", "en": "Answer shuffling & harder questions" },
     "notes": {
       "de": [
         "Bugfix: Antwortoptionen werden jetzt pro Durchlauf zufällig gemischt — die richtige Antwort ist nicht mehr fast immer B.",
@@ -78,10 +89,7 @@
   {
     "version": "2.2.0",
     "date": "2026-06-14",
-    "title": {
-      "de": "Verlinkte wissenschaftliche Quellen",
-      "en": "Linked scientific sources"
-    },
+    "title": { "de": "Verlinkte wissenschaftliche Quellen", "en": "Linked scientific sources" },
     "notes": {
       "de": [
         "Neu: aufklappbarer Quellen-Block auf der Startseite und im Ergebnisbericht.",
@@ -96,10 +104,7 @@
   {
     "version": "2.1.0",
     "date": "2026-06-14",
-    "title": {
-      "de": "Top-3-Tipps, Avatar-Verlauf & Verallgemeinerung",
-      "en": "Top 3 tips, avatar history & generalization"
-    },
+    "title": { "de": "Top-3-Tipps, Avatar-Verlauf & Verallgemeinerung", "en": "Top 3 tips, avatar history & generalization" },
     "notes": {
       "de": [
         "Neu: Top-3-Tipps am Ende, abgeleitet aus dem konkreten Ergebnis.",
@@ -120,10 +125,7 @@
   {
     "version": "2.0.0",
     "date": "2026-06-14",
-    "title": {
-      "de": "Sofort-Feedback, Fragen-Review & mehr Fragen",
-      "en": "Instant feedback, question review & more questions"
-    },
+    "title": { "de": "Sofort-Feedback, Fragen-Review & mehr Fragen", "en": "Instant feedback, question review & more questions" },
     "notes": {
       "de": [
         "Neu: Sofort-Feedback nach jeder Frage (richtig/falsch + Erläuterung).",
@@ -142,10 +144,7 @@
   {
     "version": "1.0.0",
     "date": "2026-06-14",
-    "title": {
-      "de": "Erstveröffentlichung",
-      "en": "Initial release"
-    },
+    "title": { "de": "Erstveröffentlichung", "en": "Initial release" },
     "notes": {
       "de": [
         "Anonymes KI-Kompetenz-Self-Assessment für Führungskräfte.",
