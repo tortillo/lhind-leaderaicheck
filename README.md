@@ -4,7 +4,7 @@ Eine eigenständige React-Webapp (Vite). Das ist dieselbe App wie das Claude-Art
 aber lauffähig auf jedem Webserver. Der einzige Unterschied unter der Haube: der
 geteilte Speicher (`window.storage`) wurde durch einen austauschbaren Storage-Adapter
 ersetzt (`src/storage.js`).
- 
+
 ---
 
 ## TL;DR — in 3 Minuten lokal starten
