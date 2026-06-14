@@ -1,0 +1,16 @@
+# ============================================================
+# OPTIONAL: shared backend for cross-participant comparison
+# ------------------------------------------------------------
+# Leave these EMPTY (or delete this file) to run with browser-local storage.
+# In local mode, the cohort comparison only reflects runs on THIS device.
+#
+# To enable a real shared backend so every participant's anonymous result
+# feeds the cohort comparison & admin panel, create a free Supabase project
+# and paste its URL + anon key here. See README section "Option C".
+#
+# Copy this file to ".env" and fill in your values:
+#   cp .env.example .env
+# ============================================================
+
+VITE_SUPABASE_URL=
+VITE_SUPABASE_ANON_KEY=

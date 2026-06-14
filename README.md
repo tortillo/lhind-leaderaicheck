@@ -1,160 +1,226 @@
-# LHIND · AI Leadership Check — Webapp
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LHIND AI Check · QR & Poster Generator</title>
+<!-- QR generation runs fully in your browser. Nothing is uploaded. -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root{
+    --bg:#0B1622; --panel:#10202F; --panelHi:#15293B; --line:#1F3A52;
+    --ink:#E8F0F6; --inkDim:#8AA6BC; --amber:#F5A623; --cyan:#36C9D9; --green:#4FD18B;
+    --mono:'JetBrains Mono',ui-monospace,monospace;
+    --sans:'Inter',system-ui,-apple-system,sans-serif;
+  }
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);padding:0;}
+  .wrap{max-width:920px;margin:0 auto;padding:0 20px 60px;}
+  header{display:flex;align-items:center;gap:12px;padding:22px 0 18px;border-bottom:1px solid var(--line);}
+  .logo{width:30px;height:30px;border-radius:6px;background:var(--amber);display:grid;place-items:center;color:var(--bg);font-weight:800;font-family:var(--mono);}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--amber);}
+  h1{font-size:30px;font-weight:800;letter-spacing:-.02em;margin:16px 0 8px;}
+  p.lead{color:var(--inkDim);font-size:15px;line-height:1.6;margin:0 0 28px;max-width:620px;}
+  label{font-family:var(--mono);font-size:11.5px;color:var(--inkDim);letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:8px;}
+  input,textarea{width:100%;background:var(--panel);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:11px 13px;font-size:14px;font-family:var(--sans);}
+  input:focus,textarea:focus{outline:none;border-color:var(--cyan);}
+  .row{margin-bottom:20px;}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  button{font-family:var(--sans);cursor:pointer;border:none;border-radius:10px;font-weight:700;}
+  .btn{background:var(--amber);color:var(--bg);padding:13px 22px;font-size:15px;}
+  .btn2{background:transparent;color:var(--ink);border:1px solid var(--line);padding:11px 20px;font-size:14px;font-weight:600;}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:24px;}
+  .poster-wrap{margin-top:30px;display:flex;flex-direction:column;align-items:center;gap:18px;}
+  /* The actual poster that gets exported */
+  #poster{
+    width:540px;background:linear-gradient(160deg,#10202F 0%,#0B1622 100%);
+    border:1px solid var(--line);border-radius:18px;padding:44px 40px;text-align:center;
+    position:relative;overflow:hidden;
+  }
+  #poster .ptag{font-family:var(--mono);font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--amber);}
+  #poster h2{font-size:30px;font-weight:800;letter-spacing:-.02em;margin:14px 0 6px;color:var(--ink);}
+  #poster .psub{color:var(--inkDim);font-size:15px;margin:0 0 28px;line-height:1.5;}
+  #qrbox{background:#fff;display:inline-block;padding:18px;border-radius:14px;}
+  #poster .purl{font-family:var(--mono);font-size:14px;color:var(--cyan);margin-top:24px;word-break:break-all;}
+  #poster .pfoot{margin-top:22px;font-size:12px;color:var(--inkDim);line-height:1.5;}
+  #poster .accent{position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,var(--amber),var(--cyan),var(--green));}
+  .hint{font-family:var(--mono);font-size:11.5px;color:var(--inkDim);margin-top:8px;line-height:1.5;}
+  .err{color:#F0556B;font-size:13px;margin-top:8px;}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
+  a.linklist{color:var(--cyan);font-size:13.5px;text-decoration:none;display:block;margin:4px 0;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">AI</div>
+    <div>
+      <div style="font-weight:700;font-size:15px;">LHIND · QR & Poster Generator</div>
+      <div style="font-family:var(--mono);font-size:10.5px;color:var(--inkDim);letter-spacing:.15em;">FÜR DIE VERTEILUNG DES AI LEADERSHIP CHECK</div>
+    </div>
+  </header>
 
-Eine eigenständige React-Webapp (Vite). Das ist dieselbe App wie das Claude-Artifact,
-aber lauffähig auf jedem Webserver. Der einzige Unterschied unter der Haube: der
-geteilte Speicher (`window.storage`) wurde durch einen austauschbaren Storage-Adapter
-ersetzt (`src/storage.js`).
+  <h1>QR-Code & Poster erstellen</h1>
+  <p class="lead">Trage die URL ein, unter der deine deployte App erreichbar ist (z. B. <code>https://lhind-aicheck.vercel.app</code>). Du bekommst sofort einen QR-Code und ein druckfertiges Poster. Alles läuft lokal im Browser — nichts wird hochgeladen.</p>
 
----
+  <div class="panel">
+    <div class="row">
+      <label for="url">App-URL</label>
+      <input id="url" type="url" placeholder="https://lhind-aicheck.vercel.app" value="https://lhind-aicheck.vercel.app" />
+      <div class="hint">Tipp: erst die App deployen (Vercel/Netlify), dann die finale URL hier eintragen.</div>
+      <div id="urlErr" class="err" style="display:none;"></div>
+    </div>
+    <div class="grid">
+      <div class="row">
+        <label for="title">Poster-Titel</label>
+        <input id="title" type="text" value="AI Leadership Check" />
+      </div>
+      <div class="row">
+        <label for="sub">Untertitel</label>
+        <input id="sub" type="text" value="Wie KI-fit ist deine Führung? · 12 Min · anonym" />
+      </div>
+    </div>
+    <div class="row">
+      <label for="foot">Fußzeile</label>
+      <input id="foot" type="text" value="Anonym · keine personenbezogenen Daten · Fragen an ase@lhind.dlh.de" />
+    </div>
+    <button class="btn" onclick="generate()">QR & Poster erzeugen</button>
+  </div>
 
-## TL;DR — in 3 Minuten lokal starten
+  <div class="poster-wrap" id="out" style="display:none;">
+    <div id="poster">
+      <div class="accent"></div>
+      <div class="ptag" id="p_tag">LHIND · FÜR FÜHRUNGSKRÄFTE</div>
+      <h2 id="p_title"></h2>
+      <p class="psub" id="p_sub"></p>
+      <div id="qrbox"></div>
+      <div class="purl" id="p_url"></div>
+      <div class="pfoot" id="p_foot"></div>
+    </div>
+    <div class="toolbar">
+      <button class="btn" onclick="downloadPoster()">⬇ Poster als PNG</button>
+      <button class="btn2" onclick="downloadQR()">⬇ Nur QR (PNG)</button>
+      <button class="btn2" onclick="window.print()">🖨 Drucken</button>
+    </div>
+    <div class="hint" style="text-align:center;max-width:460px;">Das Poster eignet sich für Folien, Aushänge oder Townhalls. Der reine QR-Code ist gut für Signaturen oder kleine Einbindungen.</div>
+  </div>
+</div>
 
-Voraussetzung: **Node.js 18+** installiert ([nodejs.org](https://nodejs.org)).
+<script>
+let qrInstance = null;
 
-```bash
-npm install
-npm run dev
-```
+function isValidUrl(u){
+  try { const x = new URL(u); return x.protocol==='http:'||x.protocol==='https:'; }
+  catch { return false; }
+}
 
-Dann die angezeigte Adresse öffnen (i. d. R. http://localhost:5173).
-Fertig. Läuft mit Browser-lokalem Speicher — kein Backend nötig.
+function generate(){
+  const url = document.getElementById('url').value.trim();
+  const err = document.getElementById('urlErr');
+  if(!isValidUrl(url)){
+    err.style.display='block';
+    err.textContent='Bitte eine gültige URL mit https:// eingeben.';
+    return;
+  }
+  err.style.display='none';
 
-Für die Produktion:
+  document.getElementById('p_title').textContent = document.getElementById('title').value;
+  document.getElementById('p_sub').textContent = document.getElementById('sub').value;
+  document.getElementById('p_url').textContent = url;
+  document.getElementById('p_foot').textContent = document.getElementById('foot').value;
 
-```bash
-npm run build      # erzeugt den Ordner dist/ (statische Website)
-npm run preview    # zum lokalen Testen des Builds
-```
+  const box = document.getElementById('qrbox');
+  box.innerHTML = '';
+  qrInstance = new QRCode(box, {
+    text: url, width: 240, height: 240,
+    colorDark: '#0B1622', colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.H
+  });
 
-Der Ordner `dist/` ist eine komplett statische Seite und kann überall gehostet werden.
+  document.getElementById('out').style.display='flex';
+  document.getElementById('out').scrollIntoView({behavior:'smooth'});
+}
 
----
+// Export the QR canvas alone
+function downloadQR(){
+  const canvas = document.querySelector('#qrbox canvas');
+  if(!canvas){ alert('Bitte zuerst erzeugen.'); return; }
+  const a = document.createElement('a');
+  a.href = canvas.toDataURL('image/png');
+  a.download = 'lhind-aicheck-qr.png';
+  a.click();
+}
 
-## Wichtig: Speicher-Modi verstehen
+// Render the whole poster to PNG by drawing it onto a canvas.
+function downloadPoster(){
+  const qrCanvas = document.querySelector('#qrbox canvas');
+  if(!qrCanvas){ alert('Bitte zuerst erzeugen.'); return; }
 
-Die App speichert **keine personenbezogenen Daten** — nur anonyme, aggregierte
-Kennzahlen (Score, Seniorität, Rolle, Bereich, Altersgruppe) für den Vergleich und das
-Admin-Panel. Wo diese landen, hängt vom Modus ab:
+  const W=1080, H=1400, c=document.createElement('canvas');
+  c.width=W; c.height=H;
+  const ctx=c.getContext('2d');
 
-| Modus | Setup | Kohorten-Vergleich umfasst… |
-|-------|-------|------------------------------|
-| **Lokal** (Standard) | nichts | nur Durchläufe **in diesem Browser/auf diesem Gerät** |
-| **Geteilt** (Supabase) | `.env` ausfüllen | **alle** Teilnehmer projektweit |
+  // background gradient
+  const g=ctx.createLinearGradient(0,0,W,H);
+  g.addColorStop(0,'#10202F'); g.addColorStop(1,'#0B1622');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  // top accent bar
+  const ag=ctx.createLinearGradient(0,0,W,0);
+  ag.addColorStop(0,'#F5A623'); ag.addColorStop(.5,'#36C9D9'); ag.addColorStop(1,'#4FD18B');
+  ctx.fillStyle=ag; ctx.fillRect(0,0,W,12);
 
-Solange du keine `.env` mit Supabase-Daten anlegst, läuft alles lokal. Das ist ideal
-zum Testen oder für einen einzelnen Kiosk-Rechner. Für einen echten unternehmensweiten
-Vergleich brauchst du den geteilten Modus (Option C unten).
+  const cx=W/2;
+  ctx.textAlign='center';
 
----
+  ctx.fillStyle='#F5A623';
+  ctx.font='600 26px "JetBrains Mono", monospace';
+  ctx.fillText('LHIND · FÜR FÜHRUNGSKRÄFTE', cx, 130);
 
-## Deployment — drei Wege
+  ctx.fillStyle='#E8F0F6';
+  ctx.font='800 60px Inter, sans-serif';
+  wrapText(ctx, document.getElementById('title').value, cx, 220, W-160, 66);
 
-### Option A — Statisches Hosting (am einfachsten, empfohlen)
+  ctx.fillStyle='#8AA6BC';
+  ctx.font='400 30px Inter, sans-serif';
+  wrapText(ctx, document.getElementById('sub').value, cx, 300, W-200, 40);
 
-`npm run build` erzeugt `dist/`. Lade den Inhalt auf einen beliebigen statischen Host:
+  // white QR plate
+  const qrSize=520, plate=qrSize+72, px=cx-plate/2, py=400;
+  roundRect(ctx, px, py, plate, plate, 28); ctx.fillStyle='#fff'; ctx.fill();
+  ctx.drawImage(qrCanvas, cx-qrSize/2, py+36, qrSize, qrSize);
 
-- **Vercel:** Repo importieren → Framework „Vite" → fertig. Oder `npx vercel`.
-- **Netlify:** `dist/` per Drag&Drop auf app.netlify.com/drop, oder Repo verbinden
-  (Build command `npm run build`, Publish directory `dist`).
-- **Eigener Webserver / Nginx / IIS / SharePoint-Static:** Inhalt von `dist/` in das
-  Web-Verzeichnis kopieren.
-- **GitHub Pages:** `dist/` in einen `gh-pages`-Branch pushen. Wenn die App unter einem
-  Unterpfad läuft (z. B. `…/aicheck/`), in `vite.config.js` `base: "/aicheck/"` setzen
-  und neu bauen.
+  ctx.fillStyle='#36C9D9';
+  ctx.font='500 30px "JetBrains Mono", monospace';
+  wrapText(ctx, document.getElementById('url').value, cx, py+plate+70, W-120, 40);
 
-Lokal/Intern: Da die App rein im Browser läuft (keine Server-Logik), genügt jeder Host,
-der HTML/JS ausliefert — auch ein internes Netzlaufwerk mit Webfreigabe.
+  ctx.fillStyle='#8AA6BC';
+  ctx.font='400 24px Inter, sans-serif';
+  wrapText(ctx, document.getElementById('foot').value, cx, py+plate+150, W-200, 34);
 
-### Option B — Docker (für internes Hosting hinter der Firewall)
+  const a=document.createElement('a');
+  a.href=c.toDataURL('image/png');
+  a.download='lhind-aicheck-poster.png';
+  a.click();
+}
 
-Im Projekt liegt ein `Dockerfile`. Damit baust du ein Image, das die App über Nginx
-ausliefert:
+function wrapText(ctx,text,x,y,maxW,lh){
+  const words=String(text).split(' '); let line='', yy=y;
+  for(const w of words){
+    const test=line?line+' '+w:w;
+    if(ctx.measureText(test).width>maxW && line){ ctx.fillText(line,x,yy); line=w; yy+=lh; }
+    else line=test;
+  }
+  ctx.fillText(line,x,yy);
+}
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+}
 
-```bash
-docker build -t lhind-aicheck .
-docker run -p 8080:80 lhind-aicheck
-# dann http://localhost:8080 öffnen
-```
-
-Das eignet sich gut, um die App on-premise im LHIND-Netz zu betreiben, ohne externe
-Dienste. (Im Docker-Standard läuft sie im lokalen Speichermodus pro Browser — für den
-geteilten Vergleich Option C kombinieren und die Env-Variablen beim Build mitgeben.)
-
-### Option C — Geteilter Vergleich über alle Teilnehmer (Supabase)
-
-Wenn das Admin-Panel und das Histogramm **alle** Teilnehmer zeigen sollen, brauchst du
-einen gemeinsamen Datenspeicher. Der schnellste DSGVO-taugliche Weg ist Supabase
-(kostenloser Tarif reicht; EU-Region wählbar):
-
-1. Auf [supabase.com](https://supabase.com) ein Projekt anlegen (Region: EU).
-2. Im SQL-Editor diese Tabelle erstellen:
-
-   ```sql
-   create table kv_store (
-     key   text primary key,
-     value text
-   );
-
-   alter table kv_store enable row level security;
-
-   -- Es werden nur anonyme Aggregat-JSONs gespeichert (keine Personendaten).
-   -- Diese Policy erlaubt der Web-App (anon) Lesen + Schreiben auf diese Tabelle:
-   create policy "anon kv access" on kv_store
-     for all using (true) with check (true);
-   ```
-
-3. Unter *Project Settings → API* `Project URL` und `anon public key` kopieren.
-4. Im Projekt `.env` anlegen und befüllen:
-
-   ```bash
-   cp .env.example .env
-   ```
-   ```
-   VITE_SUPABASE_URL=https://DEINPROJEKT.supabase.co
-   VITE_SUPABASE_ANON_KEY=DEIN_ANON_KEY
-   ```
-
-5. `npm run build` neu ausführen und deployen. Die App erkennt die Variablen
-   automatisch und nutzt dann den geteilten Speicher. (Bei Vercel/Netlify die beiden
-   `VITE_…`-Variablen in den Projekt-Einstellungen hinterlegen statt in `.env`.)
-
-> Hinweis: Der `anon key` ist für öffentliche Web-Apps gedacht und darf im Browser
-> liegen. Da nur anonyme Aggregatdaten gespeichert werden, ist das unkritisch. Wenn du
-> strengere Kontrolle willst, kann man die Policy einschränken oder ein kleines eigenes
-> Backend vorsetzen — der Adapter in `src/storage.js` ist genau dafür der Umschaltpunkt.
-
----
-
-## Admin-Panel
-
-Erreichbar über den „Admin"-Button auf der Startseite. **PIN: `2024`**.
-Ändern in `src/App.jsx` — suche nach `const ADMIN_PIN`.
-
-Der Admin-Bereich zeigt Aggregatauswertungen und die schwierigsten Fragen
-(Trainingsbedarf). Im lokalen Modus bezieht er sich nur auf dieses Gerät, im geteilten
-Modus auf alle Teilnehmer.
-
----
-
-## Projektstruktur
-
-```
-webapp/
-├─ index.html            Einstiegspunkt
-├─ package.json          Abhängigkeiten & Skripte
-├─ vite.config.js        Build-Konfiguration (base-Pfad hier setzen)
-├─ Dockerfile            optionales Container-Hosting
-├─ .env.example          Vorlage für den geteilten Supabase-Modus
-└─ src/
-   ├─ main.jsx           React-Bootstrap
-   ├─ App.jsx            die komplette App (Fragenpool, Test, Bericht, Admin)
-   ├─ storage.js         Speicher-Adapter (lokal ⇄ Supabase) — der Umschaltpunkt
-   └─ index.css          Basis-Styles
-```
-
-## Anpassen
-
-- **Fragen ergänzen/ändern:** in `src/App.jsx` im Array `POOL` (gleiche `I("de","en")`-Struktur).
-- **Admin-PIN:** `ADMIN_PIN` in `src/App.jsx`.
-- **Zeit pro Frage / Fragenanzahl:** `TIME_PER_Q` bzw. `NQ` in `src/App.jsx`.
-- **Empfehlungen & Ressourcen-Links:** Funktion `buildRecs` in `src/App.jsx`.
+// generate once on load with the placeholder URL
+window.addEventListener('load', generate);
+</script>
+</body>
+</html>
