@@ -1000,6 +1000,131 @@ POOL.push(
 );
 
 // ============================================================
+// HARD ITEMS (diff 4) — discrimination required, detailed explanations
+// with abbreviation glosses. Added to reduce easy 100% scores.
+// ============================================================
+POOL.push(
+  {
+    dim: "understand", diff: 4,
+    q: I("Ein Anbieter sagt: 'Unser RAG-System kann nicht halluzinieren, weil es nur aus euren Dokumenten antwortet.' Wie bewertest du das fachlich?",
+         "A vendor says: 'Our RAG system can't hallucinate because it only answers from your documents.' How do you assess this technically?"),
+    a: [
+      I("Korrekt — mit Dokumentengrundlage sind Halluzinationen ausgeschlossen", "Correct — with a document base, hallucinations are impossible"),
+      I("Falsch — das Modell kann Gefundenes falsch zusammenfassen, Lücken überbrücken oder die falschen Passagen abrufen", "Wrong — the model can missummarize retrieved text, bridge gaps, or retrieve the wrong passages"),
+      I("Korrekt, sofern die Dokumente fehlerfrei sind", "Correct, provided the documents are error-free"),
+      I("Falsch, aber nur weil RAG generell unzuverlässig ist", "Wrong, but only because RAG is generally unreliable"),
+    ], correct: 1,
+    expl: I("RAG = Retrieval-Augmented Generation: das Modell bekommt zur Laufzeit passende Dokumente in den Kontext. Das senkt Halluzinationen, beseitigt sie aber nicht — der Abruf kann die falschen Stellen liefern, und das Sprachmodell formuliert daraus frei, kann also Inhalte verzerren oder Lücken mit Erfundenem füllen. 'Grounding' reduziert Risiko, ist aber keine Garantie.",
+            "RAG = Retrieval-Augmented Generation: the model gets relevant documents into context at runtime. That lowers hallucinations but doesn't remove them — retrieval can surface the wrong passages, and the language model still phrases freely, so it can distort content or fill gaps with fabrication. Grounding reduces risk; it's no guarantee."),
+  },
+  {
+    dim: "evaluate", diff: 4,
+    q: I("Ein KI-Tool erreicht im Test 95 % 'Accuracy' bei der Betrugserkennung. Nur 1 % aller Fälle sind echter Betrug. Warum ist die 95 %-Zahl möglicherweise wertlos?",
+         "An AI tool reaches 95% accuracy in fraud detection in testing. Only 1% of all cases are actual fraud. Why might the 95% figure be worthless?"),
+    a: [
+      I("Weil 95 % immer zu niedrig für Produktion ist", "Because 95% is always too low for production"),
+      I("Weil bei 1 % Betrug schon ein 'immer ehrlich'-Rater 99 % Accuracy erreicht — entscheidend sind Präzision und Trefferquote (Recall)", "Because at 1% fraud, an 'always honest' guesser already hits 99% accuracy — what matters is precision and recall"),
+      I("Weil Accuracy nur für Bilder gilt", "Because accuracy only applies to images"),
+      I("Weil das Tool zu schnell ist", "Because the tool is too fast"),
+    ], correct: 1,
+    expl: I("Bei stark unausgewogenen Daten täuscht 'Accuracy' (Anteil insgesamt richtiger Urteile). Wenn nur 1 % Betrug ist, erreicht ein Modell, das pauschal 'kein Betrug' sagt, schon 99 %. Aussagekräftig sind: Präzision (wie viele der Betrugs-Alarme stimmen?) und Recall/Trefferquote (wie viel echter Betrug wird gefunden?). Diese Kennzahlen muss man getrennt verlangen.",
+            "With heavily imbalanced data, accuracy (share of all correct verdicts) is misleading. If only 1% is fraud, a model that always says 'no fraud' already scores 99%. What's meaningful: precision (how many fraud alerts are right?) and recall (how much real fraud is caught?). You must ask for these separately."),
+  },
+  {
+    dim: "apply", diff: 4,
+    q: I("Du vergleichst zwei Angebote: Modell A kostet 2 €/Mio. Tokens, Modell B 15 €/Mio. Tokens. Welche Information entscheidet, ob B trotzdem günstiger sein kann?",
+         "You compare two offers: Model A costs €2/M tokens, Model B €15/M tokens. Which information decides whether B can still be cheaper overall?"),
+    a: [
+      I("Die Farbe der Anbieter-Website", "The color of the vendor's website"),
+      I("Wie viele Versuche/Nacharbeit A braucht — wenn A öfter falsch liegt, steigen Gesamtkosten durch Wiederholung und Prüfung", "How many retries/rework A needs — if A is wrong more often, total cost rises through repetition and review"),
+      I("Welches Modell älter ist", "Which model is older"),
+      I("Die Anzahl der Buchstaben im Namen", "The number of letters in the name"),
+    ], correct: 1,
+    expl: I("Token = die Verrechnungseinheit für Textmenge (grob ¾ Wort). Der reine Preis pro Million Tokens sagt wenig über die Gesamtkosten. Ein billiges Modell, das häufiger falsch liegt, erzeugt Folgekosten: mehrere Anläufe, mehr menschliche Prüfung, Fehlerkorrektur. Die richtige Kennzahl sind die Kosten pro korrekt erledigter Aufgabe, nicht pro Token.",
+            "Token = the billing unit for text volume (roughly ¾ of a word). The raw price per million tokens says little about total cost. A cheap model that errs more often creates downstream cost: multiple attempts, more human review, error correction. The right metric is cost per correctly completed task, not per token."),
+  },
+  {
+    dim: "ethics", diff: 4,
+    q: I("Ein KI-Modell zur Kreditvergabe nutzt die Postleitzahl als Merkmal und ist dadurch treffsicherer. Wo liegt das Kernproblem?",
+         "A credit-scoring AI uses postal code as a feature and is more accurate for it. Where is the core problem?"),
+    a: [
+      I("Kein Problem — höhere Treffsicherheit ist immer gut", "No problem — higher accuracy is always good"),
+      I("Die PLZ kann als Stellvertreter (Proxy) für Herkunft/Ethnie wirken und so verdeckte Diskriminierung erzeugen", "Postal code can act as a proxy for origin/ethnicity, producing hidden discrimination"),
+      I("Postleitzahlen ändern sich zu oft", "Postal codes change too often"),
+      I("Das Modell wird dadurch langsamer", "It makes the model slower"),
+    ], correct: 1,
+    expl: I("Proxy-Variable = ein scheinbar neutrales Merkmal, das stark mit einem geschützten Merkmal korreliert. Wohnort/PLZ hängt vielerorts mit Herkunft und Einkommen zusammen; das Modell kann darüber faktisch nach Ethnie diskriminieren, ohne sie je direkt zu nutzen. Höhere Treffsicherheit rechtfertigt das nicht — rechtlich (Antidiskriminierung) und ethisch ist es unzulässig. Solche Proxys müssen aktiv gesucht und geprüft werden.",
+            "Proxy variable = a seemingly neutral feature strongly correlated with a protected attribute. Place of residence/postal code often correlates with origin and income; the model can effectively discriminate by ethnicity without ever using it directly. Higher accuracy doesn't justify this — legally (anti-discrimination) and ethically it's impermissible. Such proxies must be actively sought out and tested."),
+  },
+  {
+    dim: "lead", diff: 4,
+    q: I("Eine Abteilung meldet nach KI-Einführung 30 % 'Zeitersparnis', aber die Durchlaufzeit der Gesamtprozesse ist unverändert. Was ist die wahrscheinlichste Erklärung?",
+         "After AI rollout, a department reports 30% 'time saved', but end-to-end process lead time is unchanged. What's the most likely explanation?"),
+    a: [
+      I("Die Mitarbeiter lügen", "The employees are lying"),
+      I("Lokale Einsparung an einzelnen Schritten verpufft, wenn Engpässe woanders liegen oder gewonnene Zeit nicht umgewidmet wird", "Local savings at individual steps evaporate if bottlenecks lie elsewhere or freed time isn't reallocated"),
+      I("KI funktioniert grundsätzlich nicht", "AI fundamentally doesn't work"),
+      I("Die Zeit wurde falsch gemessen, mehr nicht", "The time was just mismeasured, nothing more"),
+    ], correct: 1,
+    expl: I("Ein klassischer Trugschluss: Effizienzgewinn an einer Teilaufgabe (lokale Optimierung) verbessert das Gesamtergebnis nur, wenn dort der Engpass saß und die freigewordene Zeit sinnvoll genutzt wird. Liegt der Flaschenhals woanders (z. B. Freigaben, Wartezeiten), bleibt die Durchlaufzeit gleich. Führungsaufgabe ist, am echten Engpass anzusetzen und gewonnene Kapazität bewusst umzuwidmen — sonst ist die 'Ersparnis' nur auf dem Papier.",
+            "A classic fallacy: an efficiency gain on a sub-task (local optimization) improves the whole only if that was the bottleneck and the freed time is used well. If the bottleneck is elsewhere (e.g. approvals, waiting), lead time stays the same. The leadership task is to target the real bottleneck and deliberately reallocate freed capacity — otherwise the 'saving' is only on paper."),
+  },
+  {
+    dim: "practice", diff: 4,
+    q: I("Du baust einen Agenten, der eigenständig E-Mails beantwortet und dafür auf interne Systeme zugreift. Welche Architektur-Entscheidung begrenzt das Schadensrisiko am wirksamsten?",
+         "You build an agent that autonomously answers emails and accesses internal systems. Which architecture decision most effectively limits damage risk?"),
+    a: [
+      I("Dem Agenten volle Schreibrechte geben, damit er flexibel ist", "Give the agent full write access so it's flexible"),
+      I("Geringste nötige Rechte vergeben und kritische Aktionen über eine menschliche Freigabe leiten (Principle of Least Privilege + Human-in-the-Loop)", "Grant least privilege and route critical actions through human approval (least privilege + human-in-the-loop)"),
+      I("Den Agenten möglichst oft laufen lassen", "Run the agent as often as possible"),
+      I("Auf Logging verzichten, um Speicher zu sparen", "Skip logging to save storage"),
+    ], correct: 1,
+    expl: I("Zwei bewährte Prinzipien: 'Least Privilege' (geringste notwendige Rechte) heißt, der Agent darf nur das, was er für seine Aufgabe zwingend braucht — kein pauschaler Vollzugriff. 'Human-in-the-Loop' heißt, folgenreiche Schritte (z. B. Versand nach außen, Löschen, Zahlungen) brauchen eine menschliche Bestätigung. Zusammen begrenzen sie den maximalen Schaden, falls der Agent etwas falsch interpretiert — bei autonomen Agenten essenziell.",
+            "Two proven principles: 'least privilege' means the agent may only do what it strictly needs — no blanket full access. 'Human-in-the-loop' means consequential steps (e.g. sending externally, deleting, payments) require human confirmation. Together they cap the maximum damage if the agent misinterprets something — essential for autonomous agents."),
+  },
+  {
+    dim: "understand", diff: 4,
+    q: I("Zwei Modelle haben dieselbe Antwortqualität, aber Modell A nutzt 8.000 Tokens 'Reasoning' pro Antwort, Modell B 200. Wann ist A trotzdem die schlechtere Wahl?",
+         "Two models have equal answer quality, but Model A uses 8,000 'reasoning' tokens per answer, Model B uses 200. When is A still the worse choice?"),
+    a: [
+      I("Nie — mehr Reasoning ist immer besser", "Never — more reasoning is always better"),
+      I("Bei hohem Volumen einfacher Anfragen, wo As Mehrkosten und Latenz keinen Qualitätsvorteil bringen", "For high volumes of simple requests, where A's extra cost and latency buy no quality gain"),
+      I("Nur wenn A quelloffen ist", "Only if A is open source"),
+      I("Wenn B mehr Parameter hat", "If B has more parameters"),
+    ], correct: 1,
+    expl: I("'Reasoning-Tokens' sind interne Denkschritte, die das Modell vor der Antwort erzeugt — sie kosten Geld und Zeit (Latenz). Bei gleicher Endqualität ist das teure Modell nur dann sinnvoll, wenn die Aufgabe diese Tiefe wirklich braucht. Für große Mengen einfacher Anfragen ist es Verschwendung: höhere Kosten und langsamere Antworten ohne Nutzen. Genau dafür gibt es Model-Routing — schwer zu Stark, einfach zu Schlank.",
+            "'Reasoning tokens' are internal thinking steps the model generates before answering — they cost money and time (latency). At equal final quality, the expensive model only makes sense if the task truly needs that depth. For large volumes of simple requests it's wasteful: higher cost and slower answers with no benefit. This is exactly what model routing is for — hard to strong, easy to lean."),
+  },
+  {
+    dim: "evaluate", diff: 4,
+    q: I("Eine Studie 'beweist', dass KI-Nutzer 40 % produktiver sind. Welche Rückfrage entlarvt am ehesten einen Denkfehler?",
+         "A study 'proves' AI users are 40% more productive. Which follow-up question is most likely to expose a flaw?"),
+    a: [
+      I("Welche Schriftart die Studie nutzt", "What font the study uses"),
+      I("Wurden Nutzer/Nicht-Nutzer zufällig zugeteilt — oder waren die Produktiveren ohnehin eher KI-affin (Selektionseffekt)?", "Were users/non-users randomly assigned — or were the more productive ones already more AI-inclined (selection effect)?"),
+      I("Wie lang die Studie ist", "How long the study is"),
+      I("Ob die Studie ein Logo hat", "Whether the study has a logo"),
+    ], correct: 1,
+    expl: I("Korrelation ist nicht Kausalität. Wenn sich Menschen selbst aussuchen, ob sie KI nutzen, sind die Nutzer womöglich von vornherein leistungsstärker oder technikaffiner — dann misst die Studie diesen Unterschied, nicht die Wirkung der KI (Selektionseffekt/Selbstselektion). Belastbar wird es erst durch zufällige Zuteilung (randomisierter Vergleich) oder sauberes Herausrechnen solcher Störfaktoren. Das ist die entscheidende Rückfrage.",
+            "Correlation isn't causation. If people self-select into using AI, the users may already be higher performers or more tech-savvy — then the study measures that difference, not AI's effect (selection effect/self-selection). It only becomes solid with random assignment (a randomized comparison) or proper control for such confounders. That's the decisive follow-up."),
+  },
+  {
+    dim: "apply", diff: 4,
+    q: I("Du sollst entscheiden, ob sensible Kundendaten per Cloud-API oder lokalem Modell verarbeitet werden. Das Cloud-Modell ist deutlich besser. Welche Frage ist für die Entscheidung am wichtigsten?",
+         "You must decide whether to process sensitive customer data via cloud API or a local model. The cloud model is clearly better. Which question matters most for the decision?"),
+    a: [
+      I("Welches Modell die schönere Oberfläche hat", "Which model has the nicer interface"),
+      I("Was der Datenverarbeitungsvertrag zusichert: Werden Daten gespeichert, zum Training genutzt, wo liegen die Server (Rechtsraum)?", "What the data-processing agreement guarantees: are data stored, used for training, where are the servers (jurisdiction)?"),
+      I("Wie viele Nutzer das Cloud-Modell hat", "How many users the cloud model has"),
+      I("Ob das lokale Modell ein Logo hat", "Whether the local model has a logo"),
+    ], correct: 1,
+    expl: I("Bei sensiblen Daten entscheidet nicht die reine Leistung, sondern der Datenfluss und seine vertragliche Absicherung. Ein Auftragsverarbeitungsvertrag (AVV/DPA) regelt: Werden Eingaben gespeichert, fließen sie ins Training, in welchem Rechtsraum stehen die Server? Erlaubt der AVV keine Speicherung/kein Training und liegt der Serverstandort im akzeptablen Rechtsraum, kann auch Cloud vertretbar sein — sonst zwingt der Datenschutz zur lokalen Lösung trotz schlechterer Qualität.",
+            "With sensitive data, raw capability isn't the deciding factor — the data flow and its contractual safeguards are. A data-processing agreement (DPA) governs: are inputs stored, do they feed training, in which jurisdiction are the servers? If the DPA forbids storage/training and the server location is in an acceptable jurisdiction, cloud can be defensible — otherwise data protection forces a local solution despite lower quality."),
+  },
+);
+
+
+// ============================================================
 // TRAPS (control items — catch external-tool usage)
 // ============================================================
 POOL.push(
@@ -1083,5 +1208,22 @@ export function drawItems(pool, n, area, rngSeed, excludeDims) {
   const picked = [...traps.slice(0, wantTraps)];
   const ordered = [...ctxMatch, ...rest];
   for (const q of ordered) { if (picked.length >= n) break; picked.push(q); }
-  return shuffle(picked).slice(0, n);
+  const chosen = shuffle(picked).slice(0, n);
+
+  // Shuffle the answer options within each question and remap `correct`.
+  // Traps are skipped — several of them depend on option position by design.
+  return chosen.map((q) => {
+    if (q.trap) return q;
+    const idx = q.a.map((_, i) => i);
+    // Fisher–Yates on the index list using the same seeded rng.
+    for (let i = idx.length - 1; i > 0; i--) {
+      const j = Math.floor(rnd() * (i + 1));
+      [idx[i], idx[j]] = [idx[j], idx[i]];
+    }
+    return {
+      ...q,
+      a: idx.map((i) => q.a[i]),
+      correct: idx.indexOf(q.correct),
+    };
+  });
 }

@@ -1,63 +1,25 @@
 [
   {
-    "version": "2.2.3",
+    "version": "2.3.0",
     "date": "2026-06-14",
-    "title": {
-      "de": "release.yml",
-      "en": "release.yml"
-    },
+    "title": { "de": "Antwortmischung & schwerere Fragen", "en": "Answer shuffling & harder questions" },
     "notes": {
       "de": [
-        "release.yml"
+        "Bugfix: Antwortoptionen werden jetzt pro Durchlauf zufällig gemischt — die richtige Antwort ist nicht mehr fast immer B.",
+        "Neu: 9 anspruchsvolle Fragen (Schwierigkeit 4) mit ausführlichen Erläuterungen.",
+        "Erläuterungen erklären Fachbegriffe und Kürzel (RAG, DPA/AVV, Recall, Latenz, Proxy-Variable u. a.)."
       ],
       "en": [
-        "release.yml"
-      ]
-    }
-  },
-  {
-    "version": "2.2.2",
-    "date": "2026-06-14",
-    "title": {
-      "de": "Automatik-Testlauf",
-      "en": "Automatik-Testlauf"
-    },
-    "notes": {
-      "de": [
-        "Automatik-Testlauf"
-      ],
-      "en": [
-        "Automatik-Testlauf"
-      ]
-    }
-  },
-  {
-    "version": "2.2.1",
-    "date": "2026-06-14",
-    "title": {
-      "de": "Create release.yml Workflow hinzufügen",
-      "en": "Create release.yml Workflow hinzufügen"
-    },
-    "notes": {
-      "de": [
-        "Create release.yml Workflow hinzufügen",
-        "Update README.md",
-        "Add files via upload"
-      ],
-      "en": [
-        "Create release.yml Workflow hinzufügen",
-        "Update README.md",
-        "Add files via upload"
+        "Bugfix: answer options are now shuffled per run — the correct answer is no longer almost always B.",
+        "New: 9 challenging questions (difficulty 4) with detailed explanations.",
+        "Explanations now gloss technical terms and abbreviations (RAG, DPA, recall, latency, proxy variable, etc.)."
       ]
     }
   },
   {
     "version": "2.2.0",
     "date": "2026-06-14",
-    "title": {
-      "de": "Verlinkte wissenschaftliche Quellen",
-      "en": "Linked scientific sources"
-    },
+    "title": { "de": "Verlinkte wissenschaftliche Quellen", "en": "Linked scientific sources" },
     "notes": {
       "de": [
         "Neu: aufklappbarer Quellen-Block auf der Startseite und im Ergebnisbericht.",
@@ -72,10 +34,7 @@
   {
     "version": "2.1.0",
     "date": "2026-06-14",
-    "title": {
-      "de": "Top-3-Tipps, Avatar-Verlauf & Verallgemeinerung",
-      "en": "Top 3 tips, avatar history & generalization"
-    },
+    "title": { "de": "Top-3-Tipps, Avatar-Verlauf & Verallgemeinerung", "en": "Top 3 tips, avatar history & generalization" },
     "notes": {
       "de": [
         "Neu: Top-3-Tipps am Ende, abgeleitet aus dem konkreten Ergebnis.",
@@ -96,10 +55,7 @@
   {
     "version": "2.0.0",
     "date": "2026-06-14",
-    "title": {
-      "de": "Sofort-Feedback, Fragen-Review & mehr Fragen",
-      "en": "Instant feedback, question review & more questions"
-    },
+    "title": { "de": "Sofort-Feedback, Fragen-Review & mehr Fragen", "en": "Instant feedback, question review & more questions" },
     "notes": {
       "de": [
         "Neu: Sofort-Feedback nach jeder Frage (richtig/falsch + Erläuterung).",
@@ -118,10 +74,7 @@
   {
     "version": "1.0.0",
     "date": "2026-06-14",
-    "title": {
-      "de": "Erstveröffentlichung",
-      "en": "Initial release"
-    },
+    "title": { "de": "Erstveröffentlichung", "en": "Initial release" },
     "notes": {
       "de": [
         "Anonymes KI-Kompetenz-Self-Assessment für Führungskräfte.",
