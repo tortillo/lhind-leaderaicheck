@@ -132,6 +132,17 @@ const STR = {
     progressTitle: "Deine Entwicklung",
     progressIntro: "Frühere Durchläufe unter diesem Avatar-Namen:",
     progressDelta: "Veränderung zum letzten Mal",
+    viewProfile: "Profil ansehen",
+    profileLookupTitle: "Eigenes Profil wieder aufrufen",
+    profileTitle: "Profil",
+    profileEmpty: "Noch keine Ergebnisse unter diesem Namen.",
+    profileEmptyHint: "Mach den Test und gib zu Beginn genau diesen Avatar-Namen an — dann sammeln sich deine Ergebnisse hier und du siehst deine Entwicklung über die Zeit.",
+    profileRuns: "Durchläufe",
+    profileLatest: "Zuletzt",
+    profileBest: "Bestwert",
+    profileDelta: "Entwicklung",
+    profileTrend: "Verlauf deiner Punktzahlen",
+    profileAddRun: "Neuen Durchlauf hinzufügen",
   },
   en: {
     appTitle: "LHIND · AI Leadership Check",
@@ -242,6 +253,17 @@ const STR = {
     progressTitle: "Your development",
     progressIntro: "Earlier runs under this avatar name:",
     progressDelta: "Change since last time",
+    viewProfile: "View profile",
+    profileLookupTitle: "Revisit your own profile",
+    profileTitle: "Profile",
+    profileEmpty: "No results under this name yet.",
+    profileEmptyHint: "Take the test and enter exactly this avatar name at the start — your results will collect here and you'll see your development over time.",
+    profileRuns: "Runs",
+    profileLatest: "Latest",
+    profileBest: "Best",
+    profileDelta: "Development",
+    profileTrend: "Your score history",
+    profileAddRun: "Add a new run",
   },
 };
 // POOL, I and drawItems are imported from ./questions (see top of file).
@@ -338,6 +360,14 @@ async function loadItemStats() {
   try { const r = await storage.get("itemstats:v2", true); return r ? JSON.parse(r.value) : {}; }
   catch { return {}; }
 }
+// All runs stored under a given avatar name (case-insensitive), oldest first.
+async function loadAvatarHistory(avatarKey) {
+  if (!avatarKey) return [];
+  try {
+    const all = await loadCohort();
+    return all.filter((e) => e.avatarKey === avatarKey).sort((a, b) => a.ts - b.ts);
+  } catch { return []; }
+}
 // Diagnostic: tells the admin which backend is active and whether reads work.
 async function storageDiagnose() {
   const shared = !!storage.isShared;
@@ -391,7 +421,8 @@ const L = (obj, lang) => (obj && typeof obj === "object" ? obj[lang] : obj);
 export default function App() {
   const [lang, setLang] = useState("de");
   const t = STR[lang];
-  const [phase, setPhase] = useState("intro"); // intro|onboard|test|done|admin
+  const [phase, setPhase] = useState("intro"); // intro|onboard|test|done|admin|profile
+  const [profileName, setProfileName] = useState("");
   const [profile, setProfile] = useState({});
   const [cohort, setCohort] = useState([]);
   const [report, setReport] = useState(null);
@@ -550,7 +581,7 @@ export default function App() {
       `}</style>
       <div style={{ maxWidth: 880, margin: "0 auto", padding: "0 20px" }}>
         <Header t={t} lang={lang} setLang={setLang} phase={phase} qi={qi} nq={items.length} setPhase={setPhase} />
-        {phase === "intro" && <Intro t={t} lang={lang} cohort={cohort} onStart={() => setPhase("onboard")} />}
+        {phase === "intro" && <Intro t={t} lang={lang} cohort={cohort} onStart={() => setPhase("onboard")} onViewProfile={(name) => { setProfileName(name); setPhase("profile"); }} />}
         {phase === "onboard" && <Onboard t={t} lang={lang} profile={profile} setProfile={setProfile} onDone={beginTest} />}
         {phase === "test" && items.length > 0 && (
           <TestView t={t} lang={lang} cur={items[qi]} qi={qi} total={items.length} timeLeft={timeLeft} timeMax={TIME_PER_Q}
@@ -559,8 +590,9 @@ export default function App() {
             revealed={revealed} onAdvance={advance}
             onPick={(i) => { setPicked(i); handleAnswer(i); }} />
         )}
-        {phase === "done" && report && <Report t={t} lang={lang} report={report} profile={profile} />}
+        {phase === "done" && report && <Report t={t} lang={lang} report={report} profile={profile} onViewProfile={(name) => { setProfileName(name); setPhase("profile"); }} />}
         {phase === "admin" && <Admin t={t} lang={lang} onBack={() => setPhase("intro")} />}
+        {phase === "profile" && <ProfileView t={t} lang={lang} name={profileName} onBack={() => setPhase("intro")} onStart={() => setPhase("onboard")} />}
         <VersionFooter lang={lang} />
       </div>
     </div>
@@ -678,8 +710,9 @@ function Header({ t, lang, setLang, phase, qi, nq, setPhase }) {
 }
 
 // ---------- Intro ----------
-function Intro({ t, lang, cohort, onStart }) {
+function Intro({ t, lang, cohort, onStart, onViewProfile }) {
   const avg = cohort.length ? Math.round(cohort.reduce((s, r) => s + r.score, 0) / cohort.length) : null;
+  const [lookupName, setLookupName] = useState("");
   return (
     <div className="fu" style={{ padding: "30px 0 44px" }}>
       <div style={{ background: C.panelHi, border: `1px solid ${C.green}`, borderRadius: 10, padding: "12px 16px", display: "flex", gap: 10, alignItems: "center", marginBottom: 30 }}>
@@ -709,6 +742,19 @@ function Intro({ t, lang, cohort, onStart }) {
       </div>
       <References lang={lang} compact />
       <button onClick={onStart} style={btnPrimary}>{t.start}</button>
+
+      {/* Profile lookup — revisit earlier results under an avatar name */}
+      <div style={{ marginTop: 22, paddingTop: 18, borderTop: `1px solid ${C.line}` }}>
+        <div style={{ fontFamily: mono, fontSize: 11, color: C.inkDim, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 8 }}>{t.profileLookupTitle}</div>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+          <input value={lookupName} maxLength={40} placeholder={t.avatarPlaceholder}
+            onChange={(e) => setLookupName(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter" && lookupName.trim()) onViewProfile(lookupName.trim()); }}
+            style={{ flex: "1 1 200px", background: C.panel, border: `1px solid ${C.line}`, color: C.ink, borderRadius: 8, padding: "10px 12px", fontSize: 14, fontFamily: mono }} />
+          <button disabled={!lookupName.trim()} onClick={() => onViewProfile(lookupName.trim())}
+            style={{ ...btnSecondary, opacity: lookupName.trim() ? 1 : 0.4, cursor: lookupName.trim() ? "pointer" : "not-allowed" }}>{t.viewProfile}</button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -959,7 +1005,8 @@ function computeReport(answers, flags, profile, points) {
 
   const recs = buildRecs(dimScores);
   const top3 = buildTop3(dimScores, seniority, integrity, { correct: trapsCorrect, total: traps.length });
-  return { totalScore, dimScores, seniority, integrity, suspicion, points, flags: { tabSwitches, pastes, timeouts, slowTraps }, traps: { correct: trapsCorrect, total: traps.length }, recs, top3 };
+  const tier = buildTier(sIndex);
+  return { totalScore, dimScores, seniority, integrity, suspicion, points, flags: { tabSwitches, pastes, timeouts, slowTraps }, traps: { correct: trapsCorrect, total: traps.length }, recs, top3, tier };
 }
 
 function buildRecs(dimScores) {
@@ -1030,6 +1077,37 @@ function buildRecs(dimScores) {
 }
 
 // Concrete, result-specific Top-3 tips (not generic advice).
+function buildTier(sIndex) {
+  // Playful "consulting-world equivalent" — clearly framed as a fun analogy,
+  // not a real claim about any company. 7 fine-grained tiers for a dynamic feel.
+  const tiers = [
+    { min: 92, emoji: "🏆", color: C.gold,
+      label: { de: "AI Leadership Champion", en: "AI Leadership Champion" },
+      analogy: { de: "Im augenzwinkernden Beratungsvergleich: Partner-Level — du würdest selbst die KI-Strategie-Practice anführen.", en: "In a tongue-in-cheek consulting comparison: partner level — you'd lead the AI strategy practice yourself." } },
+    { min: 82, emoji: "🚀", color: C.green,
+      label: { de: "AI-Native Leader", en: "AI-Native Leader" },
+      analogy: { de: "Vergleichbar mit einem Principal / Senior Manager einer Top-Beratung im Bereich KI.", en: "Comparable to a principal / senior manager at a top consultancy in the AI space." } },
+    { min: 70, emoji: "🎯", color: C.cyan,
+      label: { de: "Strategischer Anwender", en: "Strategic Practitioner" },
+      analogy: { de: "Auf dem Niveau eines erfahrenen Beraters (Senior Consultant) — du bringst KI verlässlich in Projekte.", en: "At the level of an experienced (senior) consultant — you reliably bring AI into projects." } },
+    { min: 56, emoji: "📈", color: C.amber,
+      label: { de: "Solider Praktiker", en: "Solid Practitioner" },
+      analogy: { de: "Vergleichbar mit einem Consultant mit ein paar Jahren Erfahrung — gutes Fundament, klarer Ausbaupfad.", en: "Comparable to a consultant with a few years' experience — good foundation, clear path to grow." } },
+    { min: 42, emoji: "🌱", color: C.violet,
+      label: { de: "Aufstrebender Einsteiger", en: "Rising Beginner" },
+      analogy: { de: "Etwa auf dem Niveau eines Junior-Beraters — die Grundlagen sitzen, jetzt kommt die Praxis.", en: "About at junior-consultant level — the basics are there, now comes the practice." } },
+    { min: 28, emoji: "🧭", color: C.violet,
+      label: { de: "Neugieriger Beobachter", en: "Curious Observer" },
+      analogy: { de: "Wie ein Analyst im ersten Jahr: viel Potenzial, strukturierter Aufbau lohnt sich jetzt.", en: "Like a first-year analyst: lots of potential, structured build-up pays off now." } },
+    { min: 0, emoji: "🔰", color: C.red,
+      label: { de: "Orientierungsphase", en: "Orientation Phase" },
+      analogy: { de: "Wie ein Praktikant am ersten Tag — jeder fängt hier an. Grundlagen zuerst, der Rest folgt.", en: "Like an intern on day one — everyone starts here. Fundamentals first, the rest follows." } },
+  ];
+  const t = tiers.find((x) => sIndex >= x.min) || tiers[tiers.length - 1];
+  // percentile-ish position within the tier band, for a progress feel (0-100)
+  return t;
+}
+
 function buildTop3(dimScores, sen, integrity, traps) {
   const dn = (k) => DIMS[k] ? DIMS[k] : { de: k, en: k };
   const tipByDim = {
@@ -1133,8 +1211,8 @@ function narrative(t, lang, profile, dimScores, sen, score, integrity, traps) {
 // ============================================================
 // REPORT
 // ============================================================
-function Report({ t, lang, report, profile }) {
-  const { totalScore, dimScores, seniority, integrity, recs, traps, flags, cohort, points, top3, history, avatar } = report;
+function Report({ t, lang, report, profile, onViewProfile }) {
+  const { totalScore, dimScores, seniority, integrity, recs, traps, flags, cohort, points, top3, history, avatar, tier } = report;
   const scores = (cohort || []).map((r) => r.score).sort((a, b) => a - b);
   const better = scores.filter((s) => s < totalScore).length;
   const percentile = scores.length > 1 ? Math.round((better / scores.length) * 100) : null;
@@ -1168,6 +1246,23 @@ function Report({ t, lang, report, profile }) {
           <div style={{ fontSize: 26, fontWeight: 800, color: C.gold, fontFamily: mono }}>{points}</div>
         </div>
       </div>
+
+      {/* Dynamic tier — playful consulting-world equivalent */}
+      {tier && (
+        <div style={{ background: `linear-gradient(135deg, ${C.panelHi}, ${C.panel})`, border: `1px solid ${tier.color}`, borderRadius: 14, padding: "20px 22px", margin: "20px 0" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <div style={{ fontSize: 38, lineHeight: 1 }}>{tier.emoji}</div>
+            <div>
+              <div style={{ fontFamily: mono, fontSize: 10.5, color: tier.color, letterSpacing: "0.12em", textTransform: "uppercase" }}>{lang === "de" ? "Deine Einstufung" : "Your tier"}</div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: tier.color, marginTop: 2 }}>{tier.label[lang]}</div>
+            </div>
+          </div>
+          <div style={{ fontSize: 14, color: C.ink, lineHeight: 1.55, marginTop: 12 }}>{tier.analogy[lang]}</div>
+          <div style={{ fontSize: 11, color: C.inkDim, marginTop: 8, fontStyle: "italic" }}>
+            {lang === "de" ? "Augenzwinkernder Vergleich, keine offizielle Einstufung." : "A tongue-in-cheek comparison, not an official ranking."}
+          </div>
+        </div>
+      )}
 
       {/* Avatar progress (only when a name was chosen and prior runs exist) */}
       {avatar && history && history.length > 0 && (
@@ -1329,7 +1424,12 @@ function Report({ t, lang, report, profile }) {
       {/* Training-plan prompt generator */}
       <TrainingPrompt t={t} lang={lang} profile={profile} dimScores={dimScores} seniority={seniority} totalScore={totalScore} recs={recs} />
 
-      <button onClick={() => window.location.reload()} style={btnSecondary}>{t.restart}</button>
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <button onClick={() => window.location.reload()} style={btnSecondary}>{t.restart}</button>
+        {avatar && (
+          <button onClick={() => onViewProfile && onViewProfile(avatar)} style={btnPrimary}>{t.viewProfile} · {avatar}</button>
+        )}
+      </div>
       <div style={{ fontFamily: mono, fontSize: 11, color: C.inkDim, marginTop: 16, lineHeight: 1.6 }}>{t.savedNote}</div>
     </div>
   );
@@ -1540,6 +1640,98 @@ function Radar({ dimScores, lang }) {
 // ============================================================
 // ADMIN
 // ============================================================
+function ProfileView({ t, lang, name, onBack, onStart }) {
+  const [runs, setRuns] = useState(null);
+  useEffect(() => {
+    const key = (name || "").trim().toLowerCase();
+    loadAvatarHistory(key).then(setRuns);
+  }, [name]);
+
+  if (runs === null) return <div style={{ padding: 60, fontFamily: mono, color: C.inkDim }}>…</div>;
+
+  const SEN = {
+    1: { de: "Orientierungsphase", en: "Orientation Phase", color: C.red },
+    2: { de: "Neugieriger Beobachter", en: "Curious Observer", color: C.violet },
+    3: { de: "Aufgeklärter Einsteiger", en: "Informed Beginner", color: C.amber },
+    4: { de: "Strategischer Anwender", en: "Strategic Practitioner", color: C.cyan },
+    5: { de: "AI-Native Leader", en: "AI-Native Leader", color: C.green },
+  };
+  const fmtDate = (ts) => new Date(ts).toLocaleDateString(lang === "de" ? "de-DE" : "en-GB", { day: "2-digit", month: "short", year: "numeric" });
+
+  return (
+    <div className="fu" style={{ padding: "28px 0" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+        <div>
+          <Eyebrow color={C.cyan}>{t.profileTitle}</Eyebrow>
+          <div style={{ fontSize: 26, fontWeight: 800, marginTop: 6 }}>{name}</div>
+        </div>
+        <button onClick={onBack} style={btnSecondary}>{t.backToStart}</button>
+      </div>
+
+      {runs.length === 0 ? (
+        <div style={{ background: C.panel, border: `1px solid ${C.line}`, borderRadius: 12, padding: "24px 20px", marginTop: 22 }}>
+          <div style={{ fontSize: 15, marginBottom: 8 }}>{t.profileEmpty}</div>
+          <div style={{ color: C.inkDim, fontSize: 13.5, lineHeight: 1.55, marginBottom: 18 }}>{t.profileEmptyHint}</div>
+          <button onClick={onStart} style={btnPrimary}>{t.start}</button>
+        </div>
+      ) : (() => {
+        const scores = runs.map((r) => r.score);
+        const best = Math.max(...scores);
+        const latest = scores[scores.length - 1];
+        const first = scores[0];
+        const max = Math.max(...scores, 100);
+        const delta = latest - first;
+        return (
+          <>
+            {/* Summary */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(130px,1fr))", gap: 12, margin: "22px 0" }}>
+              <Stat label={t.profileRuns} value={runs.length} color={C.cyan} />
+              <Stat label={t.profileLatest} value={latest} color={C.gold} />
+              <Stat label={t.profileBest} value={best} color={C.green} />
+              <Stat label={t.profileDelta} value={(delta > 0 ? "+" : "") + delta} color={delta >= 0 ? C.green : C.red} />
+            </div>
+
+            {/* Trend chart */}
+            <div style={{ background: C.panel, border: `1px solid ${C.line}`, borderRadius: 12, padding: "18px 20px", margin: "16px 0" }}>
+              <Eyebrow color={C.cyan}>{t.profileTrend}</Eyebrow>
+              <div style={{ display: "flex", gap: 6, alignItems: "flex-end", height: 90, marginTop: 14 }}>
+                {runs.map((r, i) => {
+                  const isLast = i === runs.length - 1;
+                  const sen = SEN[r.seniority] || SEN[1];
+                  return (
+                    <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4, minWidth: 30 }}>
+                      <div style={{ fontFamily: mono, fontSize: 11, color: isLast ? C.gold : C.inkDim }}>{r.score}</div>
+                      <div title={fmtDate(r.ts)} style={{ width: "100%", maxWidth: 44, height: `${Math.max(6, (r.score / max) * 60)}px`, background: isLast ? C.gold : sen.color, borderRadius: 3, opacity: isLast ? 1 : 0.8 }} />
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Run list */}
+            <div style={{ display: "grid", gap: 10, margin: "16px 0" }}>
+              {[...runs].reverse().map((r, i) => {
+                const sen = SEN[r.seniority] || SEN[1];
+                return (
+                  <div key={i} style={{ background: C.panel, border: `1px solid ${C.line}`, borderRadius: 10, padding: "12px 16px", display: "flex", alignItems: "center", gap: 14 }}>
+                    <div style={{ fontFamily: mono, fontSize: 20, fontWeight: 800, color: sen.color, minWidth: 44 }}>{r.score}</div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: sen.color }}>{sen[lang]}</div>
+                      <div style={{ fontFamily: mono, fontSize: 11, color: C.inkDim }}>{fmtDate(r.ts)}{r.area ? " · " + r.area : ""}</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <button onClick={onStart} style={btnPrimary}>{t.profileAddRun}</button>
+          </>
+        );
+      })()}
+    </div>
+  );
+}
+
 function Admin({ t, lang, onBack }) {
   const [authed, setAuthed] = useState(false);
   const [pin, setPin] = useState("");

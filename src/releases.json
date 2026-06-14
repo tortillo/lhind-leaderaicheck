@@ -1,27 +1,25 @@
 [
   {
-    "version": "2.3.1",
+    "version": "2.4.0",
     "date": "2026-06-14",
-    "title": {
-      "de": "Immer B richtig, Schwierigkeitsgrad der Fragen erhöht und Zugriffsregel (RLS-Policy) manuell hinzugefügt",
-      "en": "Immer B richtig, Schwierigkeitsgrad der Fragen erhöht und Zugriffsregel (RLS-Policy) manuell hinzugefügt"
-    },
+    "title": { "de": "Profil-Ansicht & dynamische Einstufung", "en": "Profile view & dynamic tier" },
     "notes": {
       "de": [
-        "Immer B richtig, Schwierigkeitsgrad der Fragen erhöht und Zugriffsregel (RLS-Policy) manuell hinzugefügt"
+        "Neu: Profil-Ansicht — über den Avatar-Namen lassen sich frühere Ergebnisse jederzeit wieder aufrufen (Verlauf, Bestwert, Entwicklung).",
+        "Neu: 'Profil ansehen' am Ende des Berichts und auf der Startseite.",
+        "Neu: dynamische Einstufung mit augenzwinkerndem Beratungsvergleich (von 'Orientierungsphase' bis 'AI Leadership Champion')."
       ],
       "en": [
-        "Immer B richtig, Schwierigkeitsgrad der Fragen erhöht und Zugriffsregel (RLS-Policy) manuell hinzugefügt"
+        "New: profile view — revisit earlier results anytime via the avatar name (history, best, development).",
+        "New: 'View profile' at the end of the report and on the start page.",
+        "New: dynamic tier with a tongue-in-cheek consulting comparison (from 'Orientation Phase' to 'AI Leadership Champion')."
       ]
     }
   },
   {
     "version": "2.3.0",
     "date": "2026-06-14",
-    "title": {
-      "de": "Antwortmischung & schwerere Fragen",
-      "en": "Answer shuffling & harder questions"
-    },
+    "title": { "de": "Antwortmischung & schwerere Fragen", "en": "Answer shuffling & harder questions" },
     "notes": {
       "de": [
         "Bugfix: Antwortoptionen werden jetzt pro Durchlauf zufällig gemischt — die richtige Antwort ist nicht mehr fast immer B.",
@@ -38,10 +36,7 @@
   {
     "version": "2.2.0",
     "date": "2026-06-14",
-    "title": {
-      "de": "Verlinkte wissenschaftliche Quellen",
-      "en": "Linked scientific sources"
-    },
+    "title": { "de": "Verlinkte wissenschaftliche Quellen", "en": "Linked scientific sources" },
     "notes": {
       "de": [
         "Neu: aufklappbarer Quellen-Block auf der Startseite und im Ergebnisbericht.",
@@ -56,10 +51,7 @@
   {
     "version": "2.1.0",
     "date": "2026-06-14",
-    "title": {
-      "de": "Top-3-Tipps, Avatar-Verlauf & Verallgemeinerung",
-      "en": "Top 3 tips, avatar history & generalization"
-    },
+    "title": { "de": "Top-3-Tipps, Avatar-Verlauf & Verallgemeinerung", "en": "Top 3 tips, avatar history & generalization" },
     "notes": {
       "de": [
         "Neu: Top-3-Tipps am Ende, abgeleitet aus dem konkreten Ergebnis.",
@@ -80,10 +72,7 @@
   {
     "version": "2.0.0",
     "date": "2026-06-14",
-    "title": {
-      "de": "Sofort-Feedback, Fragen-Review & mehr Fragen",
-      "en": "Instant feedback, question review & more questions"
-    },
+    "title": { "de": "Sofort-Feedback, Fragen-Review & mehr Fragen", "en": "Instant feedback, question review & more questions" },
     "notes": {
       "de": [
         "Neu: Sofort-Feedback nach jeder Frage (richtig/falsch + Erläuterung).",
@@ -102,10 +91,7 @@
   {
     "version": "1.0.0",
     "date": "2026-06-14",
-    "title": {
-      "de": "Erstveröffentlichung",
-      "en": "Initial release"
-    },
+    "title": { "de": "Erstveröffentlichung", "en": "Initial release" },
     "notes": {
       "de": [
         "Anonymes KI-Kompetenz-Self-Assessment für Führungskräfte.",
