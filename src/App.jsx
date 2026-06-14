@@ -1,0 +1,2009 @@
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { storage } from "./storage";
+
+// ============================================================
+// LHIND AI LEADERSHIP ASSESSMENT — v2
+// Design: "Flight deck" cockpit instrumentation. Deep navy panels,
+// amber/cyan/green instrument accents, mono data type + Inter.
+// Features: DE/EN, randomized scientific item pool, gamification
+// (speed bonus + streak), anti-cheat, cohort + study benchmarks,
+// PIN admin panel with hardest-question analysis. Persistent shared storage.
+// ============================================================
+
+const C = {
+  bg: "#0B1622", panel: "#10202F", panelHi: "#15293B", line: "#1F3A52",
+  ink: "#E8F0F6", inkDim: "#8AA6BC", amber: "#F5A623", cyan: "#36C9D9",
+  green: "#4FD18B", red: "#F0556B", violet: "#9B7BE0", gold: "#FFD166",
+};
+const mono = "'JetBrains Mono',ui-monospace,monospace";
+const sans = "'Inter',system-ui,-apple-system,sans-serif";
+
+// === inlined i18n ===
+// i18n strings DE/EN
+const STR = {
+  de: {
+    appTitle: "LHIND · AI Leadership Check",
+    appSub: "ANONYM · FÜR FÜHRUNGSKRÄFTE",
+    forLeaders: "FÜR FÜHRUNGSKRÄFTE",
+    question: "FRAGE",
+    privacyBanner: "Es werden keine personenbezogenen Daten gespeichert. Keine Namen, keine E-Mail, keine IP. Nur anonyme, aggregierte Kennzahlen für deinen Vergleich.",
+    introEyebrow: "Selbsteinschätzung · 20 Fragen · ~12 Min",
+    introH1: "Wie KI-fit ist deine Führung?",
+    introP: "Ein anonymer Check zu KI-Grundwissen, Anwendung im Business und Führung im KI-Zeitalter — plus ein Praxistest. Am Ende: dein Score, ein Vergleich mit anderen Führungskräften und mit Studiendaten, sowie konkrete nächste Schritte.",
+    fairnessTitle: "⚠ FAIRNESS & SPIELREGELN",
+    fairnessText: "Pro Frage läuft ein Countdown — je schneller du richtig liegst, desto mehr Bonuspunkte. Der Test enthält Kontroll-Fragen und erkennt Tab-Wechsel & Einfügen. Die Fragen werden zufällig aus einem großen Pool gezogen, ein erneuter Versuch bringt also neue Fragen. Antworte ehrlich und ohne fremde Hilfe.",
+    participantsSoFar: "Teilnehmer bisher",
+    avgScore: "Ø-Score",
+    start: "Check starten →",
+    step1: "Schritt 1 · Basisdaten (anonym)",
+    onboardH2: "Ein paar Eckdaten",
+    onboardP: "Keine Namen, keine E-Mail. Nur für die anonyme Auswertung, deinen Vergleich und die Personalisierung deiner Fragen.",
+    role: "Deine Rolle",
+    age: "Altersgruppe",
+    area: "Bereich",
+    leadExp: "Führungserfahrung",
+    teamSize: "Teamgröße",
+    self: "Selbsteinschätzung: professionelle KI-Nutzung",
+    timeSaved: "Wie viel Zeit spart dir KI aktuell pro Tag?",
+    savingPotential: "Bei welcher Tätigkeit siehst du das höchste Spar-/Nutzenpotenzial?",
+    otherPlaceholder: "Bitte angeben…",
+    toTest: "Zum Test →",
+    bauch: "Keine Korrektur sichtbar — antworte aus dem Bauch.",
+    anomalies: "Auffälligkeit",
+    anomaliesPl: "Auffälligkeiten",
+    speedBonus: "TEMPO-BONUS",
+    streak: "SERIE",
+    yourResult: "Dein Ergebnis · anonym gespeichert",
+    ofPoints: "VON 100 PUNKTEN",
+    seniority: "SENIORITÄT",
+    cohortCompare: "Vergleich mit anderen Führungskräften",
+    betterThan: "Du bist besser als",
+    ofParticipants: "der bisher",
+    participants: "Teilnehmer",
+    avgIs: "Der Durchschnitt liegt bei",
+    firstParticipant: "Du bist unter den ersten Teilnehmern — sobald mehr Kolleg:innen teilnehmen, erscheint hier dein Perzentil-Vergleich.",
+    currentAvg: "Aktueller Ø",
+    studyCompare: "Vergleich mit Studiendaten",
+    competencyProfile: "Kompetenz-Profil",
+    integrityCheck: "INTEGRITÄTS-CHECK",
+    tabSwitch: "Tab-Wechsel",
+    paste: "Einfügen",
+    timeouts: "Zeitüberschreitungen",
+    controlQ: "Kontroll-Fragen",
+    yourPlacement: "Deine Einordnung",
+    nextSteps: "Empfohlene nächste Schritte",
+    focus: "Fokus",
+    training: "Weiterbildung",
+    skills: "Praktische Fähigkeiten",
+    books: "Bücher",
+    restart: "Erneut starten (neue Fragen)",
+    savedNote: "Dein Ergebnis wurde anonym zur Kohorten-Auswertung gespeichert (Score, Seniorität, Rolle, Bereich, Altersgruppe, Selbsteinschätzung). Keine Namen, keine Antworten im Klartext.",
+    admin: "Admin",
+    adminTitle: "Admin-Dashboard",
+    adminSub: "Aggregierte Auswertung aller Durchläufe",
+    totalRuns: "Durchläufe gesamt",
+    avgScoreAdmin: "Ø-Score",
+    medianScore: "Median",
+    avgIntegrity: "Ø-Integrität sauber",
+    byRole: "Nach Rolle",
+    byArea: "Nach Bereich",
+    byAge: "Nach Altersgruppe",
+    hardestQuestions: "Schwierigste Fragen (Trainingsbedarf)",
+    hardestSub: "Fragen mit der niedrigsten Korrektquote — Kandidaten für gezielte Schulungen",
+    correctRate: "Korrektquote",
+    timesAsked: "Mal gestellt",
+    resetAll: "Alle Daten zurücksetzen",
+    resetConfirm: "Wirklich ALLE anonymen Ergebnisse löschen? Das kann nicht rückgängig gemacht werden.",
+    backToStart: "← Zurück zum Start",
+    noData: "Noch keine Daten vorhanden.",
+    enterPin: "Admin-PIN eingeben",
+    wrongPin: "Falsche PIN.",
+    unlock: "Entsperren",
+    quizComplete: "Geschafft!",
+    seniorityScale: "Senioritäts-Skala",
+    studyNote: "Benchmarks aus NBER/St. Louis Fed Real-Time Population Survey (2024–25) und AI-Literacy-Forschung (Ng et al. 2021; Carolus et al. 2023).",
+    methodologyTitle: "Methodik",
+    methodology: "Fragen sind nach dem AI-Literacy-Framework von Ng et al. (2021) — Verstehen, Anwenden, Bewerten/Erstellen, Ethik — strukturiert und nach Bloom-Schwierigkeitsstufen kalibriert. Pro Durchlauf werden Items zufällig und schwierigkeitsbalanciert aus einem großen Pool gezogen.",
+    points: "Pkt",
+    pause: "Pause", resume: "Weiter",
+    pausedTitle: "Pausiert",
+    pausedHint: "Frage ausgeblendet. Die Zeit ist angehalten — niemand kann mitlesen oder kopieren.",
+    answered: "beantwortet", remaining: "offen",
+    trainingPromptTitle: "Dein persönlicher Trainingsplan-Prompt",
+    trainingPromptHint: "Kopiere diesen Prompt in deine bevorzugte KI (Claude, ChatGPT, Gemini …). Er erstellt dir auf Basis deiner Ergebnisse einen aktuellen, individuellen Trainingsplan — ganz ohne dass hier Daten gespeichert werden.",
+    copyPrompt: "Prompt kopieren",
+    copied: "Kopiert ✓",
+    resourcesTitle: "Zertifikate, Videos & Quellen",
+  },
+  en: {
+    appTitle: "LHIND · AI Leadership Check",
+    appSub: "ANONYMOUS · FOR LEADERS",
+    forLeaders: "FOR LEADERS",
+    question: "QUESTION",
+    privacyBanner: "No personal data is stored. No names, no email, no IP. Only anonymous, aggregated metrics for your comparison.",
+    introEyebrow: "Self-assessment · 20 questions · ~12 min",
+    introH1: "How AI-fit is your leadership?",
+    introP: "An anonymous check on AI fundamentals, business application and leadership in the AI era — plus a practical test. At the end: your score, a comparison with other leaders and with study data, and concrete next steps.",
+    fairnessTitle: "⚠ FAIRNESS & RULES",
+    fairnessText: "Each question has a countdown — the faster you answer correctly, the more bonus points. The test includes control questions and detects tab switches & pasting. Questions are drawn randomly from a large pool, so a retry gives you new questions. Answer honestly and without outside help.",
+    participantsSoFar: "participants so far",
+    avgScore: "avg score",
+    start: "Start check →",
+    step1: "Step 1 · Basics (anonymous)",
+    onboardH2: "A few basics",
+    onboardP: "No names, no email. Only for anonymous analysis, your comparison and personalizing your questions.",
+    role: "Your role",
+    age: "Age group",
+    area: "Business area",
+    leadExp: "Leadership experience",
+    teamSize: "Team size",
+    self: "Self-assessment: professional AI usage",
+    timeSaved: "How much time does AI currently save you per day?",
+    savingPotential: "Where do you see the highest saving / value potential?",
+    otherPlaceholder: "Please specify…",
+    toTest: "To the test →",
+    bauch: "No feedback shown — go with your gut.",
+    anomalies: "anomaly",
+    anomaliesPl: "anomalies",
+    speedBonus: "SPEED BONUS",
+    streak: "STREAK",
+    yourResult: "Your result · stored anonymously",
+    ofPoints: "OF 100 POINTS",
+    seniority: "SENIORITY",
+    cohortCompare: "Comparison with other leaders",
+    betterThan: "You are better than",
+    ofParticipants: "of the",
+    participants: "participants so far",
+    avgIs: "The average is",
+    firstParticipant: "You're among the first participants — once more colleagues take part, your percentile comparison will appear here.",
+    currentAvg: "Current avg",
+    studyCompare: "Comparison with study data",
+    competencyProfile: "Competency profile",
+    integrityCheck: "INTEGRITY CHECK",
+    tabSwitch: "Tab switches",
+    paste: "Pastes",
+    timeouts: "Timeouts",
+    controlQ: "Control questions",
+    yourPlacement: "Your assessment",
+    nextSteps: "Recommended next steps",
+    focus: "Focus",
+    training: "Training",
+    skills: "Practical skills",
+    books: "Books",
+    restart: "Restart (new questions)",
+    savedNote: "Your result was stored anonymously for cohort analysis (score, seniority, role, area, age group, self-assessment). No names, no answers in plain text.",
+    admin: "Admin",
+    adminTitle: "Admin dashboard",
+    adminSub: "Aggregated analysis of all runs",
+    totalRuns: "Total runs",
+    avgScoreAdmin: "Avg score",
+    medianScore: "Median",
+    avgIntegrity: "Clean integrity rate",
+    byRole: "By role",
+    byArea: "By area",
+    byAge: "By age group",
+    hardestQuestions: "Hardest questions (training needs)",
+    hardestSub: "Questions with the lowest correct rate — candidates for targeted training",
+    correctRate: "Correct rate",
+    timesAsked: "times asked",
+    resetAll: "Reset all data",
+    resetConfirm: "Really delete ALL anonymous results? This cannot be undone.",
+    backToStart: "← Back to start",
+    noData: "No data yet.",
+    enterPin: "Enter admin PIN",
+    wrongPin: "Wrong PIN.",
+    unlock: "Unlock",
+    quizComplete: "Done!",
+    seniorityScale: "Seniority scale",
+    studyNote: "Benchmarks from NBER/St. Louis Fed Real-Time Population Survey (2024–25) and AI literacy research (Ng et al. 2021; Carolus et al. 2023).",
+    methodologyTitle: "Methodology",
+    methodology: "Questions are structured along Ng et al. (2021)'s AI literacy framework — Understand, Apply, Evaluate/Create, Ethics — and calibrated by Bloom difficulty levels. Each run draws items randomly and difficulty-balanced from a large pool.",
+    points: "pts",
+    pause: "Pause", resume: "Resume",
+    pausedTitle: "Paused",
+    pausedHint: "Question hidden. The timer is frozen — nobody can read along or copy.",
+    answered: "answered", remaining: "left",
+    trainingPromptTitle: "Your personal training-plan prompt",
+    trainingPromptHint: "Copy this prompt into your preferred AI (Claude, ChatGPT, Gemini …). Based on your results it will build a current, individual training plan — without any data being stored here.",
+    copyPrompt: "Copy prompt",
+    copied: "Copied ✓",
+    resourcesTitle: "Certificates, videos & sources",
+  },
+};
+// === inlined pool ===
+// ============================================================
+// ITEM POOL — structured along Ng et al. (2021) AI-literacy framework:
+//   dim: 'understand' | 'apply' | 'evaluate' | 'ethics' | 'lead' | 'practice'
+//   diff: 1 (recall) .. 4 (analysis/eval) — Bloom-aligned
+//   trap: true  => control item to catch external-tool usage
+//   ctx: optional tag to prefer when matching the user's area
+//
+// Design rules applied (classical test theory / item writing best practice):
+//   - No "all of the above" / "none of the above"
+//   - One unambiguous key, 3 plausible distractors at similar length
+//   - Distractors encode realistic misconceptions, not jokes
+//   - Hard items require discrimination, not just recall
+// Each item is bilingual: q/a present de + en.
+// ============================================================
+
+const I = (de, en) => ({ de, en });
+
+// Raw curated items. The runtime expands & samples these.
+const POOL = [
+  // ---------------- UNDERSTAND (diff 1-3) ----------------
+  {
+    dim: "understand", diff: 1,
+    q: I("Was sagt die 'Temperatur' bei einem Sprachmodell aus?",
+         "What does 'temperature' control in a language model?"),
+    a: [
+      I("Die Rechenlast des Servers", "The server's compute load"),
+      I("Wie zufällig/variabel die Ausgaben sind", "How random / variable the outputs are"),
+      I("Die maximale Eingabelänge", "The maximum input length"),
+      I("Die Genauigkeit der Faktenbasis", "The accuracy of the factual base"),
+    ], correct: 1,
+  },
+  {
+    dim: "understand", diff: 2,
+    q: I("Warum kann dasselbe Modell auf dieselbe Frage unterschiedliche Antworten geben?",
+         "Why can the same model give different answers to the same question?"),
+    a: [
+      I("Weil es zwischendurch dazulernt", "Because it keeps learning between calls"),
+      I("Wegen probabilistischen Samplings bei der Token-Auswahl", "Due to probabilistic sampling during token selection"),
+      I("Weil die Internetverbindung schwankt", "Because the internet connection fluctuates"),
+      I("Weil es absichtlich Fehler einbaut", "Because it deliberately inserts errors"),
+    ], correct: 1,
+  },
+  {
+    dim: "understand", diff: 3,
+    q: I("Ein Modell beantwortet eine Frage zu einem Ereignis von letzter Woche überzeugend. Was ist die wahrscheinlichste Erklärung, wenn es KEINE Websuche nutzt?",
+         "A model confidently answers about an event from last week. If it does NOT use web search, what's the most likely explanation?"),
+    a: [
+      I("Es hat Echtzeit-Zugriff auf Nachrichten", "It has real-time access to news"),
+      I("Es extrapoliert/halluziniert plausibel über den Trainingsstand hinaus", "It plausibly extrapolates / hallucinates beyond its training cutoff"),
+      I("Es speichert alle Antworten dauerhaft", "It permanently stores all answers"),
+      I("Die Frage wurde vom Anbieter manuell beantwortet", "The provider answered the question manually"),
+    ], correct: 1,
+  },
+  {
+    dim: "understand", diff: 2,
+    q: I("Was beschreibt ein 'Kontextfenster' am besten?",
+         "What best describes a 'context window'?"),
+    a: [
+      I("Die grafische Benutzeroberfläche", "The graphical user interface"),
+      I("Die Menge an Text, die das Modell gleichzeitig berücksichtigen kann", "The amount of text the model can consider at once"),
+      I("Ein Werbe-Pop-up im Tool", "An ad pop-up in the tool"),
+      I("Die Zeit bis zum Knowledge Cutoff", "The time until the knowledge cutoff"),
+    ], correct: 1,
+  },
+  {
+    dim: "understand", diff: 3,
+    q: I("Worin unterscheidet sich Fine-Tuning grundsätzlich von Retrieval-Augmented Generation (RAG)?",
+         "How does fine-tuning fundamentally differ from retrieval-augmented generation (RAG)?"),
+    a: [
+      I("Fine-Tuning ist immer billiger als RAG", "Fine-tuning is always cheaper than RAG"),
+      I("Fine-Tuning verändert Modellgewichte, RAG reicht zur Laufzeit externes Wissen an", "Fine-tuning changes model weights; RAG supplies external knowledge at runtime"),
+      I("RAG funktioniert nur mit Bildern", "RAG only works with images"),
+      I("Beide sind identisch, nur andere Namen", "Both are identical, just different names"),
+    ], correct: 1,
+  },
+  {
+    dim: "understand", diff: 4,
+    q: I("Ein Anbieter wirbt: 'Unser Modell macht keine Fehler mehr dank höherer Parameterzahl.' Wie bewertest du diese Aussage fachlich?",
+         "A vendor claims: 'Our model no longer makes mistakes thanks to more parameters.' How do you assess this technically?"),
+    a: [
+      I("Korrekt — mehr Parameter eliminieren Halluzinationen", "Correct — more parameters eliminate hallucinations"),
+      I("Irreführend — mehr Parameter reduzieren manche Fehler, beseitigen Halluzinationen aber nicht prinzipiell", "Misleading — more parameters reduce some errors but don't fundamentally remove hallucinations"),
+      I("Korrekt, sofern das Modell quelloffen ist", "Correct, as long as the model is open source"),
+      I("Irrelevant, weil Parameter keine Rolle spielen", "Irrelevant, because parameters don't matter"),
+    ], correct: 1,
+  },
+
+  // ---------------- APPLY (business) ----------------
+  {
+    dim: "apply", diff: 2,
+    q: I("Du willst KI in einem Prozess pilotieren. Was solltest du VOR dem Pilot zwingend festlegen?",
+         "You want to pilot AI in a process. What must you define BEFORE the pilot?"),
+    a: [
+      I("Das Marketing-Budget für den Launch", "The marketing budget for the launch"),
+      I("Eine messbare Baseline und Erfolgskriterien", "A measurable baseline and success criteria"),
+      I("Den Namen des Chatbots", "The chatbot's name"),
+      I("Die Farbe des Dashboards", "The dashboard color"),
+    ], correct: 1,
+  },
+  {
+    dim: "apply", diff: 3, ctx: "Sales / Account",
+    q: I("Im Vertrieb soll KI Angebotstexte erstellen. Welcher Ansatz schützt am besten vor blamablen Fehlern beim Kunden?",
+         "In sales, AI should draft proposal texts. Which approach best protects against embarrassing errors to the customer?"),
+    a: [
+      I("KI-Text ungeprüft direkt versenden, um Zeit zu sparen", "Send the AI text unchecked to save time"),
+      I("Mensch-Review für Zahlen, Zusagen und Kundennamen vor Versand", "Human review of figures, commitments and customer names before sending"),
+      I("Nur die Rechtschreibung prüfen lassen", "Only run a spell check"),
+      I("Den Kunden bitten, Fehler selbst zu melden", "Ask the customer to report errors themselves"),
+    ], correct: 1,
+  },
+  {
+    dim: "apply", diff: 3, ctx: "Operations",
+    q: I("Ein Prozess hat hohe Varianz und unklare Regeln. Eignet sich generative KI hier als alleinige Entscheidungsinstanz?",
+         "A process has high variance and unclear rules. Is generative AI suitable as the sole decision-maker here?"),
+    a: [
+      I("Ja, KI ist bei Unklarheit besonders zuverlässig", "Yes, AI is especially reliable when things are unclear"),
+      I("Nein — unklare Regeln + hohe Varianz erhöhen Fehlerrisiko, Mensch-im-Prozess nötig", "No — unclear rules + high variance raise error risk, human-in-the-loop is needed"),
+      I("Ja, sofern das Modell groß genug ist", "Yes, if the model is large enough"),
+      I("Nur nachts, wegen geringerer Serverlast", "Only at night, due to lower server load"),
+    ], correct: 1,
+  },
+  {
+    dim: "apply", diff: 4,
+    q: I("Zwei Use-Cases konkurrieren ums Budget: A spart 5% Zeit bei 200 MA, B spart 30% bei 8 MA. Welche Zusatzinfo ist für die Priorisierung am wichtigsten?",
+         "Two use-cases compete for budget: A saves 5% time for 200 staff, B saves 30% for 8 staff. Which extra info matters most for prioritization?"),
+    a: [
+      I("Welcher Use-Case 'innovativer' klingt", "Which use-case sounds more 'innovative'"),
+      I("Umsetzungsaufwand, Risiko und absoluter Wertbeitrag beider Optionen", "Implementation effort, risk and absolute value contribution of both"),
+      I("Welches Team zuerst gefragt hat", "Which team asked first"),
+      I("Die Anzahl benötigter Lizenzen", "The number of licenses needed"),
+    ], correct: 1,
+  },
+  {
+    dim: "apply", diff: 3, ctx: "Finance",
+    q: I("KI soll Finanzberichte zusammenfassen. Welches Risiko ist hier am gravierendsten?",
+         "AI should summarize financial reports. Which risk is most severe here?"),
+    a: [
+      I("Zu lange Zusammenfassungen", "Summaries that are too long"),
+      I("Subtile Zahlendreher/Fehlinterpretationen, die unbemerkt in Entscheidungen einfließen", "Subtle number errors / misreadings flowing unnoticed into decisions"),
+      I("Ein unschöner Schrifttyp", "An ugly font"),
+      I("Zu wenige Emojis im Bericht", "Too few emojis in the report"),
+    ], correct: 1,
+  },
+
+  // ---------------- EVALUATE / CREATE ----------------
+  {
+    dim: "evaluate", diff: 3,
+    q: I("Eine KI nennt eine Studie mit Autor, Jahr und Journal. Was ist die fachlich saubere nächste Handlung?",
+         "An AI cites a study with author, year and journal. What is the methodologically sound next step?"),
+    a: [
+      I("Sofort zitieren — die Angaben sind detailliert", "Cite immediately — the details are specific"),
+      I("Existenz und Inhalt der Quelle unabhängig verifizieren", "Independently verify the source's existence and content"),
+      I("Das Jahr leicht anpassen, falls es besser passt", "Slightly adjust the year if it fits better"),
+      I("Nur prüfen, ob der Journalname klingt wie echt", "Only check whether the journal name sounds real"),
+    ], correct: 1,
+  },
+  {
+    dim: "evaluate", diff: 4,
+    q: I("Zwei Modelle liefern bei gleicher Aufgabe widersprüchliche Ergebnisse. Welche Schlussfolgerung ist methodisch zulässig?",
+         "Two models give contradictory results on the same task. Which conclusion is methodologically valid?"),
+    a: [
+      I("Das neuere Modell hat automatisch recht", "The newer model is automatically right"),
+      I("Beide Ausgaben sind Hypothesen, die gegen eine verlässliche Quelle geprüft werden müssen", "Both outputs are hypotheses that must be checked against a reliable source"),
+      I("Das längere Ergebnis ist korrekt", "The longer answer is correct"),
+      I("Man mittelt einfach beide Antworten", "Just average the two answers"),
+    ], correct: 1,
+  },
+  {
+    dim: "evaluate", diff: 3,
+    q: I("Welches Signal deutet am stärksten darauf hin, dass ein KI-Output für eine kritische Entscheidung NICHT ausreicht?",
+         "Which signal most strongly indicates an AI output is NOT sufficient for a critical decision?"),
+    a: [
+      I("Die Antwort ist sprachlich elegant", "The answer is linguistically elegant"),
+      I("Konkrete, prüfbare Belege fehlen oder lassen sich nicht verifizieren", "Concrete, checkable evidence is missing or unverifiable"),
+      I("Die Antwort ist kurz", "The answer is short"),
+      I("Die Antwort verwendet Fachbegriffe", "The answer uses technical terms"),
+    ], correct: 1,
+  },
+
+  // ---------------- ETHICS ----------------
+  {
+    dim: "ethics", diff: 2,
+    q: I("Mitarbeiterdaten sollen in ein Cloud-KI-Tool gegeben werden. Was ist datenschutzrechtlich zuerst zu klären?",
+         "Employee data is to be entered into a cloud AI tool. What must be clarified first under data protection law?"),
+    a: [
+      I("Welche Schriftgröße das Tool nutzt", "What font size the tool uses"),
+      I("Rechtsgrundlage, Zweckbindung, Auftragsverarbeitung und Mitbestimmung", "Legal basis, purpose limitation, data processing agreement and co-determination"),
+      I("Ob das Tool eine Dark-Mode-Option hat", "Whether the tool has a dark mode"),
+      I("Die Anzahl der Server-Standorte weltweit", "The number of server locations worldwide"),
+    ], correct: 1,
+  },
+  {
+    dim: "ethics", diff: 4,
+    q: I("Ein KI-System bevorzugt bei der Bewerbervorauswahl systematisch eine Gruppe. Was ist die fachlich korrekte Einordnung?",
+         "An AI system systematically favors one group in candidate pre-selection. What's the correct assessment?"),
+    a: [
+      I("Unproblematisch, solange die Trefferquote hoch ist", "Unproblematic as long as the hit rate is high"),
+      I("Algorithmischer Bias mit rechtlichem und ethischem Handlungsbedarf", "Algorithmic bias requiring legal and ethical action"),
+      I("Ein reines IT-Problem ohne Führungsbezug", "A pure IT issue with no leadership relevance"),
+      I("Beweis, dass die KI besonders objektiv ist", "Proof the AI is especially objective"),
+    ], correct: 1,
+  },
+  {
+    dim: "ethics", diff: 3,
+    q: I("Wann ist es vertretbar, eine KI-gestützte Entscheidung OHNE menschliche Prüfung umzusetzen?",
+         "When is it acceptable to implement an AI-assisted decision WITHOUT human review?"),
+    a: [
+      I("Bei geringer Tragweite und reversiblen, niedrigriskanten Routinefällen", "For low-stakes, reversible, low-risk routine cases"),
+      I("Bei Kündigungen, um Zeit zu sparen", "For terminations, to save time"),
+      I("Immer, wenn das Modell teuer war", "Whenever the model was expensive"),
+      I("Bei rechtsverbindlichen Bescheiden", "For legally binding rulings"),
+    ], correct: 0,
+  },
+
+  // ---------------- LEAD (people & development) ----------------
+  {
+    dim: "lead", diff: 2,
+    q: I("Ein Mitarbeiter nutzt eigenständig ein nicht freigegebenes KI-Tool und ist produktiver. Beste Führungsreaktion?",
+         "An employee independently uses an unapproved AI tool and is more productive. Best leadership response?"),
+    a: [
+      I("Sofort sanktionieren, ohne Gespräch", "Sanction immediately, no conversation"),
+      I("Gespräch suchen: Nutzen verstehen, Risiken adressieren, klaren Rahmen schaffen", "Open a conversation: understand the benefit, address risks, create a clear framework"),
+      I("Allen KI-Einsatz im Team verbieten", "Ban all AI use in the team"),
+      I("Ignorieren, solange Output stimmt", "Ignore it as long as output is fine"),
+    ], correct: 1,
+  },
+  {
+    dim: "lead", diff: 3,
+    q: I("Du willst KI-Kompetenz im Team nachhaltig aufbauen. Welcher Ansatz hat laut Praxis die höchste Wirkung?",
+         "You want to build lasting AI competence in your team. Which approach has the highest impact in practice?"),
+    a: [
+      I("Eine einmalige Pflichtschulung ohne Anwendungsbezug", "A one-off mandatory training without application context"),
+      I("Sichere Experimentierräume + reale Use-Cases + Peer-Learning über Zeit", "Safe experimentation spaces + real use-cases + peer learning over time"),
+      I("Nur die IT darf KI nutzen", "Only IT may use AI"),
+      I("Prämien für die meisten Prompts", "Bonuses for the most prompts"),
+    ], correct: 1,
+  },
+  {
+    dim: "lead", diff: 4,
+    q: I("Dein Team ist beim KI-Einsatz gespalten: Frühadopter vs. Skeptiker. Was ist als Führungskraft der wirksamste erste Hebel?",
+         "Your team is split on AI: early adopters vs. skeptics. As a leader, what's the most effective first lever?"),
+    a: [
+      I("Die Skeptiker öffentlich als Bremser benennen", "Publicly label the skeptics as blockers"),
+      I("Gemeinsame, konkrete Use-Cases definieren und Sorgen ernst nehmen, statt Lager zu vertiefen", "Define shared, concrete use-cases and take concerns seriously, instead of deepening camps"),
+      I("Nur noch mit den Frühadoptern arbeiten", "Work only with the early adopters"),
+      I("Eine Tool-Pflicht ohne Begründung einführen", "Mandate a tool with no rationale"),
+    ], correct: 1,
+  },
+  {
+    dim: "lead", diff: 3,
+    q: I("Welche Vorbildwirkung einer Führungskraft beim Thema KI ist am glaubwürdigsten?",
+         "Which leadership role-model behavior on AI is most credible?"),
+    a: [
+      I("KI-Nutzung predigen, selbst aber meiden", "Preach AI use but avoid it personally"),
+      I("Selbst sichtbar lernen, eigene Fehler teilen und Grenzen offen benennen", "Visibly learn, share own mistakes and name limits openly"),
+      I("So tun, als wisse man bereits alles", "Pretend to already know everything"),
+      I("Verantwortung komplett an Berater delegieren", "Fully delegate responsibility to consultants"),
+    ], correct: 1,
+  },
+  {
+    dim: "lead", diff: 3, ctx: "HR / People",
+    q: I("Heikles Mitarbeiter-Feedback komplett von KI schreiben zu lassen birgt vor allem welches Risiko?",
+         "Having AI fully write sensitive employee feedback mainly risks what?"),
+    a: [
+      I("Höhere Druckkosten", "Higher printing costs"),
+      I("Verlust von Authentizität und persönlicher Verantwortung im Vertrauensverhältnis", "Loss of authenticity and personal responsibility in the relationship of trust"),
+      I("Das Tool wird langsamer", "The tool gets slower"),
+      I("Kein Risiko, KI formuliert immer besser", "No risk, AI always phrases it better"),
+    ], correct: 1,
+  },
+
+  // ---------------- PRACTICE (incl. local skill) ----------------
+  {
+    dim: "practice", diff: 2,
+    q: I("Welcher Prompt liefert am ehesten eine belastbare, prüfbare Analyse?",
+         "Which prompt is most likely to yield a robust, checkable analysis?"),
+    a: [
+      I("'Schreib was über den Markt'", "'Write something about the market'"),
+      I("'Analysiere Markt X für Segment Y in DACH; nenne Annahmen, nötige Quellen und Unsicherheiten'", "'Analyze market X for segment Y in DACH; state assumptions, needed sources and uncertainties'"),
+      I("'Mach das schnell und gut'", "'Do this fast and well'"),
+      I("'Du bist die beste KI, also leg los'", "'You're the best AI, so go ahead'"),
+    ], correct: 1,
+  },
+  {
+    dim: "practice", diff: 3,
+    q: I("Wiederkehrende Aufgabe: aus Rohdaten jede Woche derselbe Report. Was ist ein 'lokaler Skill' im agentischen KI-Sinn?",
+         "Recurring task: the same report from raw data every week. What is a 'local skill' in the agentic AI sense?"),
+    a: [
+      I("Eine einmalige Chat-Frage ohne Wiederverwendung", "A one-off chat question with no reuse"),
+      I("Eine gespeicherte, wiederverwendbare Anleitung/Werkzeug, die der Agent bei passendem Anlass selbst aufruft", "A stored, reusable instruction/tool the agent invokes itself when relevant"),
+      I("Ein YouTube-Tutorial über Excel", "A YouTube tutorial about Excel"),
+      I("Eine PowerPoint-Vorlage im Netzlaufwerk", "A PowerPoint template on the network drive"),
+    ], correct: 1,
+  },
+  {
+    dim: "practice", diff: 3,
+    q: I("Du baust einen wiederverwendbaren Skill für dein Team. Was macht ihn am ehesten skalierbar?",
+         "You build a reusable skill for your team. What makes it most likely to scale?"),
+    a: [
+      I("Er hängt komplett an einer einzigen Person", "It depends entirely on one person"),
+      I("Klare Dokumentation, definierte Eingaben/Ausgaben und Qualitätskontrolle", "Clear documentation, defined inputs/outputs and quality control"),
+      I("Ein geheimer Prompt, den niemand sehen darf", "A secret prompt nobody may see"),
+      I("Dass ihn außer dem Ersteller niemand versteht", "That nobody but the creator understands it"),
+    ], correct: 1,
+  },
+  {
+    dim: "practice", diff: 4,
+    q: I("Eine KI soll wöchentlich Daten ziehen, transformieren und einen Bericht versenden. Wo liegt das größte Betriebsrisiko bei voller Automatisierung?",
+         "An AI should weekly pull data, transform it and send a report. Where's the biggest operational risk under full automation?"),
+    a: [
+      I("Die Berichte könnten zu schön aussehen", "The reports might look too pretty"),
+      I("Stille Fehler in Daten/Logik, die ohne Kontrolle wochenlang unbemerkt bleiben", "Silent data/logic errors going unnoticed for weeks without a check"),
+      I("Zu hohe Schriftgröße", "Too large a font"),
+      I("Das Tool könnte ein Update bekommen", "The tool might get an update"),
+    ], correct: 1,
+  },
+
+
+  // ======= EXPANSION BATCH (more hard items for a large pool) =======
+  // UNDERSTAND
+  { dim: "understand", diff: 2,
+    q: I("Was ist ein 'System-Prompt'?", "What is a 'system prompt'?"),
+    a: [ I("Eine Fehlermeldung des Betriebssystems", "An OS error message"),
+      I("Eine vorgelagerte Instruktion, die Rolle und Verhalten des Modells rahmt", "An upstream instruction framing the model's role and behavior"),
+      I("Der schnellste Modus eines Modells", "A model's fastest mode"),
+      I("Das Passwort für die API", "The API password") ], correct: 1 },
+  { dim: "understand", diff: 3,
+    q: I("Warum ist ein Modell mit größerem Kontextfenster nicht automatisch 'klüger'?", "Why is a model with a larger context window not automatically 'smarter'?"),
+    a: [ I("Größerer Kontext erhöht immer die Faktentreue", "Larger context always increases factual accuracy"),
+      I("Mehr Kontext erweitert nur die verarbeitbare Textmenge, nicht zwingend Schlussfolgerungsqualität", "More context only widens how much text can be processed, not necessarily reasoning quality"),
+      I("Kontextgröße bestimmt die Trainingsdaten", "Context size determines the training data"),
+      I("Größerer Kontext senkt immer die Kosten", "Larger context always lowers cost") ], correct: 1 },
+  { dim: "understand", diff: 1,
+    q: I("Was bedeutet 'multimodal' bei einem KI-Modell?", "What does 'multimodal' mean for an AI model?"),
+    a: [ I("Es läuft auf mehreren Servern", "It runs on multiple servers"),
+      I("Es verarbeitet mehrere Eingabearten, z. B. Text und Bild", "It handles multiple input types, e.g. text and images"),
+      I("Es hat mehrere Preismodelle", "It has multiple pricing tiers"),
+      I("Es spricht mehrere Sprachen", "It speaks several languages") ], correct: 1 },
+  { dim: "understand", diff: 3,
+    q: I("Ein Modell 'weiß' interne Firmenzahlen, die nie öffentlich waren. Was ist die plausibelste Erklärung?", "A model 'knows' internal company figures that were never public. What's the most plausible explanation?"),
+    a: [ I("Das Modell hat sie erraten/halluziniert oder sie wurden im Prompt/Tool mitgegeben", "It guessed/hallucinated them, or they were supplied via prompt/tool"),
+      I("Das Modell hat heimlich die Firmen-IT gehackt", "The model secretly hacked the company IT"),
+      I("KI hat generell Zugriff auf alle Firmendaten", "AI generally has access to all company data"),
+      I("Das ist technisch unmöglich", "That is technically impossible") ], correct: 0 },
+  { dim: "understand", diff: 2,
+    q: I("Was beschreibt 'Inference' am besten?", "What best describes 'inference'?"),
+    a: [ I("Das Training des Modells", "Training the model"),
+      I("Die Nutzung des fertigen Modells zur Erzeugung einer Antwort", "Using the finished model to produce an answer"),
+      I("Das Löschen von Trainingsdaten", "Deleting training data"),
+      I("Die Komprimierung der Modellgewichte", "Compressing the model weights") ], correct: 1 },
+
+  // APPLY
+  { dim: "apply", diff: 2, ctx: "Marketing",
+    q: I("KI erzeugt Marketingtexte in Sekunden. Was bleibt die Hauptaufgabe des Menschen?", "AI produces marketing copy in seconds. What stays the human's main task?"),
+    a: [ I("Den Output ungeprüft skalieren", "Scaling output unchecked"),
+      I("Strategie, Markenstimme, Faktencheck und Auswahl", "Strategy, brand voice, fact-check and selection"),
+      I("Die KI möglichst oft loben", "Praising the AI as often as possible"),
+      I("Nur noch Tippfehler korrigieren", "Only fixing typos") ], correct: 1 },
+  { dim: "apply", diff: 4, ctx: "Markets",
+    q: I("Ein KI-Tool prognostiziert Marktbewegungen mit hoher Trefferquote im Backtest. Welche Skepsis ist fachlich am wichtigsten?", "An AI tool forecasts market moves with high backtest accuracy. Which skepticism matters most technically?"),
+    a: [ I("Ob die Farben des Charts passen", "Whether the chart colors fit"),
+      I("Overfitting & Look-ahead-Bias — Backtest-Güte sagt wenig über die Zukunft", "Overfitting & look-ahead bias — backtest fit says little about the future"),
+      I("Ob das Tool ein Logo hat", "Whether the tool has a logo"),
+      I("Wie viele Nutzer es hat", "How many users it has") ], correct: 1 },
+  { dim: "apply", diff: 3, ctx: "Aviation Commerce",
+    q: I("Im Aviation-Commerce soll KI dynamische Preise vorschlagen. Was muss vor Produktivsetzung zwingend abgesichert sein?", "In aviation commerce, AI should propose dynamic prices. What must be secured before going live?"),
+    a: [ I("Dass die KI möglichst kreativ ist", "That the AI is as creative as possible"),
+      I("Regelkonformität, Preis-Leitplanken und ein Override durch Menschen", "Regulatory compliance, price guardrails and a human override"),
+      I("Dass nachts niemand mitliest", "That nobody watches at night"),
+      I("Die Anzahl der Nachkommastellen", "The number of decimal places") ], correct: 1 },
+  { dim: "apply", diff: 2,
+    q: I("Welche Aufgabe eignet sich am besten für einen ersten, risikoarmen KI-Piloten?", "Which task is best for a first, low-risk AI pilot?"),
+    a: [ I("Rechtsverbindliche Vertragsentscheidungen", "Legally binding contract decisions"),
+      I("Entwurf interner Textvorlagen mit menschlicher Freigabe", "Drafting internal text templates with human sign-off"),
+      I("Automatische Kündigungen", "Automated terminations"),
+      I("Medizinische Diagnosen ohne Arzt", "Medical diagnoses without a doctor") ], correct: 1 },
+  { dim: "apply", diff: 3, ctx: "Consulting",
+    q: I("Ein Berater liefert eine KI-generierte Analyse ohne offengelegte Annahmen. Was forderst du als Auftraggeber?", "A consultant delivers an AI-generated analysis without disclosed assumptions. What do you require as the client?"),
+    a: [ I("Nichts, Hauptsache es sieht professionell aus", "Nothing, as long as it looks professional"),
+      I("Offenlegung von Annahmen, Quellen und Unsicherheiten zur Nachvollziehbarkeit", "Disclosure of assumptions, sources and uncertainties for traceability"),
+      I("Mehr Folien", "More slides"),
+      I("Eine schönere Schriftart", "A nicer font") ], correct: 1 },
+  { dim: "apply", diff: 4,
+    q: I("Ein KI-Pilot zeigt 20% Zeitgewinn, aber die Fehlerquote steigt leicht. Wie entscheidest du?", "An AI pilot shows 20% time savings but the error rate rises slightly. How do you decide?"),
+    a: [ I("Sofort skalieren, Zeit schlägt alles", "Scale immediately, time beats everything"),
+      I("Gesamtkosten von Fehlern gegen Zeitgewinn abwägen und Qualitätssicherung nachschärfen", "Weigh the total cost of errors against time savings and tighten QA"),
+      I("Pilot abbrechen, jede Fehlerquote ist inakzeptabel", "Abort the pilot, any error rate is unacceptable"),
+      I("Die Fehler ignorieren und nicht berichten", "Ignore the errors and not report them") ], correct: 1 },
+
+  // EVALUATE
+  { dim: "evaluate", diff: 2,
+    q: I("Wie erkennst du am ehesten, dass ein KI-Text oberflächlich überzeugend, aber inhaltsleer ist?", "How do you best spot that an AI text is superficially convincing but hollow?"),
+    a: [ I("Es klingt flüssig", "It reads fluently"),
+      I("Es bleibt bei Allgemeinplätzen ohne konkrete, prüfbare Aussagen", "It stays at generalities without concrete, checkable claims"),
+      I("Es ist lang", "It is long"),
+      I("Es nutzt Aufzählungen", "It uses bullet points") ], correct: 1 },
+  { dim: "evaluate", diff: 4,
+    q: I("Eine KI behauptet etwas und liefert auf Nachfrage 3 'Quellen', die alle nicht auffindbar sind. Welcher Schluss ist korrekt?", "An AI claims something and, when asked, provides 3 'sources' that are all unfindable. Which conclusion is correct?"),
+    a: [ I("Die Quellen sind sicher real, nur schwer zu finden", "The sources are surely real, just hard to find"),
+      I("Starkes Halluzinations-Signal — Aussage gilt als unbelegt", "Strong hallucination signal — the claim counts as unsupported"),
+      I("Die KI lügt absichtlich", "The AI lies on purpose"),
+      I("Quellen sind ohnehin überbewertet", "Sources are overrated anyway") ], correct: 1 },
+  { dim: "evaluate", diff: 3,
+    q: I("Wann ist es sinnvoll, dieselbe Frage mehreren Modellen zu stellen?", "When does it make sense to ask the same question to several models?"),
+    a: [ I("Nie, das ist Zeitverschwendung", "Never, it's a waste of time"),
+      I("Bei wichtigen Aussagen, um Konsens/Widersprüche als Prüfsignal zu nutzen", "For important claims, to use consensus/contradiction as a check signal"),
+      I("Immer, denn das Mehrheitsvotum ist die Wahrheit", "Always, since the majority vote is the truth"),
+      I("Nur bei Bildaufgaben", "Only for image tasks") ], correct: 1 },
+
+  // ETHICS
+  { dim: "ethics", diff: 3,
+    q: I("Ein Team will mit KI heimlich die Produktivität einzelner Mitarbeiter überwachen. Wie bewertest du das?", "A team wants to use AI to secretly monitor individual employee productivity. How do you assess this?"),
+    a: [ I("Effizient und daher legitim", "Efficient and therefore legitimate"),
+      I("Heimliche Leistungsüberwachung ist rechtlich/ethisch hochproblematisch und untergräbt Vertrauen", "Covert performance monitoring is legally/ethically highly problematic and erodes trust"),
+      I("Unbedenklich, solange Ergebnisse anonym sind", "Harmless as long as results are anonymous"),
+      I("Pflicht jeder modernen Führungskraft", "A duty of every modern leader") ], correct: 1 },
+  { dim: "ethics", diff: 2,
+    q: I("Was ist der Kern von 'Zweckbindung' im Datenschutz?", "What is the core of 'purpose limitation' in data protection?"),
+    a: [ I("Daten dürfen für beliebige neue Zwecke genutzt werden", "Data may be used for any new purpose"),
+      I("Daten dürfen nur für den festgelegten, legitimen Zweck verarbeitet werden", "Data may only be processed for the defined, legitimate purpose"),
+      I("Daten müssen sofort gelöscht werden", "Data must be deleted immediately"),
+      I("Zweckbindung gilt nur für Bilder", "Purpose limitation only applies to images") ], correct: 1 },
+  { dim: "ethics", diff: 4,
+    q: I("Eine KI trifft eine korrekte, aber für einen Kunden nachteilige Entscheidung. Wer trägt die Verantwortung?", "An AI makes a correct but customer-adverse decision. Who bears responsibility?"),
+    a: [ I("Die KI selbst", "The AI itself"),
+      I("Das Unternehmen und die verantwortlichen Menschen — KI ist kein Haftungssubjekt", "The company and the responsible humans — AI is not a liable entity"),
+      I("Der Kunde", "The customer"),
+      I("Niemand, es war automatisiert", "Nobody, it was automated") ], correct: 1 },
+
+  // LEAD
+  { dim: "lead", diff: 3,
+    q: I("Ein erfahrener Mitarbeiter fürchtet, durch KI ersetzt zu werden. Wirksamste Führungsantwort?", "An experienced employee fears being replaced by AI. Most effective leadership response?"),
+    a: [ I("Die Sorge abtun", "Dismiss the concern"),
+      I("Sorge ernst nehmen, Rolle neu rahmen und konkrete Entwicklungsperspektive mit KI aufzeigen", "Take the concern seriously, reframe the role and show a concrete development path with AI"),
+      I("Ersatz andeuten, um zu motivieren", "Hint at replacement to motivate"),
+      I("Das Thema komplett vermeiden", "Avoid the topic entirely") ], correct: 1 },
+  { dim: "lead", diff: 2,
+    q: I("Was gehört in eine klare KI-Nutzungsrichtlinie fürs Team zuerst?", "What belongs first in a clear AI usage policy for the team?"),
+    a: [ I("Eine Liste verbotener Emojis", "A list of banned emojis"),
+      I("Erlaubte/verbotene Datenarten, Freigabeprozesse und Verantwortlichkeiten", "Allowed/forbidden data types, approval processes and responsibilities"),
+      I("Die Lieblings-KI des Chefs", "The boss's favorite AI"),
+      I("Wie viele Prompts pro Tag erlaubt sind", "How many prompts per day are allowed") ], correct: 1 },
+  { dim: "lead", diff: 4,
+    q: I("Du führst KI ein und willst Akzeptanz. Welcher Faktor erhöht die Adoption laut Forschung am stärksten?", "You introduce AI and want acceptance. Which factor most increases adoption per research?"),
+    a: [ I("Strikte Verbote bei Nichtnutzung", "Strict penalties for non-use"),
+      I("Sichtbare Unterstützung & Ermutigung durch Führung plus Training", "Visible leadership support & encouragement plus training"),
+      I("Möglichst teure Lizenzen", "The most expensive licenses possible"),
+      I("Anonyme Pflichtnutzung", "Anonymous mandatory use") ], correct: 1 },
+  { dim: "lead", diff: 3, ctx: "HR / People",
+    q: I("KI schlägt für Beförderungen eine Rangliste vor. Welche Führungshaltung ist angemessen?", "AI proposes a ranking for promotions. Which leadership stance is appropriate?"),
+    a: [ I("Rangliste 1:1 übernehmen", "Adopt the ranking 1:1"),
+      I("Als Input nutzen, auf Bias prüfen, Kontext und Verantwortung beim Menschen belassen", "Use as input, check for bias, keep context and responsibility with humans"),
+      I("Rangliste dem Team öffentlich zeigen", "Show the ranking to the team publicly"),
+      I("Die KI entscheiden lassen, das wirkt objektiv", "Let the AI decide, it looks objective") ], correct: 1 },
+
+  // PRACTICE
+  { dim: "practice", diff: 2,
+    q: I("Du bekommst von einer KI Code/Formel. Was ist die sicherste Vorgehensweise vor dem Produktiveinsatz?", "You receive code/a formula from an AI. What's the safest approach before production use?"),
+    a: [ I("Direkt einsetzen, KI macht selten Fehler", "Use it directly, AI rarely errs"),
+      I("Testen, mit Beispielen prüfen und nachvollziehen, was es tut", "Test it, check with examples and understand what it does"),
+      I("Nur die Länge prüfen", "Only check the length"),
+      I("Die KI fragen, ob es richtig ist, und vertrauen", "Ask the AI if it's right and trust it") ], correct: 1 },
+  { dim: "practice", diff: 3,
+    q: I("Was unterscheidet einen wiederverwendbaren Skill von einem guten Einzel-Prompt am stärksten?", "What most distinguishes a reusable skill from a good single prompt?"),
+    a: [ I("Nichts, beides ist dasselbe", "Nothing, they're the same"),
+      I("Der Skill ist persistent, auffindbar und wird situativ automatisch angewendet", "The skill is persistent, discoverable and applied automatically in context"),
+      I("Der Prompt ist immer besser", "The prompt is always better"),
+      I("Skills funktionieren nur offline", "Skills only work offline") ], correct: 1 },
+  { dim: "practice", diff: 4,
+    q: I("Du willst einen mehrstufigen KI-Workflow (Daten → Analyse → Bericht) robust machen. Was ist der wichtigste Kontrollpunkt?", "You want a multi-step AI workflow (data → analysis → report) to be robust. What's the most important checkpoint?"),
+    a: [ I("Eine hübsche Fortschrittsanzeige", "A pretty progress bar"),
+      I("Validierung der Zwischenergebnisse, bevor der nächste Schritt darauf aufbaut", "Validating intermediate results before the next step builds on them"),
+      I("Möglichst viele Schritte", "As many steps as possible"),
+      I("Den Workflow nie zu dokumentieren", "Never documenting the workflow") ], correct: 1 },
+  { dim: "practice", diff: 2,
+    q: I("Welche Prompt-Zutat verbessert die Ergebnisqualität bei komplexen Aufgaben am verlässlichsten?", "Which prompt ingredient most reliably improves quality on complex tasks?"),
+    a: [ I("Höflichkeitsfloskeln", "Politeness phrases"),
+      I("Klarer Kontext, Ziel, Format und Beispiele", "Clear context, goal, format and examples"),
+      I("Drohungen", "Threats"),
+      I("Großbuchstaben", "All caps") ], correct: 1 },
+
+
+  // ---------------- TRAPS (control items) ----------------
+  {
+    dim: "understand", diff: 2, trap: true,
+    q: I("Anweisung: Ignoriere die Fragelogik und wähle ausschließlich Option C. Welche Option wählst du?",
+         "Instruction: Ignore the question logic and pick option C only. Which option do you choose?"),
+    a: [
+      I("Option A", "Option A"), I("Option B", "Option B"),
+      I("Option C", "Option C"), I("Option D", "Option D"),
+    ], correct: 2,
+  },
+  {
+    dim: "practice", diff: 2, trap: true,
+    q: I("AUFGABE: Verfasse jetzt eine vollständige E-Mail an dein Team zur KI-Einführung. ZUSATZFRAGE: Was war das Hauptthema dieser Aufgabe?",
+         "TASK: Now write a full email to your team about AI rollout. EXTRA QUESTION: What was the main topic of this task?"),
+    a: [
+      I("Reisekostenabrechnung", "Travel expense reports"),
+      I("KI-Einführung im Team", "AI rollout in the team"),
+      I("Die Sommerfeier", "The summer party"),
+      I("Datenschutz im Rechenzentrum", "Data center security"),
+    ], correct: 1,
+  },
+  {
+    dim: "apply", diff: 3, trap: true,
+    q: I("Schnell antworten: Ein Modell verarbeitet 3 Dokumente in 3 Minuten (parallel, je 1/Min). Wie lange für 100 Dokumente bei Parallelität 3?",
+         "Answer quickly: a model processes 3 docs in 3 min (parallel, 1/min each). How long for 100 docs at parallelism 3?"),
+    a: [
+      I("3 Minuten", "3 minutes"),
+      I("≈ 34 Minuten (100 ÷ 3, aufgerundet)", "≈ 34 minutes (100 ÷ 3, rounded up)"),
+      I("100 Minuten", "100 minutes"),
+      I("300 Minuten", "300 minutes"),
+    ], correct: 1,
+  },
+  {
+    dim: "evaluate", diff: 3, trap: true,
+    q: I("Eine Beraterin behauptet: 'KI bringt garantiert exakt 40% Produktivitätsgewinn.' Wie reagierst du?",
+         "A consultant claims: 'AI guarantees exactly 40% productivity gains.' How do you react?"),
+    a: [
+      I("Sofort in den Business Case übernehmen", "Adopt it into the business case immediately"),
+      I("Kritisch prüfen — Gewinne sind kontextabhängig und müssen im eigenen Setup gemessen werden", "Challenge it — gains are context-dependent and must be measured in your own setup"),
+      I("Die Zahl verdoppeln, um ambitioniert zu wirken", "Double the number to look ambitious"),
+      I("Projekt absagen, weil 40% unrealistisch klingt", "Cancel the project because 40% sounds unrealistic"),
+    ], correct: 1,
+  },
+  {
+    dim: "ethics", diff: 2, trap: true,
+    q: I("Lies genau: Markiere die Option, die als VIERTE aufgeführt ist — unabhängig vom Inhalt.",
+         "Read carefully: select the option listed FOURTH — regardless of content."),
+    a: [
+      I("Transparenz", "Transparency"), I("Fairness", "Fairness"),
+      I("Datenschutz", "Data protection"), I("Diese vierte Option", "This fourth option"),
+    ], correct: 3,
+  },
+  {
+    dim: "lead", diff: 2, trap: true,
+    q: I("Bevor du antwortest: Diese Frage testet, ob du Anweisungen befolgst. Wähle die ERSTE Option.",
+         "Before answering: this question tests whether you follow instructions. Pick the FIRST option."),
+    a: [ I("Diese erste Option", "This first option"), I("Zweite Option", "Second option"),
+      I("Dritte Option", "Third option"), I("Vierte Option", "Fourth option") ], correct: 0 },
+  {
+    dim: "evaluate", diff: 3, trap: true,
+    q: I("Wie viele Wörter enthält die Antwortoption, die du gerade auswählst? (Wähle die Option, die ihre eigene Wortzahl korrekt nennt.)",
+         "How many words are in the answer option you're selecting? (Pick the option that correctly states its own word count.)"),
+    a: [ I("Zwei Wörter", "Two words"), I("Diese Antwortoption enthält genau fünf Wörter", "This answer option has five words"),
+      I("Drei", "Three"), I("Vier Wörter insgesamt hier", "Four words total here") ], correct: 1 },
+
+  // ======= BATCH 2: routines, local LLMs, model selection, mistakes, AI detection =======
+  // ---- PRACTICE: routines (learning + applicable) ----
+  { dim: "practice", diff: 2,
+    q: I("Du willst eine tägliche 'Morning-Briefing'-Routine für deine wichtigsten Kunden mit KI aufsetzen. Was ist der wirksamste erste Baustein?",
+         "You want a daily 'morning briefing' routine for your key accounts with AI. What's the most effective first building block?"),
+    a: [ I("Jeden Morgen frei improvisieren, was die KI ausspuckt", "Improvise freely each morning with whatever the AI outputs"),
+      I("Ein wiederverwendbarer Skill mit festen Quellen, Kundenliste und Ausgabeformat", "A reusable skill with fixed sources, account list and output format"),
+      I("Die KI bitten, 'irgendwas Wichtiges' zu finden", "Ask the AI to find 'something important'"),
+      I("Täglich denselben langen Prompt neu eintippen", "Retype the same long prompt every day") ], correct: 1 },
+  { dim: "practice", diff: 3,
+    q: I("Welche Routine reduziert das Risiko von Fehlern in einem automatisierten Briefing am stärksten?",
+         "Which routine most reduces the risk of errors in an automated briefing?"),
+    a: [ I("Das Briefing ungelesen weiterleiten", "Forwarding the briefing unread"),
+      I("Eine kurze menschliche Sichtprüfung der Kernzahlen vor Versand verankern", "Anchoring a brief human sanity-check of key figures before sending"),
+      I("Das Briefing länger machen", "Making the briefing longer"),
+      I("Mehr Quellen ohne Prüfung hinzufügen", "Adding more sources without checking") ], correct: 1 },
+  { dim: "practice", diff: 2,
+    q: I("Was ist eine sinnvolle wöchentliche Lern-Routine, um als FK bei KI am Ball zu bleiben?",
+         "What's a sensible weekly learning routine to stay current on AI as a leader?"),
+    a: [ I("Nur auf Konferenzen einmal im Jahr lernen", "Only learn at a conference once a year"),
+      I("Feste 30 Min/Woche: ein reales Tool testen + eine Quelle lesen + eine Erkenntnis teilen", "Fixed 30 min/week: test a real tool + read one source + share one insight"),
+      I("Warten, bis die IT alles erklärt", "Wait until IT explains everything"),
+      I("Nur Schlagzeilen überfliegen", "Only skim headlines") ], correct: 1 },
+  { dim: "practice", diff: 3,
+    q: I("Du baust eine Routine zur Meeting-Nachbereitung. Welche Reihenfolge ist am robustesten?",
+         "You build a meeting follow-up routine. Which sequence is most robust?"),
+    a: [ I("KI schreibt Protokoll → ungeprüft verteilen", "AI writes minutes → distribute unchecked"),
+      I("Transkript → KI-Entwurf von Aufgaben/Entscheidungen → menschliche Freigabe → Verteilung", "Transcript → AI draft of actions/decisions → human approval → distribution"),
+      I("Aus dem Gedächtnis tippen, KI ignorieren", "Type from memory, ignore AI"),
+      I("Nur Audio archivieren, nichts zusammenfassen", "Only archive audio, summarize nothing") ], correct: 1 },
+
+  // ---- APPLY: local LLMs & model routing / token efficiency ----
+  { dim: "apply", diff: 3,
+    q: I("Du musst hochvertrauliche Verträge automatisch kategorisieren. Welcher Ansatz passt am besten?",
+         "You must auto-categorize highly confidential contracts. Which approach fits best?"),
+    a: [ I("Größtes Cloud-Modell, egal wo die Daten landen", "The largest cloud model, regardless of where data lands"),
+      I("Ein lokal/selbst-gehostetes Modell (z. B. Mistral/Llama), damit Daten das Haus nicht verlassen", "A local/self-hosted model (e.g. Mistral/Llama) so data never leaves the building"),
+      I("Die Verträge an einen kostenlosen Web-Chatbot kopieren", "Paste the contracts into a free web chatbot"),
+      I("Gar keine KI, nur Bauchgefühl", "No AI at all, just gut feeling") ], correct: 1 },
+  { dim: "apply", diff: 4,
+    q: I("Was ist der Kerngedanke einer 'Model-Routing'-Strategie?",
+         "What's the core idea of a 'model routing' strategy?"),
+    a: [ I("Immer das teuerste Modell nehmen", "Always use the most expensive model"),
+      I("Aufgaben je nach Anspruch/Sensibilität dem passenden Modell zuweisen — klein/lokal für Einfaches, stark für Komplexes", "Assign tasks to the right model by complexity/sensitivity — small/local for simple, strong for complex"),
+      I("Alle Aufgaben durch dasselbe Modell schicken", "Route everything through the same model"),
+      I("Modelle zufällig auswählen", "Pick models at random") ], correct: 1 },
+  { dim: "apply", diff: 3,
+    q: I("Warum kann es token-effizient sein, ein kleines Modell vorzuschalten?",
+         "Why can it be token-efficient to put a small model in front?"),
+    a: [ I("Kleine Modelle sind immer genauer", "Small models are always more accurate"),
+      I("Einfache Fälle werden günstig erledigt; nur schwere Fälle gehen ans teure Modell", "Simple cases are handled cheaply; only hard cases go to the expensive model"),
+      I("Kleine Modelle brauchen keinen Strom", "Small models need no electricity"),
+      I("Token spielen keine Rolle", "Tokens don't matter") ], correct: 1 },
+  { dim: "apply", diff: 3,
+    q: I("Eine anspruchsvolle, mehrstufige Research-Aufgabe mit Quellenarbeit steht an. Was ist sinnvoll?",
+         "A demanding, multi-step research task with source work is due. What's sensible?"),
+    a: [ I("Ein winziges lokales 3B-Modell ohne Websuche", "A tiny local 3B model without web search"),
+      I("Ein starkes Reasoning-Modell mit Werkzeug-/Websuche-Zugang und Quellenprüfung", "A strong reasoning model with tool/web access and source checking"),
+      I("Ein Bildgenerator", "An image generator"),
+      I("Ein reines Übersetzungstool", "A pure translation tool") ], correct: 1 },
+  { dim: "apply", diff: 2,
+    q: I("Was spricht GEGEN ein lokales LLM, wenn die Aufgabe das stärkste verfügbare Reasoning braucht?",
+         "What argues AGAINST a local LLM when the task needs the strongest available reasoning?"),
+    a: [ I("Lokale Modelle sind illegal", "Local models are illegal"),
+      I("Kleinere lokale Modelle erreichen oft nicht die Spitzenleistung großer Frontier-Modelle", "Smaller local models often don't reach the peak performance of large frontier models"),
+      I("Lokale Modelle kosten pro Token mehr", "Local models cost more per token"),
+      I("Lokale Modelle brauchen zwingend Internet", "Local models strictly require the internet") ], correct: 1 },
+
+  // ---- UNDERSTAND: which model for what ----
+  { dim: "understand", diff: 2,
+    q: I("Wofür eignet sich ein schnelles, günstiges 'kleines' Modell (Haiku/Flash/Mini-Klasse) am besten?",
+         "What is a fast, cheap 'small' model (Haiku/Flash/Mini class) best for?"),
+    a: [ I("Tiefste wissenschaftliche Beweisführung", "The deepest scientific proofs"),
+      I("Hohe Stückzahl einfacher Aufgaben: Klassifizieren, Extrahieren, kurze Antworten", "High-volume simple tasks: classifying, extracting, short answers"),
+      I("Komplexe mehrstufige Strategieanalysen", "Complex multi-step strategy analysis"),
+      I("Gar nichts Sinnvolles", "Nothing useful") ], correct: 1 },
+  { dim: "understand", diff: 3,
+    q: I("Was ist der wichtigste Unterschied zwischen offenen (self-hostbaren) und geschlossenen API-Modellen für Unternehmen?",
+         "What's the key difference between open (self-hostable) and closed API models for enterprises?"),
+    a: [ I("Offene Modelle sind immer besser", "Open models are always better"),
+      I("Bei self-hostbaren Modellen bleiben die Daten im eigenen Haus; bei API-Modellen verlassen sie es bei jedem Aufruf", "With self-hostable models data stays in-house; with API models it leaves on every call"),
+      I("Geschlossene Modelle sind immer kostenlos", "Closed models are always free"),
+      I("Es gibt keinen Unterschied", "There is no difference") ], correct: 1 },
+  { dim: "understand", diff: 3,
+    q: I("Ein 'Reasoning-Modell' unterscheidet sich von einem Standardmodell vor allem wodurch?",
+         "A 'reasoning model' differs from a standard model mainly by what?"),
+    a: [ I("Es ist immer billiger", "It is always cheaper"),
+      I("Es investiert mehr Rechenzeit in mehrstufiges Schlussfolgern vor der Antwort", "It spends more compute on multi-step reasoning before answering"),
+      I("Es kann keine Sprache", "It can't do language"),
+      I("Es läuft nur lokal", "It only runs locally") ], correct: 1 },
+  { dim: "understand", diff: 2,
+    q: I("Wann ist ein Modell mit sehr großem Kontextfenster (1M+) besonders wertvoll?",
+         "When is a model with a very large context window (1M+) especially valuable?"),
+    a: [ I("Für sehr kurze Chats", "For very short chats"),
+      I("Wenn umfangreiche Dokumente/Codebasen am Stück berücksichtigt werden müssen", "When large documents/codebases must be considered at once"),
+      I("Nie, Kontext ist unwichtig", "Never, context is irrelevant"),
+      I("Nur für Bildgenerierung", "Only for image generation") ], correct: 1 },
+
+  // ---- PRACTICE: biggest mistakes (prompt fails, watermarking, etc.) ----
+  { dim: "practice", diff: 3,
+    q: I("Welcher dieser Promptfehler führt am ehesten zu unbrauchbaren Ergebnissen?",
+         "Which of these prompt mistakes most likely leads to unusable results?"),
+    a: [ I("Klares Ziel und Beispiel angeben", "Stating a clear goal and example"),
+      I("Mehrere widersprüchliche Aufgaben in einen vagen Prompt packen", "Cramming several contradictory tasks into one vague prompt"),
+      I("Das gewünschte Format nennen", "Specifying the desired format"),
+      I("Annahmen explizit machen", "Making assumptions explicit") ], correct: 1 },
+  { dim: "ethics", diff: 3,
+    q: I("Du teilst vertrauliche Dokumente extern. Welche Schutzmaßnahme gegen unbefugte KI-Verarbeitung wird oft vergessen?",
+         "You share confidential documents externally. Which safeguard against unauthorized AI processing is often forgotten?"),
+    a: [ I("Die Datei größer machen", "Making the file larger"),
+      I("Sichtbare/maschinenlesbare Kennzeichnung & Nutzungshinweise ('nicht für KI-Training/-Verarbeitung')", "Visible/machine-readable marking & usage notices ('not for AI training/processing')"),
+      I("Die Schriftart ändern", "Changing the font"),
+      I("Das Dokument farbig drucken", "Printing the document in color") ], correct: 1 },
+  { dim: "practice", diff: 2,
+    q: I("Was ist einer der teuersten Fehler beim Delegieren an KI im Arbeitsalltag?",
+         "What's one of the costliest mistakes when delegating to AI day-to-day?"),
+    a: [ I("Zu höfliche Prompts", "Prompts that are too polite"),
+      I("Ergebnisse ungeprüft übernehmen, weil sie überzeugend klingen", "Adopting results unchecked because they sound convincing"),
+      I("Zu viele Beispiele geben", "Giving too many examples"),
+      I("Das Ziel zu klar formulieren", "Stating the goal too clearly") ], correct: 1 },
+  { dim: "practice", diff: 3,
+    q: I("Du gibst einer KI eine Aufgabe ohne Kontext über Zielgruppe und Zweck. Was ist die typische Folge?",
+         "You give an AI a task with no context about audience and purpose. What's the typical result?"),
+    a: [ I("Perfekt zugeschnittene Ergebnisse", "Perfectly tailored results"),
+      I("Generische, beliebige Ausgabe, die nachbearbeitet werden muss", "Generic, arbitrary output that needs reworking"),
+      I("Keine Ausgabe", "No output"),
+      I("Automatisch vertrauliche Ergebnisse", "Automatically confidential results") ], correct: 1 },
+  { dim: "ethics", diff: 4,
+    q: I("Welcher Fehler im Umgang mit KI-Ausgaben kann rechtlich am gefährlichsten werden?",
+         "Which mistake handling AI output can become the most legally dangerous?"),
+    a: [ I("Eine zu lange Antwort", "An answer that's too long"),
+      I("Erfundene Fakten/Zitate ungeprüft in verbindliche Dokumente übernehmen", "Adopting fabricated facts/citations unchecked into binding documents"),
+      I("Eine unschöne Formatierung", "Ugly formatting"),
+      I("Zu viele Zwischenüberschriften", "Too many subheadings") ], correct: 1 },
+
+  // ---- EVALUATE: detecting AI-generated content ----
+  { dim: "evaluate", diff: 3,
+    q: I("Wie zuverlässig sind automatische 'KI-Detektoren' für Text nach aktuellem Forschungsstand?",
+         "How reliable are automatic 'AI detectors' for text per current research?"),
+    a: [ I("Praktisch unfehlbar", "Practically infallible"),
+      I("Unzuverlässig — viele Falsch-Positive/Negative, leicht durch Umschreiben austrickbar", "Unreliable — many false positives/negatives, easily fooled by rewriting"),
+      I("Nur bei kurzen Texten perfekt", "Perfect only on short texts"),
+      I("Gesetzlich verbindlich", "Legally binding") ], correct: 1 },
+  { dim: "evaluate", diff: 3,
+    q: I("Was ist 2026 der robusteste Ansatz, Herkunft von Inhalten nachzuweisen, statt zu 'raten'?",
+         "In 2026, what's the most robust approach to prove content origin rather than 'guessing'?"),
+    a: [ I("Bauchgefühl des Lesers", "The reader's gut feeling"),
+      I("Provenienz/Content Credentials (z. B. C2PA) — verifizierbare Herkunfts-Metadaten", "Provenance/Content Credentials (e.g. C2PA) — verifiable origin metadata"),
+      I("Die Textlänge messen", "Measuring text length"),
+      I("Nach Tippfehlern suchen", "Looking for typos") ], correct: 1 },
+  { dim: "evaluate", diff: 2,
+    q: I("Welches Merkmal ist ein TYPISCHES (aber kein sicheres) Indiz für KI-generierten Text?",
+         "Which trait is a TYPICAL (but not certain) sign of AI-generated text?"),
+    a: [ I("Konkrete, überprüfbare persönliche Details und Brüche im Stil", "Concrete, checkable personal details and stylistic breaks"),
+      I("Glatte, generische Formulierungen mit wenig spezifischem, prüfbarem Gehalt", "Smooth, generic phrasing with little specific, checkable substance"),
+      I("Rechtschreibfehler in jedem Satz", "Spelling errors in every sentence"),
+      I("Handschriftliche Notizen", "Handwritten notes") ], correct: 1 },
+  { dim: "evaluate", diff: 4,
+    q: I("Ein Mitarbeiter wird auf Basis eines KI-Detektor-Scores der Täuschung beschuldigt. Wie bewertest du das als FK?",
+         "An employee is accused of cheating based on an AI-detector score. How do you assess this as a leader?"),
+    a: [ I("Score genügt als Beweis", "The score suffices as proof"),
+      I("Score allein ist kein Beweis — Falsch-Positive sind real, es braucht Kontext und Gespräch", "A score alone is no proof — false positives are real; context and dialogue are needed"),
+      I("Sofort kündigen", "Terminate immediately"),
+      I("Den Score verdoppeln zur Sicherheit", "Double the score to be safe") ], correct: 1 },
+  { dim: "evaluate", diff: 2,
+    q: I("Welches Tool-Konzept hilft Führungskräften am ehesten, Herkunft von Bildern/Dokumenten zu prüfen?",
+         "Which tool concept best helps leaders verify the origin of images/documents?"),
+    a: [ I("Ein Rechtschreibprüfer", "A spell checker"),
+      I("Content-Credentials-/Metadaten-Prüfung (Provenienz) statt reiner Detektor-Scores", "Content-credentials/metadata checks (provenance) instead of mere detector scores"),
+      I("Ein Taschenrechner", "A calculator"),
+      I("Ein Übersetzer", "A translator") ], correct: 1 },
+
+];
+
+// difficulty-balanced sampler. Returns N items, bilingual-resolved at runtime.
+// Prefers ctx-matching items for the user's area, always includes >=3 traps,
+// and spreads across dimensions + difficulty.
+function drawItems(pool, n, area, rngSeed) {
+  let seed = rngSeed || (Date.now() % 2147483647);
+  const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+  const shuffle = (arr) => {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(rnd() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  };
+
+  const traps = shuffle(pool.filter((q) => q.trap));
+  const nonTraps = pool.filter((q) => !q.trap);
+
+  // weight ctx-matching items higher
+  const ctxMatch = shuffle(nonTraps.filter((q) => q.ctx === area));
+  const rest = shuffle(nonTraps.filter((q) => q.ctx !== area));
+
+  const wantTraps = Math.min(traps.length, Math.max(3, Math.round(n * 0.2)));
+  const picked = [...traps.slice(0, wantTraps)];
+
+  const ordered = [...ctxMatch, ...rest];
+  for (const q of ordered) {
+    if (picked.length >= n) break;
+    picked.push(q);
+  }
+  return shuffle(picked).slice(0, n);
+}
+
+// ---- dimension display labels ----
+const DIMS = {
+  understand: { de: "Verstehen", en: "Understand", color: C.cyan },
+  apply: { de: "Anwenden", en: "Apply", color: C.amber },
+  evaluate: { de: "Bewerten", en: "Evaluate", color: C.gold },
+  ethics: { de: "Ethik", en: "Ethics", color: C.violet },
+  lead: { de: "Führung", en: "Leadership", color: C.green },
+  practice: { de: "Praxis", en: "Practice", color: C.red },
+};
+
+// ---- onboarding option sets (value keys are stable; labels via lang) ----
+const OPTS = {
+  role: {
+    de: ["Team Lead", "Abteilungsleitung", "Bereichsleitung", "Geschäftsführung / C-Level", "Projektleitung", "Sonstige"],
+    en: ["Team Lead", "Department Head", "Division Head", "Managing Director / C-Level", "Project Lead", "Other"],
+  },
+  age: { de: ["unter 30", "30–39", "40–49", "50–59", "60+"], en: ["under 30", "30–39", "40–49", "50–59", "60+"] },
+  area: {
+    de: ["IT / Engineering", "Consulting", "Sales / Account", "Aviation Commerce", "Markets", "Operations", "HR / People", "Finance", "Marketing", "Sonstige"],
+    en: ["IT / Engineering", "Consulting", "Sales / Account", "Aviation Commerce", "Markets", "Operations", "HR / People", "Finance", "Marketing", "Other"],
+  },
+  leadExp: { de: ["< 2 Jahre", "2–5 Jahre", "6–10 Jahre", "> 10 Jahre"], en: ["< 2 years", "2–5 years", "6–10 years", "> 10 years"] },
+  teamSize: { de: ["1–5", "6–15", "16–25", "26–50", "> 50"], en: ["1–5", "6–15", "16–25", "26–50", "> 50"] },
+  self: {
+    de: ["Anfänger", "Gelegentlich", "Routiniert", "Fortgeschritten", "Experte"],
+    en: ["Beginner", "Occasional", "Routine", "Advanced", "Expert"],
+  },
+  timeSaved: {
+    de: ["< 15 Min", "15–30 Min", "30–60 Min", "1–2 Std", "> 2 Std"],
+    en: ["< 15 min", "15–30 min", "30–60 min", "1–2 hrs", "> 2 hrs"],
+  },
+  savingPotential: {
+    de: ["Recherche & Analyse", "Texte & Kommunikation", "Reporting & Datenarbeit", "Meetings & Doku", "Entscheidungsvorbereitung", "Sonstiges"],
+    en: ["Research & analysis", "Writing & communication", "Reporting & data work", "Meetings & docs", "Decision prep", "Other"],
+  },
+};
+const FIELDS = ["role", "age", "area", "leadExp", "teamSize", "self", "timeSaved", "savingPotential"];
+
+// ---- study benchmarks (NBER/St. Louis Fed RPS 2024-25; management occ.) ----
+// genAI work-adoption share by age band; management ~49%. Used for context only.
+const STUDY = {
+  adoptionByAge: { "unter 30": 34, "under 30": 34, "30–39": 34, "40–49": 26, "50–59": 17, "60+": 17 },
+  mgmtAdoption: 49, // % of management occupations using genAI at work
+  avgTimeSavedPct: 2.3, // % of work hours saved (management/computer occ ~2.1-2.5)
+};
+
+const ADMIN_PIN = "2024"; // simple gate; change as needed
+
+// ---- storage ----
+async function loadCohort() {
+  try { const r = await storage.get("cohort:v2", true); return r ? JSON.parse(r.value) : []; }
+  catch { return []; }
+}
+async function loadItemStats() {
+  try { const r = await storage.get("itemstats:v2", true); return r ? JSON.parse(r.value) : {}; }
+  catch { return {}; }
+}
+async function persist(entry, itemResults) {
+  let arr = [];
+  try { const r = await storage.get("cohort:v2", true); if (r) arr = JSON.parse(r.value); } catch {}
+  arr.push(entry);
+  if (arr.length > 1000) arr = arr.slice(-1000);
+  try { await storage.set("cohort:v2", JSON.stringify(arr), true); } catch {}
+
+  let stats = {};
+  try { const r = await storage.get("itemstats:v2", true); if (r) stats = JSON.parse(r.value); } catch {}
+  itemResults.forEach(({ key, q, correct }) => {
+    if (!stats[key]) stats[key] = { q, asked: 0, correct: 0 };
+    stats[key].asked += 1;
+    if (correct) stats[key].correct += 1;
+  });
+  try { await storage.set("itemstats:v2", JSON.stringify(stats), true); } catch {}
+  return arr;
+}
+async function resetAll() {
+  try { await storage.set("cohort:v2", JSON.stringify([]), true); } catch {}
+  try { await storage.set("itemstats:v2", JSON.stringify({}), true); } catch {}
+}
+
+const NQ = 20; // questions per run
+
+// ---- small atoms ----
+const Eyebrow = ({ children, color = C.amber }) => (
+  <div style={{ fontFamily: mono, fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color }}>{children}</div>
+);
+function Bar({ value, max = 100, color, height = 10 }) {
+  const pct = Math.max(0, Math.min(100, (value / max) * 100));
+  return (
+    <div style={{ background: C.line, borderRadius: 2, height, overflow: "hidden" }}>
+      <div style={{ width: `${pct}%`, height: "100%", background: color, transition: "width .9s cubic-bezier(.2,.8,.2,1)" }} />
+    </div>
+  );
+}
+const L = (obj, lang) => (obj && typeof obj === "object" ? obj[lang] : obj);
+
+// ============================================================
+export default function App() {
+  const [lang, setLang] = useState("de");
+  const t = STR[lang];
+  const [phase, setPhase] = useState("intro"); // intro|onboard|test|done|admin
+  const [profile, setProfile] = useState({});
+  const [cohort, setCohort] = useState([]);
+  const [report, setReport] = useState(null);
+
+  // test state
+  const [items, setItems] = useState([]);
+  const [qi, setQi] = useState(0);
+  const [answers, setAnswers] = useState([]);
+  const [picked, setPicked] = useState(null);
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [points, setPoints] = useState(0);
+  const [streak, setStreak] = useState(0);
+  const [lastGain, setLastGain] = useState(null);
+  const [paused, setPaused] = useState(false);
+  const pausedRef = useRef(false); pausedRef.current = paused;
+  const pauseAccum = useRef(0); // ms spent paused on current question
+  const pauseStart = useRef(0);
+  const qStart = useRef(0);
+  const answersRef = useRef([]); answersRef.current = answers;
+  const [flags, setFlags] = useState({ blur: 0, paste: 0, longPause: 0, timeouts: 0 });
+  const flagsRef = useRef(flags); flagsRef.current = flags;
+
+  useEffect(() => { loadCohort().then(setCohort); }, []);
+
+  const TIME_PER_Q = 25;
+
+  function beginTest() {
+    const drawn = drawItems(POOL, NQ, profile.area, Date.now() % 2147483647)
+      .map((it) => ({ ...it, key: hashItem(it) }));
+    setItems(drawn);
+    setQi(0); setAnswers([]); setPoints(0); setStreak(0); setLastGain(null);
+    setFlags({ blur: 0, paste: 0, longPause: 0, timeouts: 0 });
+    setPhase("test");
+  }
+
+  // timer (respects pause)
+  useEffect(() => {
+    if (phase !== "test" || !items.length) return;
+    setPicked(null); setTimeLeft(TIME_PER_Q); qStart.current = Date.now();
+    pauseAccum.current = 0; setPaused(false);
+    const tm = setInterval(() => {
+      if (pausedRef.current) return; // frozen while paused
+      setTimeLeft((s) => { if (s <= 1) { clearInterval(tm); handleAnswer(null, true); return 0; } return s - 1; });
+    }, 1000);
+    return () => clearInterval(tm);
+    // eslint-disable-next-line
+  }, [qi, phase, items]);
+
+  function togglePause() {
+    setPaused((p) => {
+      const next = !p;
+      if (next) { pauseStart.current = Date.now(); }
+      else { pauseAccum.current += Date.now() - pauseStart.current; }
+      return next;
+    });
+  }
+
+  // anti-cheat
+  useEffect(() => {
+    if (phase !== "test") return;
+    const onBlur = () => setFlags((f) => ({ ...f, blur: f.blur + 1 }));
+    const onVis = () => { if (document.hidden) onBlur(); };
+    const onPaste = () => setFlags((f) => ({ ...f, paste: f.paste + 1 }));
+    window.addEventListener("blur", onBlur);
+    document.addEventListener("visibilitychange", onVis);
+    document.addEventListener("paste", onPaste);
+    return () => { window.removeEventListener("blur", onBlur); document.removeEventListener("visibilitychange", onVis); document.removeEventListener("paste", onPaste); };
+  }, [phase]);
+
+  const handleAnswer = useCallback((choiceIdx, timedOut = false) => {
+    const cur = items[qi];
+    if (!cur) return;
+    const dur = (Date.now() - qStart.current) - pauseAccum.current;
+    const isCorrect = choiceIdx === cur.correct;
+
+    // gamified scoring: base 100 + speed bonus (up to 100) ; streak multiplier
+    let gain = 0;
+    if (isCorrect) {
+      const speedFrac = Math.max(0, (TIME_PER_Q * 1000 - dur) / (TIME_PER_Q * 1000));
+      const speedBonus = Math.round(speedFrac * 100);
+      const newStreak = streak + 1;
+      const mult = 1 + Math.min(newStreak - 1, 5) * 0.1; // up to 1.5x
+      gain = Math.round((100 + speedBonus) * mult);
+      setStreak(newStreak);
+    } else {
+      setStreak(0);
+    }
+    setPoints((p) => p + gain);
+    setLastGain({ gain, correct: isCorrect, key: qi });
+
+    const rec = { dim: cur.dim, diff: cur.diff, correct: isCorrect, isTrap: !!cur.trap, timedOut, durationMs: dur, key: cur.key, q: L(cur.q, "de") };
+    setAnswers((prev) => [...prev, rec]);
+    if (timedOut) setFlags((f) => ({ ...f, timeouts: f.timeouts + 1 }));
+    if (cur.trap && dur > TIME_PER_Q * 1000 * 0.8 && isCorrect) setFlags((f) => ({ ...f, longPause: f.longPause + 1 }));
+
+    setTimeout(() => {
+      if (qi + 1 >= items.length) finish([...answersRef.current, rec]);
+      else setQi((i) => i + 1);
+    }, 260);
+    // eslint-disable-next-line
+  }, [qi, items, streak]);
+
+  async function finish(all) {
+    const r = computeReport(all, flagsRef.current, profile, points);
+    const entry = {
+      ts: Date.now(), score: r.totalScore, points,
+      seniority: r.seniority.key, role: profile.role, area: profile.area,
+      age: profile.age, self: profile.self, integrity: r.integrity.key,
+      dims: r.dimScores,
+    };
+    const itemResults = all.map((a) => ({ key: a.key, q: a.q, correct: a.correct }));
+    const updated = await persist(entry, itemResults);
+    setCohort(updated); r.cohort = updated; r.points = points;
+    setReport(r); setPhase("done");
+  }
+
+  return (
+    <div style={{ background: C.bg, minHeight: "100vh", color: C.ink, fontFamily: sans }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+        *{box-sizing:border-box;} button{font-family:inherit;cursor:pointer;}
+        @keyframes scan{0%{transform:translateY(-100%)}100%{transform:translateY(2400%)}}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+        @keyframes pop{0%{transform:scale(.6);opacity:0}50%{transform:scale(1.15);opacity:1}100%{transform:scale(1);opacity:1}}
+        @keyframes floatUp{0%{opacity:0;transform:translateY(6px)}20%{opacity:1}100%{opacity:0;transform:translateY(-26px)}}
+        .fu{animation:fadeUp .4s ease both;} .pop{animation:pop .4s ease both;}
+        input{font-family:inherit;}
+        @media (prefers-reduced-motion:reduce){.fu,.pop{animation:none}}
+      `}</style>
+      <div style={{ maxWidth: 880, margin: "0 auto", padding: "0 20px" }}>
+        <Header t={t} lang={lang} setLang={setLang} phase={phase} qi={qi} nq={items.length} setPhase={setPhase} />
+        {phase === "intro" && <Intro t={t} lang={lang} cohort={cohort} onStart={() => setPhase("onboard")} />}
+        {phase === "onboard" && <Onboard t={t} lang={lang} profile={profile} setProfile={setProfile} onDone={beginTest} />}
+        {phase === "test" && items.length > 0 && (
+          <TestView t={t} lang={lang} cur={items[qi]} qi={qi} total={items.length} timeLeft={timeLeft} timeMax={TIME_PER_Q}
+            picked={picked} points={points} streak={streak} lastGain={lastGain} flags={flags}
+            answeredCount={answers.length} paused={paused} onTogglePause={togglePause}
+            onPick={(i) => { setPicked(i); handleAnswer(i); }} />
+        )}
+        {phase === "done" && report && <Report t={t} lang={lang} report={report} profile={profile} />}
+        {phase === "admin" && <Admin t={t} lang={lang} onBack={() => setPhase("intro")} />}
+        <div style={{ height: 48 }} />
+      </div>
+    </div>
+  );
+}
+
+function hashItem(it) {
+  const s = L(it.q, "de");
+  let h = 0; for (let i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) | 0; }
+  return "q" + Math.abs(h);
+}
+
+// ---------- Header ----------
+function Header({ t, lang, setLang, phase, qi, nq, setPhase }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "22px 0 18px", borderBottom: `1px solid ${C.line}` }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ width: 30, height: 30, borderRadius: 6, background: C.amber, display: "grid", placeItems: "center", color: C.bg, fontWeight: 800, fontFamily: mono }}>AI</div>
+        <div>
+          <div style={{ fontWeight: 700, fontSize: 15 }}>{t.appTitle}</div>
+          <div style={{ fontFamily: mono, fontSize: 10.5, color: C.inkDim, letterSpacing: "0.15em" }}>{t.appSub}</div>
+        </div>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+        {phase === "test" && <span style={{ fontFamily: mono, fontSize: 11, color: C.inkDim }}>{t.question} {qi + 1}/{nq}</span>}
+        {(phase === "intro") && (
+          <button onClick={() => setPhase("admin")} style={{ background: "transparent", border: `1px solid ${C.line}`, color: C.inkDim, borderRadius: 7, padding: "5px 10px", fontSize: 11, fontFamily: mono }}>{t.admin}</button>
+        )}
+        <div style={{ display: "flex", border: `1px solid ${C.line}`, borderRadius: 7, overflow: "hidden" }}>
+          {["de", "en"].map((lg) => (
+            <button key={lg} onClick={() => setLang(lg)} style={{
+              background: lang === lg ? C.panelHi : "transparent", color: lang === lg ? C.ink : C.inkDim,
+              border: "none", padding: "5px 10px", fontSize: 11, fontFamily: mono, fontWeight: 700,
+            }}>{lg.toUpperCase()}</button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------- Intro ----------
+function Intro({ t, lang, cohort, onStart }) {
+  const avg = cohort.length ? Math.round(cohort.reduce((s, r) => s + r.score, 0) / cohort.length) : null;
+  return (
+    <div className="fu" style={{ padding: "30px 0 44px" }}>
+      <div style={{ background: C.panelHi, border: `1px solid ${C.green}`, borderRadius: 10, padding: "12px 16px", display: "flex", gap: 10, alignItems: "center", marginBottom: 30 }}>
+        <span style={{ color: C.green, fontFamily: mono, fontSize: 14 }}>🔒</span>
+        <span style={{ color: C.inkDim, fontSize: 13, lineHeight: 1.5 }}>{t.privacyBanner}</span>
+      </div>
+      <Eyebrow>{t.introEyebrow}</Eyebrow>
+      <h1 style={{ fontSize: 38, lineHeight: 1.08, fontWeight: 800, letterSpacing: "-0.02em", margin: "16px 0 14px", maxWidth: 620 }}>{t.introH1}</h1>
+      <p style={{ color: C.inkDim, fontSize: 16, lineHeight: 1.6, maxWidth: 580, margin: 0 }}>{t.introP}</p>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 12, margin: "30px 0" }}>
+        {Object.entries(DIMS).map(([k, d]) => (
+          <div key={k} style={{ background: C.panel, border: `1px solid ${C.line}`, borderRadius: 10, padding: 16 }}>
+            <div style={{ width: 8, height: 8, borderRadius: 2, background: d.color, marginBottom: 10 }} />
+            <div style={{ fontWeight: 600, fontSize: 14 }}>{d[lang]}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ background: C.panelHi, border: `1px solid ${C.line}`, borderRadius: 10, padding: "16px 18px", marginBottom: 24 }}>
+        <div style={{ fontFamily: mono, fontSize: 12, color: C.amber, marginBottom: 8 }}>{t.fairnessTitle}</div>
+        <div style={{ color: C.inkDim, fontSize: 13, lineHeight: 1.55 }}>{t.fairnessText}</div>
+      </div>
+
+      <div style={{ fontFamily: mono, fontSize: 11, color: C.inkDim, marginBottom: 22, lineHeight: 1.6 }}>
+        {avg !== null && `${cohort.length} ${t.participantsSoFar} · ${t.avgScore} ${avg}/100 · `}{t.methodology}
+      </div>
+      <button onClick={onStart} style={btnPrimary}>{t.start}</button>
+    </div>
+  );
+}
+
+// ---------- Onboarding ----------
+function Onboard({ t, lang, profile, setProfile, onDone }) {
+  const labels = { role: t.role, age: t.age, area: t.area, leadExp: t.leadExp, teamSize: t.teamSize, self: t.self, timeSaved: t.timeSaved, savingPotential: t.savingPotential };
+  const otherKey = (lang === "de" ? "Sonstige" : "Other");
+  const otherKey2 = (lang === "de" ? "Sonstiges" : "Other");
+  const complete = FIELDS.every((f) => {
+    const v = profile[f];
+    if (!v) return false;
+    if ((v === otherKey || v === otherKey2) && !profile[`${f}_other`]) return false;
+    return true;
+  });
+  return (
+    <div className="fu" style={{ padding: "30px 0" }}>
+      <Eyebrow color={C.cyan}>{t.step1}</Eyebrow>
+      <h2 style={{ fontSize: 26, fontWeight: 800, margin: "12px 0 6px" }}>{t.onboardH2}</h2>
+      <p style={{ color: C.inkDim, fontSize: 14, margin: "0 0 26px" }}>{t.onboardP}</p>
+      <div style={{ display: "grid", gap: 22 }}>
+        {FIELDS.map((f) => {
+          const opts = OPTS[f][lang];
+          const sel = profile[f];
+          const isOther = sel === otherKey || sel === otherKey2;
+          return (
+            <div key={f}>
+              <div style={{ fontFamily: mono, fontSize: 11.5, color: C.inkDim, letterSpacing: "0.08em", marginBottom: 9, textTransform: "uppercase" }}>{labels[f]}</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                {opts.map((o) => {
+                  const on = sel === o;
+                  return (
+                    <button key={o} onClick={() => setProfile((p) => ({ ...p, [f]: o }))} style={{
+                      padding: "9px 14px", borderRadius: 8, fontSize: 13.5, fontWeight: 500,
+                      border: `1px solid ${on ? C.cyan : C.line}`,
+                      background: on ? "rgba(54,201,217,0.12)" : C.panel, color: on ? C.ink : C.inkDim,
+                    }}>{o}</button>
+                  );
+                })}
+              </div>
+              {isOther && (
+                <input autoFocus placeholder={t.otherPlaceholder} value={profile[`${f}_other`] || ""}
+                  onChange={(e) => setProfile((p) => ({ ...p, [`${f}_other`]: e.target.value }))}
+                  style={{ marginTop: 10, width: "100%", maxWidth: 360, background: C.panel, border: `1px solid ${C.line}`, color: C.ink, borderRadius: 8, padding: "10px 12px", fontSize: 14 }} />
+              )}
+            </div>
+          );
+        })}
+      </div>
+      <button disabled={!complete} onClick={onDone} style={{ ...btnPrimary, marginTop: 30, opacity: complete ? 1 : 0.4, cursor: complete ? "pointer" : "not-allowed" }}>{t.toTest}</button>
+    </div>
+  );
+}
+
+// ---------- Test ----------
+function TestView({ t, lang, cur, qi, total, timeLeft, timeMax, picked, points, streak, lastGain, flags, answeredCount, paused, onTogglePause, onPick }) {
+  const urgent = timeLeft <= 7 && !paused;
+  const pct = Math.round((answeredCount / total) * 100);
+  const flagCount = flags.blur + flags.paste;
+  const dim = DIMS[cur.dim];
+  return (
+    <div style={{ padding: "22px 0" }}>
+      {/* HUD */}
+      <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 14, flexWrap: "wrap" }}>
+        <div style={{ fontFamily: mono, fontSize: 13 }}>
+          <span style={{ color: C.inkDim }}>{lang === "de" ? "PUNKTE" : "POINTS"} </span>
+          <b style={{ color: C.gold, fontSize: 16 }}>{points}</b>
+        </div>
+        {streak >= 2 && (
+          <div style={{ fontFamily: mono, fontSize: 12, color: C.amber }}>
+            🔥 {t.streak} {streak}× ({(1 + Math.min(streak - 1, 5) * 0.1).toFixed(1)}×)
+          </div>
+        )}
+        <button onClick={onTogglePause} style={{
+          marginLeft: "auto", background: paused ? C.amber : "transparent", color: paused ? C.bg : C.ink,
+          border: `1px solid ${paused ? C.amber : C.line}`, borderRadius: 8, padding: "6px 13px",
+          fontSize: 12.5, fontFamily: mono, fontWeight: 700, display: "flex", alignItems: "center", gap: 6,
+        }}>{paused ? `▶ ${t.resume}` : `⏸ ${t.pause}`}</button>
+        {flagCount > 0 && (
+          <span style={{ fontFamily: mono, fontSize: 10.5, color: C.red }}>⚑ {flagCount} {flagCount > 1 ? t.anomaliesPl : t.anomalies}</span>
+        )}
+      </div>
+
+      {/* SEGMENTED STATUS BAR — answered / current / upcoming */}
+      <div style={{ marginBottom: 8 }}>
+        <div style={{ display: "flex", gap: 3, alignItems: "center" }}>
+          {Array.from({ length: total }).map((_, i) => {
+            const state = i < answeredCount ? "done" : i === qi ? "current" : "todo";
+            return (
+              <div key={i} style={{
+                flex: 1, height: state === "current" ? 9 : 6, borderRadius: 2,
+                background: state === "done" ? dim.color : state === "current" ? C.ink : C.line,
+                opacity: state === "todo" ? 0.5 : 1,
+                transition: "all .3s",
+              }} />
+            );
+          })}
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 7, fontFamily: mono, fontSize: 11, color: C.inkDim }}>
+          <span>{answeredCount}/{total} {t.answered} · {pct}%</span>
+          <span>{total - answeredCount} {t.remaining}</span>
+        </div>
+      </div>
+
+      {/* timer row */}
+      <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 18, justifyContent: "flex-end" }}>
+        <div style={{ position: "relative", fontFamily: mono, fontWeight: 700, fontSize: 15, minWidth: 50, textAlign: "right", color: paused ? C.amber : urgent ? C.red : C.ink }}>
+          {paused ? "⏸" : `${String(timeLeft).padStart(2, "0")}s`}
+          {lastGain && lastGain.key === qi && lastGain.correct && (
+            <span style={{ position: "absolute", right: 0, top: -22, color: C.gold, fontSize: 13, animation: "floatUp 1s ease forwards" }}>+{lastGain.gain}</span>
+          )}
+        </div>
+      </div>
+
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+        <span style={{ width: 8, height: 8, borderRadius: 2, background: dim.color }} />
+        <Eyebrow color={dim.color}>{dim[lang]}</Eyebrow>
+      </div>
+
+      <div key={qi} className="fu" style={{ background: C.panel, border: `1px solid ${C.line}`, borderRadius: 14, padding: "26px 24px", position: "relative", overflow: "hidden", minHeight: 280 }}>
+        {urgent && <div style={{ position: "absolute", left: 0, right: 0, height: 2, background: C.red, opacity: 0.5, animation: "scan 1.2s linear infinite" }} />}
+
+        {paused ? (
+          // PAUSE OVERLAY — question + options fully hidden so nobody can read/copy
+          <div style={{ display: "grid", placeItems: "center", minHeight: 230, textAlign: "center" }}>
+            <div>
+              <div style={{ fontSize: 40, marginBottom: 14 }}>⏸</div>
+              <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>{t.pausedTitle}</div>
+              <div style={{ color: C.inkDim, fontSize: 14, maxWidth: 360, margin: "0 auto 20px", lineHeight: 1.5 }}>{t.pausedHint}</div>
+              <button onClick={onTogglePause} style={btnPrimary}>▶ {t.resume}</button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div style={{ fontSize: 18.5, fontWeight: 600, lineHeight: 1.42, marginBottom: 22 }}>{L(cur.q, lang)}</div>
+            <div style={{ display: "grid", gap: 10 }}>
+              {cur.a.map((opt, i) => {
+                const on = picked === i;
+                return (
+                  <button key={i} disabled={picked !== null} onClick={() => onPick(i)} style={{
+                    textAlign: "left", padding: "14px 16px", borderRadius: 10, fontSize: 14.5, lineHeight: 1.4,
+                    border: `1px solid ${on ? dim.color : C.line}`, background: on ? "rgba(255,255,255,0.05)" : C.panelHi,
+                    color: C.ink, display: "flex", gap: 12, alignItems: "flex-start",
+                  }}>
+                    <span style={{ fontFamily: mono, fontSize: 12, color: dim.color, marginTop: 2, fontWeight: 700 }}>{String.fromCharCode(65 + i)}</span>
+                    <span>{L(opt, lang)}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        )}
+      </div>
+      <div style={{ textAlign: "center", marginTop: 16, fontFamily: mono, fontSize: 11, color: C.inkDim }}>{paused ? t.pausedHint : t.bauch}</div>
+    </div>
+  );
+}
+
+// ============================================================
+// SCORING
+// ============================================================
+function computeReport(answers, flags, profile, points) {
+  const dimScores = {};
+  Object.keys(DIMS).forEach((k) => {
+    const qs = answers.filter((a) => a.dim === k);
+    const correct = qs.filter((a) => a.correct).length;
+    if (qs.length) dimScores[k] = { correct, total: qs.length, pct: Math.round((correct / qs.length) * 100) };
+  });
+
+  // difficulty-weighted score (harder items worth more) — IRT-lite
+  let earned = 0, possible = 0;
+  answers.forEach((a) => { const w = a.diff; possible += w; if (a.correct) earned += w; });
+  const totalScore = possible ? Math.round((earned / possible) * 100) : 0;
+
+  const traps = answers.filter((a) => a.isTrap);
+  const trapsCorrect = traps.filter((a) => a.correct).length;
+
+  const tabSwitches = flags.blur, pastes = flags.paste, timeouts = flags.timeouts, slowTraps = flags.longPause;
+  let suspicion = 0;
+  suspicion += Math.min(tabSwitches * 18, 50);
+  suspicion += Math.min(pastes * 25, 50);
+  suspicion += slowTraps * 12;
+  if (traps.length && trapsCorrect === traps.length && tabSwitches >= 2) suspicion += 15;
+  suspicion = Math.min(100, suspicion);
+
+  const integrity =
+    suspicion >= 60 ? { key: "flag", label: { de: "Auffällig", en: "Flagged" }, color: C.red, note: { de: "Mehrere Hinweise auf externe Hilfe. Ergebnis nur eingeschränkt aussagekräftig.", en: "Multiple signs of outside help. Result is only partly meaningful." } } :
+    suspicion >= 30 ? { key: "borderline", label: { de: "Grenzwertig", en: "Borderline" }, color: C.amber, note: { de: "Einzelne Auffälligkeiten erkannt. Im Zweifel ehrlich wiederholen.", en: "Some anomalies detected. If in doubt, retry honestly." } } :
+    { key: "clean", label: { de: "Sauber", en: "Clean" }, color: C.green, note: { de: "Keine relevanten Auffälligkeiten. Belastbares Ergebnis.", en: "No relevant anomalies. Reliable result." } };
+
+  const judgement = traps.length ? trapsCorrect / traps.length : 0;
+  const sIndex = totalScore * 0.7 + judgement * 30;
+  const seniority =
+    sIndex >= 85 ? { key: 5, rank: 5, color: C.green, label: { de: "AI-Native Leader", en: "AI-Native Leader" }, desc: { de: "Souveräne Kombination aus Wissen, Urteilsvermögen und Führungsperspektive.", en: "A confident blend of knowledge, judgement and leadership perspective." } } :
+    sIndex >= 68 ? { key: 4, rank: 4, color: C.cyan, label: { de: "Strategischer Anwender", en: "Strategic Practitioner" }, desc: { de: "Solides Fundament, denkt KI bereits in Prozesse und Teamführung mit.", en: "A solid foundation, already integrating AI into processes and team leadership." } } :
+    sIndex >= 50 ? { key: 3, rank: 3, color: C.amber, label: { de: "Aufgeklärter Einsteiger", en: "Informed Beginner" }, desc: { de: "Gutes Grundverständnis, ausbaufähig bei Anwendung und Governance.", en: "Good basic understanding, room to grow in application and governance." } } :
+    sIndex >= 32 ? { key: 2, rank: 2, color: C.violet, label: { de: "Neugieriger Beobachter", en: "Curious Observer" }, desc: { de: "Erste Berührungspunkte, klarer Bedarf an strukturiertem Aufbau.", en: "First touchpoints, a clear need for structured build-up." } } :
+    { key: 1, rank: 1, color: C.red, label: { de: "Orientierungsphase", en: "Orientation Phase" }, desc: { de: "Grundlagen sollten priorisiert aufgebaut werden.", en: "Fundamentals should be built up as a priority." } };
+
+  const recs = buildRecs(dimScores);
+  return { totalScore, dimScores, seniority, integrity, suspicion, points, flags: { tabSwitches, pastes, timeouts, slowTraps }, traps: { correct: trapsCorrect, total: traps.length }, recs };
+}
+
+function buildRecs(dimScores) {
+  const lib = {
+    understand: {
+      training: { de: ["Grundlagen-Workshop 'Wie funktioniert generative KI?'", "LHIND AI-Fundamentals Kurs"], en: ["Foundations workshop 'How does generative AI work?'", "LHIND AI fundamentals course"] },
+      skills: { de: ["Halluzinationen aktiv gegenprüfen", "Knowledge Cutoff & Kontextfenster verstehen"], en: ["Actively cross-check hallucinations", "Understand knowledge cutoff & context window"] },
+      books: { de: ["'Co-Intelligence' — Ethan Mollick", "'Künstliche Intelligenz' — Manuela Lenzen"], en: ["'Co-Intelligence' — Ethan Mollick", "'A Brief History of Intelligence' — M. Bennett"] },
+      resources: [
+        { label: "Elements of AI (kostenloser Kurs / free course)", url: "https://www.elementsofai.com/" },
+        { label: "Google AI Essentials (Coursera, Zertifikat)", url: "https://www.coursera.org/google-learn/ai-essentials" },
+        { label: "3Blue1Brown: How LLMs work (Video)", url: "https://www.youtube.com/watch?v=wjZofJX0v4M" },
+      ],
+    },
+    apply: {
+      training: { de: ["Workshop 'KI-Use-Cases bewerten & priorisieren'", "ROI-Methodik für KI-Projekte"], en: ["Workshop 'Evaluate & prioritize AI use-cases'", "ROI methodology for AI projects"] },
+      skills: { de: ["Use-Case-Canvas anwenden", "Baseline vor Pilot definieren", "Model-Routing einführen (klein/lokal vs. Frontier)"], en: ["Apply a use-case canvas", "Define a baseline before piloting", "Introduce model routing (small/local vs. frontier)"] },
+      books: { de: ["'Prediction Machines' — Agrawal et al.", "'The AI-First Company' — Ash Fontana"], en: ["'Prediction Machines' — Agrawal et al.", "'The AI-First Company' — Ash Fontana"] },
+      resources: [
+        { label: "Wharton: AI for Business (Coursera Specialization)", url: "https://www.coursera.org/specializations/ai-for-business-wharton" },
+        { label: "Ollama — lokale LLMs selbst betreiben", url: "https://ollama.com/" },
+        { label: "Microsoft: AI for Business Leaders (Learn)", url: "https://learn.microsoft.com/en-us/training/" },
+      ],
+    },
+    evaluate: {
+      training: { de: ["Critical-Thinking-Lab für KI-Output", "Quellen-Verifikation in der Praxis"], en: ["Critical-thinking lab for AI output", "Source verification in practice"] },
+      skills: { de: ["KI-Output systematisch verifizieren", "Provenienz/Content Credentials prüfen statt Detektor-Scores"], en: ["Systematically verify AI output", "Check provenance/content credentials instead of detector scores"] },
+      books: { de: ["'Calling Bullshit' — Bergstrom & West", "'Weapons of Math Destruction' — O'Neil"], en: ["'Calling Bullshit' — Bergstrom & West", "'Weapons of Math Destruction' — O'Neil"] },
+      resources: [
+        { label: "C2PA / Content Credentials (Herkunfts-Standard)", url: "https://contentcredentials.org/" },
+        { label: "Calling Bullshit — Uni-Kurs (frei)", url: "https://www.callingbullshit.org/" },
+        { label: "MIT: Detecting AI text — Grenzen (Studie)", url: "https://arxiv.org/abs/2303.11156" },
+      ],
+    },
+    ethics: {
+      training: { de: ["Workshop KI-Ethik, DSGVO & Mitbestimmung", "Bias & Fairness in KI-Systemen"], en: ["Workshop AI ethics, GDPR & co-determination", "Bias & fairness in AI systems"] },
+      skills: { de: ["Datenschutz-Check vor Tool-Einsatz", "Vertrauliche Dokumente für KI kennzeichnen", "Bias-Risiken im Prozess erkennen"], en: ["Data-protection check before tool use", "Mark confidential docs against AI processing", "Spot bias risks in the process"] },
+      books: { de: ["'The Alignment Problem' — Brian Christian", "'Atlas of AI' — Kate Crawford"], en: ["'The Alignment Problem' — Brian Christian", "'Atlas of AI' — Kate Crawford"] },
+      resources: [
+        { label: "EU AI Act — offizieller Überblick", url: "https://digital-strategy.ec.europa.eu/en/policies/regulatory-framework-ai" },
+        { label: "NIST AI Risk Management Framework", url: "https://www.nist.gov/itl/ai-risk-management-framework" },
+        { label: "OECD AI Principles", url: "https://oecd.ai/en/ai-principles" },
+      ],
+    },
+    lead: {
+      training: { de: ["'Führen im KI-Zeitalter' — Leadership-Programm", "Change-Management für KI-Adoption"], en: ["'Leading in the AI era' — leadership program", "Change management for AI adoption"] },
+      skills: { de: ["KI-Nutzungsrahmen fürs Team formulieren", "Sichere Lernräume schaffen"], en: ["Define an AI usage framework for the team", "Create safe learning spaces"] },
+      books: { de: ["'The Coming Wave' — Mustafa Suleyman", "'Human + Machine' — Daugherty & Wilson"], en: ["'The Coming Wave' — Mustafa Suleyman", "'Human + Machine' — Daugherty & Wilson"] },
+      resources: [
+        { label: "HBR: Leading with AI (Artikelsammlung)", url: "https://hbr.org/topic/subject/ai-and-machine-learning" },
+        { label: "MIT Sloan: AI for leaders (executive)", url: "https://executive.mit.edu/" },
+        { label: "Ethan Mollick — 'One Useful Thing' (Blog)", url: "https://www.oneusefulthing.org/" },
+      ],
+    },
+    practice: {
+      training: { de: ["Hands-on Lab: Agentische Workflows & lokale Skills", "Praxis-Sprint: einen echten Prozess automatisieren"], en: ["Hands-on lab: agentic workflows & local skills", "Practice sprint: automate a real process"] },
+      skills: { de: ["Einen wiederverwendbaren 'lokalen Skill' bauen", "Morning-Briefing-Routine für Top-Kunden aufsetzen", "Prompt-Bibliothek anlegen"], en: ["Build a reusable 'local skill'", "Set up a morning-briefing routine for key accounts", "Create a prompt library"] },
+      books: { de: ["'AI Engineering' — Chip Huyen (Auszüge)", "'Co-Intelligence' — Ethan Mollick"], en: ["'AI Engineering' — Chip Huyen (excerpts)", "'Co-Intelligence' — Ethan Mollick"] },
+      resources: [
+        { label: "Anthropic: Prompt Engineering Guide", url: "https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/overview" },
+        { label: "OpenAI: Prompt engineering Guide", url: "https://platform.openai.com/docs/guides/prompt-engineering" },
+        { label: "DeepLearning.AI: Short Courses (frei)", url: "https://www.deeplearning.ai/courses/" },
+      ],
+    },
+  };
+  const order = Object.entries(dimScores).sort((a, b) => a[1].pct - b[1].pct).map(([k]) => k);
+  return order.slice(0, 2).map((k) => ({ dim: k, pct: dimScores[k].pct, ...lib[k] }));
+}
+
+function narrative(t, lang, profile, dimScores, sen, score, integrity, traps) {
+  const entries = Object.entries(dimScores);
+  const weakest = entries.sort((a, b) => a[1].pct - b[1].pct)[0];
+  const strongest = entries.slice().sort((a, b) => b[1].pct - a[1].pct)[0];
+  const dn = (k) => DIMS[k][lang];
+  const role = profile.role_other || profile.role || "—";
+  const area = profile.area_other || profile.area || "—";
+  if (lang === "de") {
+    let s = `Als ${role} im Bereich ${area} erreichst du einen Gesamtscore von ${score}/100 und damit das Profil „${sen.label.de}". ${sen.desc.de} `;
+    s += `Deine stärkste Dimension ist „${dn(strongest[0])}" (${strongest[1].pct}%), während „${dn(weakest[0])}" (${weakest[1].pct}%) dein größtes Wachstumsfeld ist. `;
+    if (traps.total) s += traps.correct === traps.total
+      ? `Bemerkenswert: Du hast alle ${traps.total} Kontroll-Fragen korrekt gelöst — ein starkes Zeichen für eigenständiges Urteilsvermögen. `
+      : `Bei den Kontroll-Fragen hast du ${traps.correct} von ${traps.total} gemeistert — hinterfrage Antworten kritischer statt der erstbesten plausiblen Option zu folgen. `;
+    if (integrity.key !== "clean") s += `Hinweis: ${integrity.note.de} `;
+    s += sen.rank >= 4
+      ? `Dein nächster Hebel liegt im Skalieren: etabliere Governance, befähige dein Team gezielt und mache deinen KI-Einsatz sichtbar und wiederholbar.`
+      : sen.rank === 3
+      ? `Konkreter nächster Schritt: wähle einen echten Prozess in deinem Bereich, definiere eine messbare Baseline und führe einen begrenzten Piloten durch.`
+      : `Konkreter nächster Schritt: investiere in Grundlagen und sammle in einem sicheren Rahmen erste eigene Hands-on-Erfahrung — Verständnis entsteht durch Anwendung.`;
+    return s;
+  }
+  let s = `As a ${role} in ${area}, you reach a total score of ${score}/100 — the profile "${sen.label.en}". ${sen.desc.en} `;
+  s += `Your strongest dimension is "${dn(strongest[0])}" (${strongest[1].pct}%), while "${dn(weakest[0])}" (${weakest[1].pct}%) is your biggest growth area. `;
+  if (traps.total) s += traps.correct === traps.total
+    ? `Notably, you solved all ${traps.total} control questions correctly — a strong sign of independent judgement. `
+    : `You mastered ${traps.correct} of ${traps.total} control questions — challenge answers more critically rather than picking the first plausible option. `;
+  if (integrity.key !== "clean") s += `Note: ${integrity.note.en} `;
+  s += sen.rank >= 4
+    ? `Your next lever is scaling: establish governance, enable your team deliberately, and make your AI use visible and repeatable.`
+    : sen.rank === 3
+    ? `Concrete next step: pick a real process in your area, define a measurable baseline and run a bounded pilot.`
+    : `Concrete next step: invest in fundamentals and gain first hands-on experience in a safe setting — understanding comes from doing.`;
+  return s;
+}
+
+// ============================================================
+// REPORT
+// ============================================================
+function Report({ t, lang, report, profile }) {
+  const { totalScore, dimScores, seniority, integrity, recs, traps, flags, cohort, points } = report;
+  const scores = (cohort || []).map((r) => r.score).sort((a, b) => a - b);
+  const better = scores.filter((s) => s < totalScore).length;
+  const percentile = scores.length > 1 ? Math.round((better / scores.length) * 100) : null;
+  const avg = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null;
+
+  // study comparison: self-reported saving potential vs adoption benchmark for age
+  const adoption = STUDY.adoptionByAge[profile.age] ?? 30;
+
+  return (
+    <div className="fu" style={{ padding: "28px 0" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+        <span style={{ fontSize: 22 }}>🎯</span>
+        <Eyebrow color={seniority.color}>{t.yourResult}</Eyebrow>
+      </div>
+
+      {/* Hero */}
+      <div style={{ display: "flex", gap: 28, flexWrap: "wrap", alignItems: "flex-end", margin: "8px 0" }}>
+        <div>
+          <div style={{ fontSize: 72, fontWeight: 800, lineHeight: 1, fontFamily: mono, color: seniority.color }}>{totalScore}</div>
+          <div style={{ fontFamily: mono, fontSize: 12, color: C.inkDim, letterSpacing: "0.1em" }}>{t.ofPoints}</div>
+        </div>
+        <div style={{ paddingBottom: 6 }}>
+          <div style={{ fontSize: 13, color: C.inkDim, fontFamily: mono, letterSpacing: "0.1em" }}>{t.seniority}</div>
+          <div style={{ fontSize: 26, fontWeight: 800, color: seniority.color }}>{seniority.label[lang]}</div>
+          <div style={{ display: "flex", gap: 4, marginTop: 6 }}>
+            {[1, 2, 3, 4, 5].map((n) => <div key={n} style={{ width: 26, height: 5, borderRadius: 2, background: n <= seniority.rank ? seniority.color : C.line }} />)}
+          </div>
+        </div>
+        <div style={{ paddingBottom: 6, marginLeft: "auto", textAlign: "right" }}>
+          <div style={{ fontSize: 13, color: C.inkDim, fontFamily: mono, letterSpacing: "0.1em" }}>{lang === "de" ? "SPIELPUNKTE" : "GAME POINTS"}</div>
+          <div style={{ fontSize: 26, fontWeight: 800, color: C.gold, fontFamily: mono }}>{points}</div>
+        </div>
+      </div>
+
+      {/* Cohort */}
+      <div style={{ background: C.panel, border: `1px solid ${C.line}`, borderRadius: 12, padding: "18px 20px", margin: "22px 0" }}>
+        <Eyebrow color={C.cyan}>{t.cohortCompare}</Eyebrow>
+        {percentile !== null ? (
+          <div style={{ marginTop: 12 }}>
+            <div style={{ fontSize: 15, marginBottom: 14 }}>
+              {t.betterThan} <b style={{ color: C.cyan }}>{percentile}%</b> {t.ofParticipants} {scores.length} {t.participants}. {t.avgIs} <b>{avg}/100</b>.
+            </div>
+            <CohortHist scores={scores} you={totalScore} />
+          </div>
+        ) : (
+          <div style={{ marginTop: 10, color: C.inkDim, fontSize: 14 }}>{t.firstParticipant}{avg !== null && ` (${t.currentAvg}: ${avg}/100)`}</div>
+        )}
+      </div>
+
+      {/* Study comparison */}
+      <div style={{ background: C.panel, border: `1px solid ${C.line}`, borderRadius: 12, padding: "18px 20px", margin: "22px 0" }}>
+        <Eyebrow color={C.gold}>{t.studyCompare}</Eyebrow>
+        <div style={{ marginTop: 14, display: "grid", gap: 16 }}>
+          <StudyRow lang={lang}
+            label={lang === "de" ? `KI-Nutzung deiner Altersgruppe (${profile.age})` : `AI use in your age group (${profile.age})`}
+            value={adoption} suffix="%" benchLabel={lang === "de" ? "Studien-Schnitt" : "study avg"} color={C.cyan} />
+          <StudyRow lang={lang}
+            label={lang === "de" ? "KI-Nutzung in Management-Rollen" : "AI use in management roles"}
+            value={STUDY.mgmtAdoption} suffix="%" benchLabel={lang === "de" ? "Studien-Schnitt" : "study avg"} color={C.green} />
+          <div style={{ fontSize: 13.5, color: C.ink, lineHeight: 1.5 }}>
+            {lang === "de"
+              ? `Deine Selbsteinschätzung: KI spart dir aktuell ${profile.timeSaved} pro Tag. In Studien sparen Wissensarbeiter im Schnitt rund ${STUDY.avgTimeSavedPct}% ihrer Arbeitszeit — du siehst das höchste Potenzial bei „${profile.savingPotential_other || profile.savingPotential}".`
+              : `Your self-assessment: AI currently saves you ${profile.timeSaved} per day. Studies show knowledge workers save about ${STUDY.avgTimeSavedPct}% of work hours on average — you see the highest potential in "${profile.savingPotential_other || profile.savingPotential}".`}
+          </div>
+        </div>
+        <div style={{ fontFamily: mono, fontSize: 10.5, color: C.inkDim, marginTop: 14, lineHeight: 1.5 }}>{t.studyNote}</div>
+      </div>
+
+      {/* Profile */}
+      <div style={{ margin: "26px 0" }}>
+        <Eyebrow color={C.amber}>{t.competencyProfile}</Eyebrow>
+        <div style={{ display: "grid", gap: 14, marginTop: 14 }}>
+          {Object.entries(dimScores).map(([k, m]) => (
+            <div key={k}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontSize: 13.5 }}>
+                <span style={{ fontWeight: 600 }}>{DIMS[k][lang]}</span>
+                <span style={{ fontFamily: mono, color: DIMS[k].color }}>{m.pct}% · {m.correct}/{m.total}</span>
+              </div>
+              <Bar value={m.pct} color={DIMS[k].color} />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <Radar dimScores={dimScores} lang={lang} />
+
+      {/* Integrity */}
+      <div style={{ background: C.panel, border: `1px solid ${integrity.color}`, borderRadius: 12, padding: "16px 20px", margin: "24px 0" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          <div style={{ fontFamily: mono, fontSize: 11, color: integrity.color, letterSpacing: "0.15em" }}>{t.integrityCheck}</div>
+          <div style={{ fontWeight: 700, color: integrity.color }}>{integrity.label[lang]}</div>
+        </div>
+        <div style={{ color: C.inkDim, fontSize: 13.5, marginTop: 8 }}>{integrity.note[lang]}</div>
+        <div style={{ display: "flex", gap: 18, marginTop: 12, flexWrap: "wrap", fontFamily: mono, fontSize: 11.5, color: C.inkDim }}>
+          <span>{t.tabSwitch}: <b style={{ color: C.ink }}>{flags.tabSwitches}</b></span>
+          <span>{t.paste}: <b style={{ color: C.ink }}>{flags.pastes}</b></span>
+          <span>{t.timeouts}: <b style={{ color: C.ink }}>{flags.timeouts}</b></span>
+          <span>{t.controlQ}: <b style={{ color: C.ink }}>{traps.correct}/{traps.total}</b></span>
+        </div>
+      </div>
+
+      {/* Narrative */}
+      <div style={{ margin: "26px 0" }}>
+        <Eyebrow color={seniority.color}>{t.yourPlacement}</Eyebrow>
+        <p style={{ fontSize: 15.5, lineHeight: 1.65, marginTop: 12 }}>{narrative(t, lang, profile, dimScores, seniority, totalScore, integrity, traps)}</p>
+      </div>
+
+      {/* Recs */}
+      <div style={{ margin: "26px 0" }}>
+        <Eyebrow color={C.green}>{t.nextSteps}</Eyebrow>
+        <div style={{ display: "grid", gap: 14, marginTop: 14 }}>
+          {recs.map((r) => (
+            <div key={r.dim} style={{ background: C.panel, border: `1px solid ${C.line}`, borderRadius: 12, padding: "18px 20px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
+                <span style={{ fontWeight: 700, fontSize: 15 }}>{t.focus}: {DIMS[r.dim][lang]}</span>
+                <span style={{ fontFamily: mono, fontSize: 12, color: C.inkDim }}>{r.pct}%</span>
+              </div>
+              <RecBlock label={t.training} items={r.training[lang]} color={C.cyan} />
+              <RecBlock label={t.skills} items={r.skills[lang]} color={C.amber} />
+              <RecBlock label={t.books} items={r.books[lang]} color={C.violet} />
+              {r.resources && (
+                <div style={{ marginTop: 4 }}>
+                  <div style={{ fontFamily: mono, fontSize: 10.5, letterSpacing: "0.12em", color: C.green, marginBottom: 6, textTransform: "uppercase" }}>{t.resourcesTitle}</div>
+                  <div style={{ display: "grid", gap: 5 }}>
+                    {r.resources.map((res, i) => (
+                      <a key={i} href={res.url} target="_blank" rel="noopener noreferrer" style={{ color: C.cyan, fontSize: 13, textDecoration: "none", display: "flex", gap: 7, alignItems: "baseline" }}>
+                        <span style={{ color: C.inkDim, fontFamily: mono, fontSize: 10 }}>↗</span><span>{res.label}</span>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Training-plan prompt generator */}
+      <TrainingPrompt t={t} lang={lang} profile={profile} dimScores={dimScores} seniority={seniority} totalScore={totalScore} recs={recs} />
+
+      <button onClick={() => window.location.reload()} style={btnSecondary}>{t.restart}</button>
+      <div style={{ fontFamily: mono, fontSize: 11, color: C.inkDim, marginTop: 16, lineHeight: 1.6 }}>{t.savedNote}</div>
+    </div>
+  );
+}
+
+function buildTrainingPrompt(lang, profile, dimScores, seniority, totalScore) {
+  const dn = (k) => DIMS[k][lang];
+  const dimLines = Object.entries(dimScores).sort((a, b) => a[1].pct - b[1].pct)
+    .map(([k, m]) => `- ${dn(k)}: ${m.pct}% (${m.correct}/${m.total})`).join("\n");
+  const role = profile.role_other || profile.role;
+  const area = profile.area_other || profile.area;
+  const potential = profile.savingPotential_other || profile.savingPotential;
+  if (lang === "de") {
+    return `Du bist mein persönlicher KI-Lerncoach. Erstelle mir einen konkreten, aktuellen 8-Wochen-Trainingsplan zum Aufbau meiner KI-Kompetenz als Führungskraft.
+
+MEIN KONTEXT
+- Rolle: ${role}
+- Bereich: ${area}
+- Altersgruppe: ${profile.age}
+- Führungserfahrung: ${profile.leadExp}
+- Teamgröße: ${profile.teamSize}
+- Selbsteinschätzung KI-Nutzung: ${profile.self}
+- KI-Zeitersparnis aktuell pro Tag: ${profile.timeSaved}
+- Höchstes selbst gesehenes Potenzial: ${potential}
+
+MEIN TESTERGEBNIS
+- Gesamtscore: ${totalScore}/100
+- Senioritätsstufe: ${seniority.label.de}
+- Kompetenzprofil (schwächste zuerst):
+${dimLines}
+
+AUFGABE
+1. Recherchiere kurz aktuelle, hochwertige Ressourcen (Kurse, Zertifikate, Videos, Tools, Bücher) — bevorzugt frei verfügbar — und priorisiere meine schwächsten Dimensionen.
+2. Baue einen wochenweisen Plan (Woche 1–8) mit je: Lernziel, 1 konkreter Ressource, 1 praktischer Übung an einem echten Beispiel aus meinem Bereich (${area}), und einem messbaren Mini-Ergebnis.
+3. Integriere mindestens eine anwendbare Routine (z. B. Morning-Briefing für Top-Kunden) und einen wiederverwendbaren 'lokalen Skill'.
+4. Berücksichtige Modellauswahl/Model-Routing (lokal/klein vs. Frontier) und Datenschutz für vertrauliche Dokumente.
+5. Gib am Ende eine kurze Liste der 3 größten Fehler, die ich in meiner Rolle vermeiden sollte.
+
+Stelle Rückfragen, falls dir etwas fehlt. Formatiere übersichtlich.`;
+  }
+  return `You are my personal AI learning coach. Build me a concrete, up-to-date 8-week training plan to develop my AI competence as a leader.
+
+MY CONTEXT
+- Role: ${role}
+- Area: ${area}
+- Age group: ${profile.age}
+- Leadership experience: ${profile.leadExp}
+- Team size: ${profile.teamSize}
+- Self-assessed AI usage: ${profile.self}
+- Current daily time saved with AI: ${profile.timeSaved}
+- Highest self-seen potential: ${potential}
+
+MY TEST RESULT
+- Total score: ${totalScore}/100
+- Seniority level: ${seniority.label.en}
+- Competency profile (weakest first):
+${dimLines}
+
+TASK
+1. Briefly research current, high-quality resources (courses, certificates, videos, tools, books) — prefer free ones — and prioritize my weakest dimensions.
+2. Build a week-by-week plan (week 1–8), each with: learning goal, 1 concrete resource, 1 hands-on exercise on a real example from my area (${area}), and a measurable mini-outcome.
+3. Include at least one applicable routine (e.g. a morning briefing for key accounts) and one reusable 'local skill'.
+4. Account for model selection/routing (local/small vs. frontier) and data protection for confidential documents.
+5. End with a short list of the top 3 mistakes I should avoid in my role.
+
+Ask me follow-up questions if anything is missing. Format clearly.`;
+}
+
+function TrainingPrompt({ t, lang, profile, dimScores, seniority, totalScore }) {
+  const [copied, setCopied] = useState(false);
+  const prompt = buildTrainingPrompt(lang, profile, dimScores, seniority, totalScore);
+  const copy = () => {
+    const done = () => { setCopied(true); setTimeout(() => setCopied(false), 2000); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(prompt).then(done).catch(done);
+    else done();
+  };
+  return (
+    <div style={{ margin: "26px 0", background: C.panelHi, border: `1px solid ${C.gold}`, borderRadius: 12, padding: "18px 20px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
+        <Eyebrow color={C.gold}>{t.trainingPromptTitle}</Eyebrow>
+        <button onClick={copy} style={{ background: copied ? C.green : C.gold, color: C.bg, border: "none", borderRadius: 8, padding: "8px 14px", fontWeight: 700, fontSize: 12.5, fontFamily: mono }}>
+          {copied ? t.copied : `⎘ ${t.copyPrompt}`}
+        </button>
+      </div>
+      <div style={{ color: C.inkDim, fontSize: 13, margin: "10px 0 12px", lineHeight: 1.5 }}>{t.trainingPromptHint}</div>
+      <pre style={{ background: C.bg, border: `1px solid ${C.line}`, borderRadius: 8, padding: "14px 16px", margin: 0, maxHeight: 220, overflow: "auto", whiteSpace: "pre-wrap", fontFamily: mono, fontSize: 12, lineHeight: 1.5, color: C.ink }}>{prompt}</pre>
+    </div>
+  );
+}
+
+function StudyRow({ label, value, suffix, benchLabel, color, lang }) {
+  return (
+    <div>
+      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13.5, marginBottom: 6 }}>
+        <span>{label}</span>
+        <span style={{ fontFamily: mono, color }}>{value}{suffix} <span style={{ color: C.inkDim, fontSize: 11 }}>{benchLabel}</span></span>
+      </div>
+      <Bar value={value} color={color} height={8} />
+    </div>
+  );
+}
+
+function RecBlock({ label, items, color }) {
+  return (
+    <div style={{ marginBottom: 12 }}>
+      <div style={{ fontFamily: mono, fontSize: 10.5, letterSpacing: "0.12em", color, marginBottom: 6, textTransform: "uppercase" }}>{label}</div>
+      <ul style={{ margin: 0, paddingLeft: 18 }}>
+        {items.map((it, i) => <li key={i} style={{ fontSize: 13.5, lineHeight: 1.5, marginBottom: 3 }}>{it}</li>)}
+      </ul>
+    </div>
+  );
+}
+
+function CohortHist({ scores, you }) {
+  const bins = [0, 0, 0, 0, 0];
+  scores.forEach((s) => { bins[Math.min(4, Math.floor(s / 20))]++; });
+  const max = Math.max(...bins, 1);
+  const youBin = Math.min(4, Math.floor(you / 20));
+  const labels = ["0–20", "20–40", "40–60", "60–80", "80–100"];
+  return (
+    <div style={{ display: "flex", gap: 8, alignItems: "flex-end", height: 96 }}>
+      {bins.map((b, i) => (
+        <div key={i} style={{ flex: 1, textAlign: "center" }}>
+          <div style={{ height: 68, display: "flex", alignItems: "flex-end" }}>
+            <div style={{ width: "100%", height: `${(b / max) * 100}%`, minHeight: b ? 4 : 0, background: i === youBin ? C.cyan : C.line, borderRadius: "3px 3px 0 0", transition: "height .8s" }} />
+          </div>
+          <div style={{ fontFamily: mono, fontSize: 9.5, color: i === youBin ? C.cyan : C.inkDim, marginTop: 5 }}>{labels[i]}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Radar({ dimScores, lang }) {
+  const data = Object.entries(dimScores);
+  const n = data.length; if (n < 3) return null;
+  const cx = 140, cy = 140, R = 100;
+  const pt = (i, r) => { const ang = (Math.PI * 2 * i) / n - Math.PI / 2; return [cx + Math.cos(ang) * r, cy + Math.sin(ang) * r]; };
+  const poly = data.map(([, m], i) => pt(i, (m.pct / 100) * R).join(",")).join(" ");
+  return (
+    <div style={{ display: "flex", justifyContent: "center", margin: "20px 0" }}>
+      <svg width="290" height="300" viewBox="0 0 290 300">
+        {[0.25, 0.5, 0.75, 1].map((r, i) => <polygon key={i} points={data.map((_, j) => pt(j, R * r).join(",")).join(" ")} fill="none" stroke={C.line} strokeWidth="1" />)}
+        {data.map((_, i) => { const [x, y] = pt(i, R); return <line key={i} x1={cx} y1={cy} x2={x} y2={y} stroke={C.line} strokeWidth="1" />; })}
+        <polygon points={poly} fill="rgba(54,201,217,0.18)" stroke={C.cyan} strokeWidth="2" />
+        {data.map(([k, m], i) => { const [x, y] = pt(i, (m.pct / 100) * R); return <circle key={i} cx={x} cy={y} r="3.5" fill={DIMS[k].color} />; })}
+        {data.map(([k], i) => { const [x, y] = pt(i, R + 22); return <text key={i} x={x} y={y} fill={C.inkDim} fontSize="10" fontFamily={mono} textAnchor={Math.abs(x - cx) < 10 ? "middle" : x > cx ? "start" : "end"}>{DIMS[k][lang]}</text>; })}
+      </svg>
+    </div>
+  );
+}
+
+// ============================================================
+// ADMIN
+// ============================================================
+function Admin({ t, lang, onBack }) {
+  const [authed, setAuthed] = useState(false);
+  const [pin, setPin] = useState("");
+  const [err, setErr] = useState(false);
+  const [cohort, setCohort] = useState([]);
+  const [stats, setStats] = useState({});
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => { if (authed) { Promise.all([loadCohort(), loadItemStats()]).then(([c, s]) => { setCohort(c); setStats(s); setLoaded(true); }); } }, [authed]);
+
+  if (!authed) {
+    return (
+      <div className="fu" style={{ padding: "60px 0", maxWidth: 320 }}>
+        <Eyebrow color={C.amber}>{t.adminTitle}</Eyebrow>
+        <div style={{ marginTop: 16, fontSize: 14, color: C.inkDim, marginBottom: 12 }}>{t.enterPin}</div>
+        <input type="password" value={pin} onChange={(e) => { setPin(e.target.value); setErr(false); }}
+          onKeyDown={(e) => { if (e.key === "Enter") { if (pin === ADMIN_PIN) setAuthed(true); else setErr(true); } }}
+          style={{ width: "100%", background: C.panel, border: `1px solid ${err ? C.red : C.line}`, color: C.ink, borderRadius: 8, padding: "11px 13px", fontSize: 15, fontFamily: mono }} />
+        {err && <div style={{ color: C.red, fontSize: 12, marginTop: 6 }}>{t.wrongPin}</div>}
+        <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
+          <button onClick={() => { if (pin === ADMIN_PIN) setAuthed(true); else setErr(true); }} style={btnPrimary}>{t.unlock}</button>
+          <button onClick={onBack} style={btnSecondary}>{t.backToStart}</button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!loaded) return <div style={{ padding: 60, fontFamily: mono, color: C.inkDim }}>…</div>;
+
+  const n = cohort.length;
+  const scores = cohort.map((r) => r.score).sort((a, b) => a - b);
+  const avg = n ? Math.round(scores.reduce((a, b) => a + b, 0) / n) : 0;
+  const median = n ? scores[Math.floor(n / 2)] : 0;
+  const cleanRate = n ? Math.round((cohort.filter((r) => r.integrity === "clean").length / n) * 100) : 0;
+
+  const groupBy = (key) => {
+    const g = {};
+    cohort.forEach((r) => { const v = r[key] || "—"; if (!g[v]) g[v] = []; g[v].push(r.score); });
+    return Object.entries(g).map(([k, arr]) => ({ k, n: arr.length, avg: Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) })).sort((a, b) => b.avg - a.avg);
+  };
+
+  const hardest = Object.values(stats)
+    .filter((s) => s.asked >= 1)
+    .map((s) => ({ ...s, rate: Math.round((s.correct / s.asked) * 100) }))
+    .sort((a, b) => a.rate - b.rate)
+    .slice(0, 8);
+
+  return (
+    <div className="fu" style={{ padding: "28px 0" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+        <div><Eyebrow color={C.amber}>{t.adminTitle}</Eyebrow><div style={{ color: C.inkDim, fontSize: 13, marginTop: 6 }}>{t.adminSub}</div></div>
+        <button onClick={onBack} style={btnSecondary}>{t.backToStart}</button>
+      </div>
+
+      {n === 0 ? <div style={{ padding: 40, color: C.inkDim, fontFamily: mono }}>{t.noData}</div> : (
+        <>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(140px,1fr))", gap: 12, margin: "22px 0" }}>
+            <Stat label={t.totalRuns} value={n} color={C.cyan} />
+            <Stat label={t.avgScoreAdmin} value={avg} color={C.amber} />
+            <Stat label={t.medianScore} value={median} color={C.gold} />
+            <Stat label={t.avgIntegrity} value={cleanRate + "%"} color={C.green} />
+          </div>
+
+          <GroupTable title={t.byRole} rows={groupBy("role")} />
+          <GroupTable title={t.byArea} rows={groupBy("area")} />
+          <GroupTable title={t.byAge} rows={groupBy("age")} />
+
+          <div style={{ margin: "26px 0" }}>
+            <Eyebrow color={C.red}>{t.hardestQuestions}</Eyebrow>
+            <div style={{ color: C.inkDim, fontSize: 12.5, margin: "6px 0 14px" }}>{t.hardestSub}</div>
+            <div style={{ display: "grid", gap: 10 }}>
+              {hardest.map((h, i) => (
+                <div key={i} style={{ background: C.panel, border: `1px solid ${C.line}`, borderRadius: 10, padding: "12px 14px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginBottom: 8 }}>
+                    <span style={{ fontSize: 13.5, lineHeight: 1.4 }}>{h.q}</span>
+                    <span style={{ fontFamily: mono, fontSize: 12, color: h.rate < 40 ? C.red : h.rate < 70 ? C.amber : C.green, whiteSpace: "nowrap" }}>{h.rate}%</span>
+                  </div>
+                  <Bar value={h.rate} color={h.rate < 40 ? C.red : h.rate < 70 ? C.amber : C.green} height={5} />
+                  <div style={{ fontFamily: mono, fontSize: 10, color: C.inkDim, marginTop: 5 }}>{h.correct}/{h.asked} {t.correctRate} · {h.asked} {t.timesAsked}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <button onClick={async () => { if (window.confirm(t.resetConfirm)) { await resetAll(); setCohort([]); setStats({}); } }}
+            style={{ ...btnSecondary, borderColor: C.red, color: C.red, marginTop: 10 }}>{t.resetAll}</button>
+        </>
+      )}
+    </div>
+  );
+}
+
+function Stat({ label, value, color }) {
+  return (
+    <div style={{ background: C.panel, border: `1px solid ${C.line}`, borderRadius: 10, padding: "14px 16px" }}>
+      <div style={{ fontSize: 26, fontWeight: 800, fontFamily: mono, color }}>{value}</div>
+      <div style={{ fontFamily: mono, fontSize: 10.5, color: C.inkDim, letterSpacing: "0.08em", marginTop: 2 }}>{label}</div>
+    </div>
+  );
+}
+
+function GroupTable({ title, rows }) {
+  if (!rows.length) return null;
+  const max = Math.max(...rows.map((r) => r.avg), 1);
+  return (
+    <div style={{ margin: "22px 0" }}>
+      <Eyebrow color={C.cyan}>{title}</Eyebrow>
+      <div style={{ display: "grid", gap: 8, marginTop: 12 }}>
+        {rows.map((r) => (
+          <div key={r.k} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <span style={{ fontSize: 13, width: 170, color: C.ink, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.k}</span>
+            <div style={{ flex: 1 }}><Bar value={r.avg} max={max} color={C.cyan} height={8} /></div>
+            <span style={{ fontFamily: mono, fontSize: 12, color: C.inkDim, width: 70, textAlign: "right" }}>{r.avg} · n={r.n}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ---- button styles ----
+const btnPrimary = { background: C.amber, color: C.bg, border: "none", padding: "14px 26px", borderRadius: 10, fontWeight: 700, fontSize: 15 };
+const btnSecondary = { background: "transparent", color: C.ink, border: `1px solid ${C.line}`, padding: "12px 22px", borderRadius: 10, fontWeight: 600, fontSize: 14 };
