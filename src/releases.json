@@ -1,0 +1,74 @@
+[
+  {
+    "version": "2.2.0",
+    "date": "2026-06-14",
+    "title": { "de": "Verlinkte wissenschaftliche Quellen", "en": "Linked scientific sources" },
+    "notes": {
+      "de": [
+        "Neu: aufklappbarer Quellen-Block auf der Startseite und im Ergebnisbericht.",
+        "Verlinkt: AI-Literacy-Framework (Ng et al. 2021), MAILS (Carolus et al. 2023), Bloom-Taxonomie und die NBER-Nutzungsstudie."
+      ],
+      "en": [
+        "New: collapsible sources block on the start page and in the result report.",
+        "Linked: AI literacy framework (Ng et al. 2021), MAILS (Carolus et al. 2023), Bloom's taxonomy and the NBER adoption study."
+      ]
+    }
+  },
+  {
+    "version": "2.1.0",
+    "date": "2026-06-14",
+    "title": { "de": "Top-3-Tipps, Avatar-Verlauf & Verallgemeinerung", "en": "Top 3 tips, avatar history & generalization" },
+    "notes": {
+      "de": [
+        "Neu: Top-3-Tipps am Ende, abgeleitet aus dem konkreten Ergebnis.",
+        "Neu: optionaler Avatar-Name — zeigt beim Wiederkommen den eigenen Verlauf.",
+        "Neu: Checkbox, um Führungs-spezifische Fragen für einen Durchlauf auszuschließen.",
+        "Branchenneutral: Aviation-Bezug entfernt, Branding über BRAND/APP_NAME einstellbar.",
+        "Sichtbare Versionsnummer im Footer (diese Anzeige)."
+      ],
+      "en": [
+        "New: Top 3 tips at the end, derived from your concrete result.",
+        "New: optional avatar name — shows your own history when you return.",
+        "New: checkbox to exclude leadership-specific questions for a run.",
+        "Industry-neutral: aviation references removed, branding via BRAND/APP_NAME.",
+        "Visible version number in the footer (this display)."
+      ]
+    }
+  },
+  {
+    "version": "2.0.0",
+    "date": "2026-06-14",
+    "title": { "de": "Sofort-Feedback, Fragen-Review & mehr Fragen", "en": "Instant feedback, question review & more questions" },
+    "notes": {
+      "de": [
+        "Neu: Sofort-Feedback nach jeder Frage (richtig/falsch + Erläuterung).",
+        "Neu: Gesamtübersicht aller Fragen am Ende mit Erläuterungen.",
+        "Fragenpool deutlich erweitert und in eigene Datei ausgelagert.",
+        "Admin-Panel: Speicher-Status-Diagnose ergänzt."
+      ],
+      "en": [
+        "New: instant feedback after each question (right/wrong + explanation).",
+        "New: end-of-test review of all questions with explanations.",
+        "Question pool substantially expanded and moved to its own file.",
+        "Admin panel: storage-status diagnostics added."
+      ]
+    }
+  },
+  {
+    "version": "1.0.0",
+    "date": "2026-06-14",
+    "title": { "de": "Erstveröffentlichung", "en": "Initial release" },
+    "notes": {
+      "de": [
+        "Anonymes KI-Kompetenz-Self-Assessment für Führungskräfte.",
+        "6 Dimensionen, Gamification, Anti-Cheating, Kohorten- & Studienvergleich.",
+        "PIN-geschütztes Admin-Panel."
+      ],
+      "en": [
+        "Anonymous AI-competence self-assessment for leaders.",
+        "6 dimensions, gamification, anti-cheating, cohort & study benchmarks.",
+        "PIN-protected admin panel."
+      ]
+    }
+  }
+]

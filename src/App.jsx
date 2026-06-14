@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { storage } from "./storage";
 import { POOL, I, drawItems } from "./questions";
+import { VERSION, RELEASES } from "./version";
 
 // ============================================================
 // LHIND AI LEADERSHIP ASSESSMENT — v2
@@ -291,6 +292,34 @@ const STUDY = {
   avgTimeSavedPct: 2.3, // % of work hours saved (management/computer occ ~2.1-2.5)
 };
 
+// ---- scientific references (verified canonical links) ----
+const REFERENCES = [
+  {
+    cite: "Ng, Leung, Chu & Qiao (2021)",
+    what: { de: "AI-Literacy-Framework: Verstehen · Anwenden · Bewerten/Erstellen · Ethik", en: "AI literacy framework: Understand · Apply · Evaluate/Create · Ethics" },
+    where: "Computers and Education: Artificial Intelligence",
+    url: "https://doi.org/10.1016/j.caeai.2021.100041",
+  },
+  {
+    cite: "Carolus, Koch, Straka, Latoschik & Wienrich (2023)",
+    what: { de: "MAILS — Meta-AI-Literacy-Skala; Dimensionen inkl. 'Detect AI' & Ethik", en: "MAILS — Meta AI Literacy Scale; dimensions incl. 'Detect AI' & ethics" },
+    where: "Computers in Human Behavior: Artificial Humans",
+    url: "https://doi.org/10.1016/j.chbah.2023.100014",
+  },
+  {
+    cite: "Bloom (1956)",
+    what: { de: "Taxonomie der Lernzielstufen — Grundlage der Schwierigkeitskalibrierung", en: "Taxonomy of learning objectives — basis for difficulty calibration" },
+    where: "Taxonomy of Educational Objectives",
+    url: "https://www.britannica.com/topic/Blooms-taxonomy",
+  },
+  {
+    cite: "Bick, Blandin & Deming (2024)",
+    what: { de: "KI-Nutzungs-Benchmarks (Real-Time Population Survey, NBER/St. Louis Fed)", en: "AI adoption benchmarks (Real-Time Population Survey, NBER/St. Louis Fed)" },
+    where: "NBER Working Paper No. 32966",
+    url: "https://www.nber.org/papers/w32966",
+  },
+];
+
 const ADMIN_PIN = "2024"; // simple gate; change as needed
 
 // ---- Branding (change here to reuse the app in any context) ----
@@ -532,8 +561,83 @@ export default function App() {
         )}
         {phase === "done" && report && <Report t={t} lang={lang} report={report} profile={profile} />}
         {phase === "admin" && <Admin t={t} lang={lang} onBack={() => setPhase("intro")} />}
-        <div style={{ height: 48 }} />
+        <VersionFooter lang={lang} />
       </div>
+    </div>
+  );
+}
+
+// ---------- Scientific references block (reusable) ----------
+function References({ lang, compact }) {
+  const [open, setOpen] = useState(!compact);
+  return (
+    <div style={{ background: C.panelHi, border: `1px solid ${C.line}`, borderRadius: 10, padding: compact ? "14px 16px" : "16px 18px", margin: compact ? "0 0 22px" : "22px 0" }}>
+      <button onClick={() => setOpen((o) => !o)} style={{ background: "transparent", border: "none", color: C.cyan, fontFamily: mono, fontSize: 11.5, letterSpacing: "0.06em", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 8, width: "100%", justifyContent: "space-between", padding: 0 }}>
+        <span>{lang === "de" ? "Wissenschaftliche Grundlagen & Quellen" : "Scientific basis & sources"}</span>
+        <span style={{ opacity: 0.7 }}>{open ? "▲" : "▼"}</span>
+      </button>
+      {open && (
+        <div style={{ marginTop: 12, display: "grid", gap: 11 }}>
+          {REFERENCES.map((r, i) => (
+            <div key={i} style={{ fontSize: 13, lineHeight: 1.5 }}>
+              <a href={r.url} target="_blank" rel="noopener noreferrer" style={{ color: C.cyan, fontWeight: 600, textDecoration: "none" }}>
+                {r.cite} ↗
+              </a>
+              <span style={{ color: C.ink }}> — {r.what[lang]}</span>
+              <span style={{ color: C.inkDim, display: "block", fontSize: 11.5, fontFamily: mono, marginTop: 2 }}>{r.where}</span>
+            </div>
+          ))}
+          <div style={{ color: C.inkDim, fontSize: 11.5, lineHeight: 1.5, marginTop: 2 }}>
+            {lang === "de"
+              ? "Die Benchmark-Zahlen sind gerundete Orientierungswerte aus US-Erhebungen und dienen dem groben Vergleich, nicht als exakte Messlatte."
+              : "The benchmark figures are rounded reference values from US surveys, intended for rough comparison, not as an exact yardstick."}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------- Version footer + release-notes modal ----------
+function VersionFooter({ lang }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ borderTop: `1px solid ${C.line}`, marginTop: 48, padding: "18px 0 40px", display: "flex", justifyContent: "center" }}>
+      <button onClick={() => setOpen(true)} title={lang === "de" ? "Release-Notes anzeigen" : "Show release notes"} style={{
+        background: "transparent", border: `1px solid ${C.line}`, color: C.inkDim, borderRadius: 20,
+        padding: "5px 13px", fontFamily: mono, fontSize: 11, letterSpacing: "0.05em", display: "flex", alignItems: "center", gap: 7,
+      }}>
+        <span style={{ width: 6, height: 6, borderRadius: "50%", background: C.green }} />
+        v{VERSION}
+        <span style={{ opacity: 0.6 }}>· {lang === "de" ? "Was ist neu?" : "What's new?"}</span>
+      </button>
+      {open && (
+        <div onClick={() => setOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(5,11,18,0.78)", display: "grid", placeItems: "center", zIndex: 50, padding: 20 }}>
+          <div onClick={(e) => e.stopPropagation()} className="fu" style={{ background: C.panel, border: `1px solid ${C.line}`, borderRadius: 16, padding: "24px 26px", maxWidth: 560, width: "100%", maxHeight: "80vh", overflowY: "auto" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
+              <Eyebrow color={C.green}>{lang === "de" ? "Release-Notes" : "Release notes"}</Eyebrow>
+              <button onClick={() => setOpen(false)} style={{ background: "transparent", border: "none", color: C.inkDim, fontSize: 22, lineHeight: 1 }}>×</button>
+            </div>
+            <div style={{ display: "grid", gap: 22 }}>
+              {RELEASES.map((r) => (
+                <div key={r.version}>
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 8 }}>
+                    <span style={{ fontFamily: mono, fontWeight: 700, fontSize: 15, color: r.version === VERSION ? C.green : C.ink }}>v{r.version}</span>
+                    {r.version === VERSION && <span style={{ fontFamily: mono, fontSize: 9.5, color: C.bg, background: C.green, borderRadius: 4, padding: "1px 6px", letterSpacing: "0.05em" }}>{lang === "de" ? "AKTUELL" : "CURRENT"}</span>}
+                    <span style={{ fontFamily: mono, fontSize: 11, color: C.inkDim, marginLeft: "auto" }}>{r.date}</span>
+                  </div>
+                  <div style={{ fontSize: 14.5, fontWeight: 600, marginBottom: 8 }}>{r.title[lang]}</div>
+                  <ul style={{ margin: 0, paddingLeft: 18, display: "grid", gap: 5 }}>
+                    {r.notes[lang].map((n, i) => (
+                      <li key={i} style={{ fontSize: 13.5, color: C.inkDim, lineHeight: 1.5 }}>{n}</li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -603,6 +707,7 @@ function Intro({ t, lang, cohort, onStart }) {
       <div style={{ fontFamily: mono, fontSize: 11, color: C.inkDim, marginBottom: 22, lineHeight: 1.6 }}>
         {avg !== null && `${cohort.length} ${t.participantsSoFar} · ${t.avgScore} ${avg}/100 · `}{t.methodology}
       </div>
+      <References lang={lang} compact />
       <button onClick={onStart} style={btnPrimary}>{t.start}</button>
     </div>
   );
@@ -1145,6 +1250,9 @@ function Report({ t, lang, report, profile }) {
         </div>
         <div style={{ fontFamily: mono, fontSize: 10.5, color: C.inkDim, marginTop: 14, lineHeight: 1.5 }}>{t.studyNote}</div>
       </div>
+
+      {/* Scientific references */}
+      <References lang={lang} compact />
 
       {/* Profile */}
       <div style={{ margin: "26px 0" }}>
