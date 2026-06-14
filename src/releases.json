@@ -1,5 +1,21 @@
 [
   {
+    "version": "2.2.2",
+    "date": "2026-06-14",
+    "title": {
+      "de": "Automatik-Testlauf",
+      "en": "Automatik-Testlauf"
+    },
+    "notes": {
+      "de": [
+        "Automatik-Testlauf"
+      ],
+      "en": [
+        "Automatik-Testlauf"
+      ]
+    }
+  },
+  {
     "version": "2.2.1",
     "date": "2026-06-14",
     "title": {
