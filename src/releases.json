@@ -1,8 +1,27 @@
 [
   {
+    "version": "2.5.1",
+    "date": "2026-06-14",
+    "title": {
+      "de": "Schwierigkeit der Fragen erhöht durch vergleichbare Alternativantworten",
+      "en": "Schwierigkeit der Fragen erhöht durch vergleichbare Alternativantworten"
+    },
+    "notes": {
+      "de": [
+        "Schwierigkeit der Fragen erhöht durch vergleichbare Alternativantworten"
+      ],
+      "en": [
+        "Schwierigkeit der Fragen erhöht durch vergleichbare Alternativantworten"
+      ]
+    }
+  },
+  {
     "version": "2.5.0",
     "date": "2026-06-14",
-    "title": { "de": "Plausiblere, gleich lange Antwortoptionen", "en": "Plausible, length-balanced answer options" },
+    "title": {
+      "de": "Plausiblere, gleich lange Antwortoptionen",
+      "en": "Plausible, length-balanced answer options"
+    },
     "notes": {
       "de": [
         "Alle Fragen überarbeitet: Distraktoren sind jetzt fachlich plausible Fehlannahmen statt offensichtlich falscher Optionen.",
@@ -19,7 +38,10 @@
   {
     "version": "2.4.0",
     "date": "2026-06-14",
-    "title": { "de": "Profil-Ansicht & dynamische Einstufung", "en": "Profile view & dynamic tier" },
+    "title": {
+      "de": "Profil-Ansicht & dynamische Einstufung",
+      "en": "Profile view & dynamic tier"
+    },
     "notes": {
       "de": [
         "Neu: Profil-Ansicht — über den Avatar-Namen lassen sich frühere Ergebnisse jederzeit wieder aufrufen (Verlauf, Bestwert, Entwicklung).",
@@ -36,7 +58,10 @@
   {
     "version": "2.3.0",
     "date": "2026-06-14",
-    "title": { "de": "Antwortmischung & schwerere Fragen", "en": "Answer shuffling & harder questions" },
+    "title": {
+      "de": "Antwortmischung & schwerere Fragen",
+      "en": "Answer shuffling & harder questions"
+    },
     "notes": {
       "de": [
         "Bugfix: Antwortoptionen werden jetzt pro Durchlauf zufällig gemischt — die richtige Antwort ist nicht mehr fast immer B.",
@@ -53,7 +78,10 @@
   {
     "version": "2.2.0",
     "date": "2026-06-14",
-    "title": { "de": "Verlinkte wissenschaftliche Quellen", "en": "Linked scientific sources" },
+    "title": {
+      "de": "Verlinkte wissenschaftliche Quellen",
+      "en": "Linked scientific sources"
+    },
     "notes": {
       "de": [
         "Neu: aufklappbarer Quellen-Block auf der Startseite und im Ergebnisbericht.",
@@ -68,7 +96,10 @@
   {
     "version": "2.1.0",
     "date": "2026-06-14",
-    "title": { "de": "Top-3-Tipps, Avatar-Verlauf & Verallgemeinerung", "en": "Top 3 tips, avatar history & generalization" },
+    "title": {
+      "de": "Top-3-Tipps, Avatar-Verlauf & Verallgemeinerung",
+      "en": "Top 3 tips, avatar history & generalization"
+    },
     "notes": {
       "de": [
         "Neu: Top-3-Tipps am Ende, abgeleitet aus dem konkreten Ergebnis.",
@@ -89,7 +120,10 @@
   {
     "version": "2.0.0",
     "date": "2026-06-14",
-    "title": { "de": "Sofort-Feedback, Fragen-Review & mehr Fragen", "en": "Instant feedback, question review & more questions" },
+    "title": {
+      "de": "Sofort-Feedback, Fragen-Review & mehr Fragen",
+      "en": "Instant feedback, question review & more questions"
+    },
     "notes": {
       "de": [
         "Neu: Sofort-Feedback nach jeder Frage (richtig/falsch + Erläuterung).",
@@ -108,7 +142,10 @@
   {
     "version": "1.0.0",
     "date": "2026-06-14",
-    "title": { "de": "Erstveröffentlichung", "en": "Initial release" },
+    "title": {
+      "de": "Erstveröffentlichung",
+      "en": "Initial release"
+    },
     "notes": {
       "de": [
         "Anonymes KI-Kompetenz-Self-Assessment für Führungskräfte.",
