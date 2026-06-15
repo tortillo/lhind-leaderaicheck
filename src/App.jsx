@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { storage } from "./storage";
 import { POOL, I, drawItems } from "./questions";
+import { LHIND_ROLES } from "./roles";
 import { VERSION, RELEASES } from "./version";
 
 // ============================================================
@@ -41,13 +42,18 @@ const STR = {
     onboardH2: "Ein paar Eckdaten",
     onboardP: "Keine Namen, keine E-Mail. Nur für die anonyme Auswertung, deinen Vergleich und die Personalisierung deiner Fragen.",
     role: "Deine Rolle",
+    timeLabel: "Verbleibende Zeit",
+    firstQBonus: "Erste Frage: +10 Sek. Bonuszeit zum Reinkommen 😊",
+    rolePlaceholder: "Rolle suchen oder eingeben…",
+    roleFreeText: "Mit Enter als eigene Eingabe übernehmen",
     age: "Altersgruppe",
     area: "Bereich",
     leadExp: "Führungserfahrung",
     teamSize: "Teamgröße",
     self: "Selbsteinschätzung: professionelle KI-Nutzung",
     timeSaved: "Wie viel Zeit spart dir KI aktuell pro Tag?",
-    savingPotential: "Bei welcher Tätigkeit siehst du das höchste Spar-/Nutzenpotenzial?",
+    savingPotential: "Bei welchen Tätigkeiten siehst du Spar-/Nutzenpotenzial? (nach Priorität antippen)",
+    savingRankHint: "Tippe die Tätigkeiten in der Reihenfolge an, in der du das größte Potenzial siehst. Erneutes Antippen entfernt sie wieder.",
     otherPlaceholder: "Bitte angeben…",
     toTest: "Zum Test →",
     bauch: "Keine Korrektur sichtbar — antworte aus dem Bauch.",
@@ -105,7 +111,7 @@ const STR = {
     seniorityScale: "Senioritäts-Skala",
     studyNote: "Benchmarks aus NBER/St. Louis Fed Real-Time Population Survey (2024–25) und AI-Literacy-Forschung (Ng et al. 2021; Carolus et al. 2023).",
     methodologyTitle: "Methodik",
-    methodology: "Fragen sind nach dem AI-Literacy-Framework von Ng et al. (2021) — Verstehen, Anwenden, Bewerten/Erstellen, Ethik — strukturiert und nach Bloom-Schwierigkeitsstufen kalibriert. Pro Durchlauf werden Items zufällig und schwierigkeitsbalanciert aus einem großen Pool gezogen.",
+    methodology: "Fragen sind nach dem AI-Literacy-Framework von Ng et al. (2021) — Verstehen, Anwenden, Bewerten/Erstellen, Ethik — strukturiert und nach der revidierten Bloom-Taxonomie (Anderson & Krathwohl, 2001) schwierigkeitskalibriert. Pro Durchlauf werden Items zufällig und schwierigkeitsbalanciert aus einem großen Pool gezogen.",
     points: "Pkt",
     pause: "Pause", resume: "Weiter",
     pausedTitle: "Pausiert",
@@ -136,6 +142,8 @@ const STR = {
     progressDelta: "Veränderung zum letzten Mal",
     viewProfile: "Profil ansehen",
     profileLookupTitle: "Eigenes Profil wieder aufrufen",
+    viewLastResult: "Letztes Ergebnis auf diesem Gerät anzeigen",
+    persistHint: "Hinweis: Ergebnisse werden anonym gespeichert. Geräteübergreifend (z. B. anderes Handy/PC) funktioniert das Wiederaufrufen nur bei verbundenem gemeinsamem Speicher und mit gesetztem Avatar-Namen. Auf diesem Gerät bleibt dein letztes Ergebnis auch ohne Avatar abrufbar.",
     profileTitle: "Profil",
     profileEmpty: "Noch keine Ergebnisse unter diesem Namen.",
     profileEmptyHint: "Mach den Test und gib zu Beginn genau diesen Avatar-Namen an — dann sammeln sich deine Ergebnisse hier und du siehst deine Entwicklung über die Zeit.",
@@ -164,13 +172,18 @@ const STR = {
     onboardH2: "A few basics",
     onboardP: "No names, no email. Only for anonymous analysis, your comparison and personalizing your questions.",
     role: "Your role",
+    timeLabel: "Time remaining",
+    firstQBonus: "First question: +10 sec bonus time to get started 😊",
+    rolePlaceholder: "Search or type a role…",
+    roleFreeText: "Press Enter to use your own input",
     age: "Age group",
     area: "Business area",
     leadExp: "Leadership experience",
     teamSize: "Team size",
     self: "Self-assessment: professional AI usage",
     timeSaved: "How much time does AI currently save you per day?",
-    savingPotential: "Where do you see the highest saving / value potential?",
+    savingPotential: "Where do you see saving / value potential? (tap in priority order)",
+    savingRankHint: "Tap the activities in the order you see the greatest potential. Tap again to remove.",
     otherPlaceholder: "Please specify…",
     toTest: "To the test →",
     bauch: "No feedback shown — go with your gut.",
@@ -228,7 +241,7 @@ const STR = {
     seniorityScale: "Seniority scale",
     studyNote: "Benchmarks from NBER/St. Louis Fed Real-Time Population Survey (2024–25) and AI literacy research (Ng et al. 2021; Carolus et al. 2023).",
     methodologyTitle: "Methodology",
-    methodology: "Questions are structured along Ng et al. (2021)'s AI literacy framework — Understand, Apply, Evaluate/Create, Ethics — and calibrated by Bloom difficulty levels. Each run draws items randomly and difficulty-balanced from a large pool.",
+    methodology: "Questions are structured along Ng et al. (2021)'s AI literacy framework — Understand, Apply, Evaluate/Create, Ethics — and difficulty-calibrated using the revised Bloom's taxonomy (Anderson & Krathwohl, 2001). Each run draws items randomly and difficulty-balanced from a large pool.",
     points: "pts",
     pause: "Pause", resume: "Resume",
     pausedTitle: "Paused",
@@ -259,6 +272,8 @@ const STR = {
     progressDelta: "Change since last time",
     viewProfile: "View profile",
     profileLookupTitle: "Revisit your own profile",
+    viewLastResult: "Show last result on this device",
+    persistHint: "Note: results are stored anonymously. Cross-device retrieval (e.g. another phone/PC) only works with shared storage connected and an avatar name set. On this device your last result stays available even without an avatar.",
     profileTitle: "Profile",
     profileEmpty: "No results under this name yet.",
     profileEmptyHint: "Take the test and enter exactly this avatar name at the start — your results will collect here and you'll see your development over time.",
@@ -309,7 +324,7 @@ const OPTS = {
     en: ["Research & analysis", "Writing & communication", "Reporting & data work", "Meetings & docs", "Decision prep", "Other"],
   },
 };
-const FIELDS = ["role", "age", "area", "leadExp", "teamSize", "self", "timeSaved", "savingPotential"];
+const FIELDS = ["age", "area", "leadExp", "teamSize", "self", "timeSaved"];
 
 // ---- study benchmarks (NBER/St. Louis Fed RPS 2024-25; management occ.) ----
 // genAI work-adoption share by age band; management ~49%. Used for context only.
@@ -334,10 +349,10 @@ const REFERENCES = [
     url: "https://doi.org/10.1016/j.chbah.2023.100014",
   },
   {
-    cite: "Bloom (1956)",
-    what: { de: "Taxonomie der Lernzielstufen — Grundlage der Schwierigkeitskalibrierung", en: "Taxonomy of learning objectives — basis for difficulty calibration" },
-    where: "Taxonomy of Educational Objectives",
-    url: "https://www.britannica.com/topic/Blooms-taxonomy",
+    cite: "Anderson & Krathwohl (2001)",
+    what: { de: "Revidierte Bloom-Taxonomie (Erinnern · Verstehen · Anwenden · Analysieren · Bewerten · Erschaffen) — aktuelle Grundlage der Schwierigkeitskalibrierung", en: "Revised Bloom's taxonomy (Remember · Understand · Apply · Analyze · Evaluate · Create) — current basis for difficulty calibration" },
+    where: "A Taxonomy for Learning, Teaching, and Assessing (Longman); Überblick: Krathwohl (2002), Theory Into Practice 41(4)",
+    url: "https://doi.org/10.1207/s15430421tip4104_2",
   },
   {
     cite: "Bick, Blandin & Deming (2024)",
@@ -372,6 +387,24 @@ async function loadAvatarHistory(avatarKey) {
     const all = await loadCohort();
     return all.filter((e) => e.avatarKey === avatarKey).sort((a, b) => a.ts - b.ts);
   } catch { return []; }
+}
+// Always keep the most recent full report locally, so a person can re-open
+// their last result after reloading even without an avatar name or Supabase.
+// Uses localStorage directly (device-local by design) and is independent of
+// the cohort backend.
+function saveLastResult(report, profile) {
+  try {
+    const slim = {
+      ts: Date.now(), report, profile,
+    };
+    localStorage.setItem("lastResult:v1", JSON.stringify(slim));
+  } catch {}
+}
+function loadLastResult() {
+  try {
+    const raw = localStorage.getItem("lastResult:v1");
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
 }
 // Diagnostic: tells the admin which backend is active and whether reads work.
 async function storageDiagnose() {
@@ -473,7 +506,7 @@ export default function App() {
   const revealedRef = useRef(null); revealedRef.current = revealed;
   useEffect(() => {
     if (phase !== "test" || !items.length) return;
-    setPicked(null); setRevealed(null); setTimeLeft(TIME_PER_Q); qStart.current = Date.now();
+    setPicked(null); setRevealed(null); setTimeLeft(TIME_PER_Q + (qi === 0 ? 10 : 0)); qStart.current = Date.now();
     pauseAccum.current = 0; setPaused(false);
     const tm = setInterval(() => {
       if (pausedRef.current || revealedRef.current) return; // frozen while paused or showing feedback
@@ -572,6 +605,7 @@ export default function App() {
     const updated = await persist(entry, itemResults);
     setCohort(updated); r.cohort = updated; r.points = points;
     r.answers = all; // full per-question records for the end-of-test review
+    saveLastResult(r, profile); // device-local snapshot for "view my last result"
     setReport(r); setPhase("done");
   }
 
@@ -590,7 +624,10 @@ export default function App() {
       `}</style>
       <div style={{ maxWidth: 880, margin: "0 auto", padding: "0 20px" }}>
         <Header t={t} lang={lang} setLang={setLang} phase={phase} qi={qi} nq={items.length} setPhase={setPhase} />
-        {phase === "intro" && <Intro t={t} lang={lang} cohort={cohort} onStart={() => setPhase("onboard")} onViewProfile={(name) => { setProfileName(name); setPhase("profile"); }} />}
+        {phase === "intro" && <Intro t={t} lang={lang} cohort={cohort} onStart={() => setPhase("onboard")} onViewProfile={(name) => { setProfileName(name); setPhase("profile"); }} onViewLast={() => {
+          const last = loadLastResult();
+          if (last && last.report) { setReport(last.report); setPhase("done"); }
+        }} hasLast={!!loadLastResult()} />}
         {phase === "onboard" && <Onboard t={t} lang={lang} profile={profile} setProfile={setProfile} onDone={beginTest} />}
         {phase === "test" && items.length > 0 && (
           <TestView t={t} lang={lang} cur={items[qi]} qi={qi} total={items.length} timeLeft={timeLeft} timeMax={TIME_PER_Q}
@@ -719,7 +756,7 @@ function Header({ t, lang, setLang, phase, qi, nq, setPhase }) {
 }
 
 // ---------- Intro ----------
-function Intro({ t, lang, cohort, onStart, onViewProfile }) {
+function Intro({ t, lang, cohort, onStart, onViewProfile, onViewLast, hasLast }) {
   const avg = cohort.length ? Math.round(cohort.reduce((s, r) => s + r.score, 0) / cohort.length) : null;
   const [lookupName, setLookupName] = useState("");
   return (
@@ -763,17 +800,100 @@ function Intro({ t, lang, cohort, onStart, onViewProfile }) {
           <button disabled={!lookupName.trim()} onClick={() => onViewProfile(lookupName.trim())}
             style={{ ...btnSecondary, opacity: lookupName.trim() ? 1 : 0.4, cursor: lookupName.trim() ? "pointer" : "not-allowed" }}>{t.viewProfile}</button>
         </div>
+        {hasLast && (
+          <button onClick={onViewLast} style={{ ...btnSecondary, marginTop: 10 }}>{t.viewLastResult}</button>
+        )}
+        <div style={{ fontFamily: mono, fontSize: 10.5, color: C.inkDim, marginTop: 10, lineHeight: 1.5 }}>{t.persistHint}</div>
       </div>
     </div>
   );
 }
 
 // ---------- Onboarding ----------
+// Tap-to-rank picker: stores an ordered list, avoiding the suggestive
+// "pick the single highest" framing. Tapping adds with a rank badge; tapping
+// again removes and renumbers.
+function RankPicker({ options, value, onChange, t }) {
+  const ranked = Array.isArray(value) ? value : [];
+  const toggle = (o) => {
+    if (ranked.includes(o)) onChange(ranked.filter((x) => x !== o));
+    else onChange([...ranked, o]);
+  };
+  return (
+    <div>
+      <div style={{ color: C.inkDim, fontSize: 12.5, marginBottom: 9, lineHeight: 1.5 }}>{t.savingRankHint}</div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+        {options.map((o) => {
+          const rank = ranked.indexOf(o);
+          const on = rank >= 0;
+          return (
+            <button key={o} onClick={() => toggle(o)} style={{
+              display: "flex", alignItems: "center", gap: 8,
+              padding: "9px 14px", borderRadius: 8, fontSize: 13.5, fontWeight: 500,
+              border: `1px solid ${on ? C.cyan : C.line}`,
+              background: on ? "rgba(54,201,217,0.12)" : C.panel, color: on ? C.ink : C.inkDim,
+            }}>
+              {on && (
+                <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 18, height: 18, borderRadius: "50%", background: C.cyan, color: C.bg, fontSize: 11, fontWeight: 800, fontFamily: mono }}>{rank + 1}</span>
+              )}
+              {o}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// Searchable role picker: type to filter all LHIND roles; free text allowed.
+function RoleSearch({ t, lang, value, onChange }) {
+  const [q, setQ] = useState(value || "");
+  const [open, setOpen] = useState(false);
+  const boxRef = useRef(null);
+  useEffect(() => {
+    const onDoc = (e) => { if (boxRef.current && !boxRef.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, []);
+  const ql = q.trim().toLowerCase();
+  const matches = ql
+    ? LHIND_ROLES.filter((r) => r.name.toLowerCase().includes(ql)).slice(0, 8)
+    : LHIND_ROLES.slice(0, 8);
+  const exact = LHIND_ROLES.some((r) => r.name.toLowerCase() === ql);
+  return (
+    <div ref={boxRef} style={{ position: "relative" }}>
+      <input
+        value={q}
+        placeholder={t.rolePlaceholder}
+        onFocus={() => setOpen(true)}
+        onChange={(e) => { setQ(e.target.value); onChange(e.target.value); setOpen(true); }}
+        style={{ width: "100%", maxWidth: 420, background: C.panel, border: `1px solid ${value ? C.cyan : C.line}`, color: C.ink, borderRadius: 8, padding: "10px 12px", fontSize: 14 }}
+      />
+      {open && (
+        <div style={{ position: "absolute", zIndex: 20, marginTop: 4, width: "100%", maxWidth: 420, maxHeight: 260, overflowY: "auto", background: C.panelHi, border: `1px solid ${C.line}`, borderRadius: 8, boxShadow: "0 8px 24px rgba(0,0,0,0.4)" }}>
+          {matches.map((r) => (
+            <button key={r.name} onMouseDown={() => { setQ(r.name); onChange(r.name); setOpen(false); }}
+              style={{ display: "block", width: "100%", textAlign: "left", padding: "9px 12px", fontSize: 13.5, color: C.ink, background: "transparent", border: "none", borderBottom: `1px solid ${C.line}`, cursor: "pointer" }}>
+              {r.name}
+            </button>
+          ))}
+          {ql && !exact && (
+            <div style={{ padding: "9px 12px", fontSize: 12.5, color: C.inkDim, fontStyle: "italic" }}>{t.roleFreeText}</div>
+          )}
+          {!matches.length && !ql && (
+            <div style={{ padding: "9px 12px", fontSize: 12.5, color: C.inkDim }}>—</div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Onboard({ t, lang, profile, setProfile, onDone }) {
   const labels = { role: t.role, age: t.age, area: t.area, leadExp: t.leadExp, teamSize: t.teamSize, self: t.self, timeSaved: t.timeSaved, savingPotential: t.savingPotential };
   const otherKey = (lang === "de" ? "Sonstige" : "Other");
   const otherKey2 = (lang === "de" ? "Sonstiges" : "Other");
-  const complete = FIELDS.every((f) => {
+  const complete = !!profile.role && (Array.isArray(profile.savingPotential) && profile.savingPotential.length > 0) && FIELDS.every((f) => {
     const v = profile[f];
     if (!v) return false;
     if ((v === otherKey || v === otherKey2) && !profile[`${f}_other`]) return false;
@@ -795,6 +915,10 @@ function Onboard({ t, lang, profile, setProfile, onDone }) {
       </div>
 
       <div style={{ display: "grid", gap: 22 }}>
+        <div>
+          <div style={{ fontFamily: mono, fontSize: 11.5, color: C.inkDim, letterSpacing: "0.08em", marginBottom: 9, textTransform: "uppercase" }}>{t.role}</div>
+          <RoleSearch t={t} lang={lang} value={profile.role || ""} onChange={(v) => setProfile((p) => ({ ...p, role: v }))} />
+        </div>
         {FIELDS.map((f) => {
           const opts = OPTS[f][lang];
           const sel = profile[f];
@@ -822,6 +946,17 @@ function Onboard({ t, lang, profile, setProfile, onDone }) {
             </div>
           );
         })}
+
+        {/* Saving-potential as a ranking (non-suggestive) */}
+        <div>
+          <div style={{ fontFamily: mono, fontSize: 11.5, color: C.inkDim, letterSpacing: "0.08em", marginBottom: 9, textTransform: "uppercase" }}>{t.savingPotential}</div>
+          <RankPicker t={t} options={OPTS.savingPotential[lang]} value={profile.savingPotential} onChange={(v) => setProfile((p) => ({ ...p, savingPotential: v }))} />
+          {Array.isArray(profile.savingPotential) && (profile.savingPotential.includes(otherKey) || profile.savingPotential.includes(otherKey2)) && (
+            <input placeholder={t.otherPlaceholder} value={profile.savingPotential_other || ""}
+              onChange={(e) => setProfile((p) => ({ ...p, savingPotential_other: e.target.value }))}
+              style={{ marginTop: 10, width: "100%", maxWidth: 360, background: C.panel, border: `1px solid ${C.line}`, color: C.ink, borderRadius: 8, padding: "10px 12px", fontSize: 14 }} />
+          )}
+        </div>
       </div>
 
       {/* Optional: exclude leadership-specific questions */}
@@ -903,14 +1038,28 @@ function TestView({ t, lang, cur, qi, total, timeLeft, timeMax, picked, points, 
         </div>
       </div>
 
-      {/* timer row */}
-      <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 18, justifyContent: "flex-end" }}>
-        <div style={{ position: "relative", fontFamily: mono, fontWeight: 700, fontSize: 15, minWidth: 50, textAlign: "right", color: paused ? C.amber : urgent ? C.red : C.ink }}>
-          {paused ? "⏸" : `${String(timeLeft).padStart(2, "0")}s`}
-          {lastGain && lastGain.key === qi && lastGain.correct && (
-            <span style={{ position: "absolute", right: 0, top: -22, color: C.gold, fontSize: 13, animation: "floatUp 1s ease forwards" }}>+{lastGain.gain}</span>
-          )}
+      {/* timer row — visible countdown bar + large readout */}
+      <div style={{ marginBottom: 18 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+          <span style={{ fontFamily: mono, fontSize: 11, color: C.inkDim, letterSpacing: "0.06em", textTransform: "uppercase" }}>{t.timeLabel}</span>
+          <div style={{ position: "relative", marginLeft: "auto", fontFamily: mono, fontWeight: 800, fontSize: 22, minWidth: 56, textAlign: "right", color: paused ? C.amber : urgent ? C.red : C.ink }}>
+            {paused ? "⏸" : `${String(timeLeft).padStart(2, "0")}s`}
+            {lastGain && lastGain.key === qi && lastGain.correct && (
+              <span style={{ position: "absolute", right: 0, top: -22, color: C.gold, fontSize: 13, animation: "floatUp 1s ease forwards" }}>+{lastGain.gain}</span>
+            )}
+          </div>
         </div>
+        <div style={{ height: 8, borderRadius: 5, background: C.panelHi, overflow: "hidden" }}>
+          <div style={{
+            height: "100%", borderRadius: 5,
+            width: `${Math.max(0, Math.min(100, (timeLeft / (timeMax + (qi === 0 ? 10 : 0))) * 100))}%`,
+            background: paused ? C.amber : urgent ? C.red : dim.color,
+            transition: "width 1s linear, background .3s",
+          }} />
+        </div>
+        {qi === 0 && !paused && !revealed && (
+          <div style={{ fontFamily: mono, fontSize: 10.5, color: C.inkDim, marginTop: 6 }}>{t.firstQBonus}</div>
+        )}
       </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
@@ -1036,6 +1185,7 @@ function buildRecs(dimScores) {
       skills: { de: ["Halluzinationen aktiv gegenprüfen", "Knowledge Cutoff & Kontextfenster verstehen"], en: ["Actively cross-check hallucinations", "Understand knowledge cutoff & context window"] },
       books: { de: ["'Co-Intelligence' — Ethan Mollick", "'Künstliche Intelligenz' — Manuela Lenzen"], en: ["'Co-Intelligence' — Ethan Mollick", "'A Brief History of Intelligence' — M. Bennett"] },
       resources: [
+        { label: "LHG LinkedIn Learning: 'Generative AI / KI-Grundlagen' (intern verfügbar)", url: "https://www.linkedin.com/learning/search?keywords=artificial%20intelligence%20fundamentals" },
         { label: "Elements of AI (kostenloser Kurs / free course)", url: "https://www.elementsofai.com/" },
         { label: "Google AI Essentials (Coursera, Zertifikat)", url: "https://www.coursera.org/google-learn/ai-essentials" },
         { label: "3Blue1Brown: How LLMs work (Video)", url: "https://www.youtube.com/watch?v=wjZofJX0v4M" },
@@ -1046,6 +1196,7 @@ function buildRecs(dimScores) {
       skills: { de: ["Use-Case-Canvas anwenden", "Baseline vor Pilot definieren", "Model-Routing einführen (klein/lokal vs. Frontier)"], en: ["Apply a use-case canvas", "Define a baseline before piloting", "Introduce model routing (small/local vs. frontier)"] },
       books: { de: ["'Prediction Machines' — Agrawal et al.", "'The AI-First Company' — Ash Fontana"], en: ["'Prediction Machines' — Agrawal et al.", "'The AI-First Company' — Ash Fontana"] },
       resources: [
+        { label: "LHG LinkedIn Learning: 'AI for Business Leaders' (intern verfügbar)", url: "https://www.linkedin.com/learning/search?keywords=ai%20for%20business" },
         { label: "Wharton: AI for Business (Coursera Specialization)", url: "https://www.coursera.org/specializations/ai-for-business-wharton" },
         { label: "Ollama — lokale LLMs selbst betreiben", url: "https://ollama.com/" },
         { label: "Microsoft: AI for Business Leaders (Learn)", url: "https://learn.microsoft.com/en-us/training/" },
@@ -1056,6 +1207,7 @@ function buildRecs(dimScores) {
       skills: { de: ["KI-Output systematisch verifizieren", "Provenienz/Content Credentials prüfen statt Detektor-Scores"], en: ["Systematically verify AI output", "Check provenance/content credentials instead of detector scores"] },
       books: { de: ["'Calling Bullshit' — Bergstrom & West", "'Weapons of Math Destruction' — O'Neil"], en: ["'Calling Bullshit' — Bergstrom & West", "'Weapons of Math Destruction' — O'Neil"] },
       resources: [
+        { label: "LHG LinkedIn Learning: 'Critical Thinking / Fact-Checking' (intern verfügbar)", url: "https://www.linkedin.com/learning/search?keywords=critical%20thinking" },
         { label: "C2PA / Content Credentials (Herkunfts-Standard)", url: "https://contentcredentials.org/" },
         { label: "Calling Bullshit — Uni-Kurs (frei)", url: "https://www.callingbullshit.org/" },
         { label: "MIT: Detecting AI text — Grenzen (Studie)", url: "https://arxiv.org/abs/2303.11156" },
@@ -1066,6 +1218,7 @@ function buildRecs(dimScores) {
       skills: { de: ["Datenschutz-Check vor Tool-Einsatz", "Vertrauliche Dokumente für KI kennzeichnen", "Bias-Risiken im Prozess erkennen"], en: ["Data-protection check before tool use", "Mark confidential docs against AI processing", "Spot bias risks in the process"] },
       books: { de: ["'The Alignment Problem' — Brian Christian", "'Atlas of AI' — Kate Crawford"], en: ["'The Alignment Problem' — Brian Christian", "'Atlas of AI' — Kate Crawford"] },
       resources: [
+        { label: "LHG LinkedIn Learning: 'GDPR / AI Ethics' (intern verfügbar)", url: "https://www.linkedin.com/learning/search?keywords=ai%20ethics%20gdpr" },
         { label: "EU AI Act — offizieller Überblick", url: "https://digital-strategy.ec.europa.eu/en/policies/regulatory-framework-ai" },
         { label: "NIST AI Risk Management Framework", url: "https://www.nist.gov/itl/ai-risk-management-framework" },
         { label: "OECD AI Principles", url: "https://oecd.ai/en/ai-principles" },
@@ -1073,9 +1226,10 @@ function buildRecs(dimScores) {
     },
     lead: {
       training: { de: ["'Führen im KI-Zeitalter' — Leadership-Programm", "Change-Management für KI-Adoption"], en: ["'Leading in the AI era' — leadership program", "Change management for AI adoption"] },
-      skills: { de: ["KI-Nutzungsrahmen fürs Team formulieren", "Sichere Lernräume schaffen"], en: ["Define an AI usage framework for the team", "Create safe learning spaces"] },
+      skills: { de: ["KI-Nutzungsrahmen fürs Team formulieren", "Sichere Lernräume schaffen", "Team Zeit & Raum für KI einräumen"], en: ["Define an AI usage framework for the team", "Create safe learning spaces", "Give the team time & space for AI"] },
       books: { de: ["'The Coming Wave' — Mustafa Suleyman", "'Human + Machine' — Daugherty & Wilson"], en: ["'The Coming Wave' — Mustafa Suleyman", "'Human + Machine' — Daugherty & Wilson"] },
       resources: [
+        { label: "LHG LinkedIn Learning: 'Leading through Change / AI for Leaders' (intern verfügbar)", url: "https://www.linkedin.com/learning/search?keywords=leading%20through%20change" },
         { label: "HBR: Leading with AI (Artikelsammlung)", url: "https://hbr.org/topic/subject/ai-and-machine-learning" },
         { label: "MIT Sloan: AI for leaders (executive)", url: "https://executive.mit.edu/" },
         { label: "Ethan Mollick — 'One Useful Thing' (Blog)", url: "https://www.oneusefulthing.org/" },
@@ -1086,6 +1240,7 @@ function buildRecs(dimScores) {
       skills: { de: ["Einen wiederverwendbaren 'lokalen Skill' bauen", "Morning-Briefing-Routine für Top-Kunden aufsetzen", "Prompt-Bibliothek anlegen"], en: ["Build a reusable 'local skill'", "Set up a morning-briefing routine for key accounts", "Create a prompt library"] },
       books: { de: ["'AI Engineering' — Chip Huyen (Auszüge)", "'Co-Intelligence' — Ethan Mollick"], en: ["'AI Engineering' — Chip Huyen (excerpts)", "'Co-Intelligence' — Ethan Mollick"] },
       resources: [
+        { label: "LHG LinkedIn Learning: 'Prompt Engineering / Generative AI' (intern verfügbar)", url: "https://www.linkedin.com/learning/search?keywords=prompt%20engineering" },
         { label: "Anthropic: Prompt Engineering Guide", url: "https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/overview" },
         { label: "OpenAI: Prompt engineering Guide", url: "https://platform.openai.com/docs/guides/prompt-engineering" },
         { label: "DeepLearning.AI: Short Courses (frei)", url: "https://www.deeplearning.ai/courses/" },
@@ -1106,34 +1261,37 @@ function buildRecs(dimScores) {
 }
 
 // Concrete, result-specific Top-3 tips (not generic advice).
+function fmtPotential(profile, lang) {
+  const v = profile.savingPotential;
+  const list = Array.isArray(v) ? v.slice() : (v ? [v] : []);
+  if (profile.savingPotential_other) list.push(profile.savingPotential_other);
+  if (!list.length) return lang === "de" ? "—" : "—";
+  // Show as a ranked list "1. X, 2. Y, 3. Z"
+  return list.map((x, i) => `${i + 1}. ${x}`).join(", ");
+}
+
 function buildTier(sIndex) {
-  // Playful "consulting-world equivalent" — clearly framed as a fun analogy,
-  // not a real claim about any company. 7 fine-grained tiers for a dynamic feel.
+  // Maps the competence score onto LHIND's own seniority ladder
+  // (Junior → Professional → Senior → Expert), with an entry level below.
+  // Descriptions are adapted from the official LHIND seniority model.
   const tiers = [
-    { min: 92, emoji: "🏆", color: C.gold,
-      label: { de: "AI Leadership Champion", en: "AI Leadership Champion" },
-      analogy: { de: "Im augenzwinkernden Beratungsvergleich: Partner-Level — du würdest selbst die KI-Strategie-Practice anführen.", en: "In a tongue-in-cheek consulting comparison: partner level — you'd lead the AI strategy practice yourself." } },
-    { min: 82, emoji: "🚀", color: C.green,
-      label: { de: "AI-Native Leader", en: "AI-Native Leader" },
-      analogy: { de: "Vergleichbar mit einem Principal / Senior Manager einer Top-Beratung im Bereich KI.", en: "Comparable to a principal / senior manager at a top consultancy in the AI space." } },
-    { min: 70, emoji: "🎯", color: C.cyan,
-      label: { de: "Strategischer Anwender", en: "Strategic Practitioner" },
-      analogy: { de: "Auf dem Niveau eines erfahrenen Beraters (Senior Consultant) — du bringst KI verlässlich in Projekte.", en: "At the level of an experienced (senior) consultant — you reliably bring AI into projects." } },
-    { min: 56, emoji: "📈", color: C.amber,
-      label: { de: "Solider Praktiker", en: "Solid Practitioner" },
-      analogy: { de: "Vergleichbar mit einem Consultant mit ein paar Jahren Erfahrung — gutes Fundament, klarer Ausbaupfad.", en: "Comparable to a consultant with a few years' experience — good foundation, clear path to grow." } },
-    { min: 42, emoji: "🌱", color: C.violet,
-      label: { de: "Aufstrebender Einsteiger", en: "Rising Beginner" },
-      analogy: { de: "Etwa auf dem Niveau eines Junior-Beraters — die Grundlagen sitzen, jetzt kommt die Praxis.", en: "About at junior-consultant level — the basics are there, now comes the practice." } },
-    { min: 28, emoji: "🧭", color: C.violet,
-      label: { de: "Neugieriger Beobachter", en: "Curious Observer" },
-      analogy: { de: "Wie ein Analyst im ersten Jahr: viel Potenzial, strukturierter Aufbau lohnt sich jetzt.", en: "Like a first-year analyst: lots of potential, structured build-up pays off now." } },
+    { min: 88, emoji: "🏆", color: C.gold,
+      label: { de: "Expert", en: "Expert" },
+      analogy: { de: "Auf LHIND-Expert-Niveau: Du würdest beim Thema KI Standards setzen, andere befähigen und Verantwortung in Schlüsselbereichen übernehmen.", en: "At LHIND Expert level: on AI you'd set standards, enable others and take accountability in key areas." } },
+    { min: 70, emoji: "🚀", color: C.green,
+      label: { de: "Senior", en: "Senior" },
+      analogy: { de: "Auf LHIND-Senior-Niveau: Du gibst fundierte Orientierung, denkst KI in Prozesse und Teamführung mit und verantwortest Ergebnisse von der Analyse bis zur Umsetzung.", en: "At LHIND Senior level: you give well-founded guidance, weave AI into processes and team leadership, and own outcomes from analysis to delivery." } },
+    { min: 50, emoji: "🎯", color: C.cyan,
+      label: { de: "Professional", en: "Professional" },
+      analogy: { de: "Auf LHIND-Professional-Niveau: Du bearbeitest vielfältige, komplexe KI-Themen eigenständig, unterstützt andere und bringst KI verlässlich in die Praxis.", en: "At LHIND Professional level: you handle diverse, complex AI topics autonomously, support others and bring AI reliably into practice." } },
+    { min: 30, emoji: "🌱", color: C.amber,
+      label: { de: "Junior", en: "Junior" },
+      analogy: { de: "Auf LHIND-Junior-Niveau: Die Grundlagen sitzen; du arbeitest unter Anleitung an klar umrissenen KI-Aufgaben und baust Routine auf.", en: "At LHIND Junior level: the basics are in place; you work under guidance on well-defined AI tasks and build routine." } },
     { min: 0, emoji: "🔰", color: C.red,
-      label: { de: "Orientierungsphase", en: "Orientation Phase" },
-      analogy: { de: "Wie ein Praktikant am ersten Tag — jeder fängt hier an. Grundlagen zuerst, der Rest folgt.", en: "Like an intern on day one — everyone starts here. Fundamentals first, the rest follows." } },
+      label: { de: "Einstieg", en: "Entry" },
+      analogy: { de: "Noch vor dem Junior-Niveau: Jeder fängt hier an. Mit gezieltem Aufbau der Grundlagen kommt der Rest Schritt für Schritt.", en: "Just below Junior level: everyone starts here. With targeted work on the fundamentals, the rest follows step by step." } },
   ];
   const t = tiers.find((x) => sIndex >= x.min) || tiers[tiers.length - 1];
-  // percentile-ish position within the tier band, for a progress feel (0-100)
   return t;
 }
 
@@ -1292,7 +1450,7 @@ function Report({ t, lang, report, profile, onViewProfile }) {
           </div>
           <div style={{ fontSize: 14, color: C.ink, lineHeight: 1.55, marginTop: 12 }}>{tier.analogy[lang]}</div>
           <div style={{ fontSize: 11, color: C.inkDim, marginTop: 8, fontStyle: "italic" }}>
-            {lang === "de" ? "Augenzwinkernder Vergleich, keine offizielle Einstufung." : "A tongue-in-cheek comparison, not an official ranking."}
+            {lang === "de" ? "Orientierung an den LHIND-Senioritätsstufen — eine Einordnung der KI-Kompetenz, keine offizielle Stellenbewertung." : "Oriented on the LHIND seniority levels — an indication of AI competence, not an official job grading."}
           </div>
         </div>
       )}
@@ -1372,8 +1530,8 @@ function Report({ t, lang, report, profile, onViewProfile }) {
             value={STUDY.mgmtAdoption} suffix="%" benchLabel={lang === "de" ? "Studien-Schnitt" : "study avg"} color={C.green} />
           <div style={{ fontSize: 13.5, color: C.ink, lineHeight: 1.5 }}>
             {lang === "de"
-              ? `Deine Selbsteinschätzung: KI spart dir aktuell ${profile.timeSaved} pro Tag. In Studien sparen Wissensarbeiter im Schnitt rund ${STUDY.avgTimeSavedPct}% ihrer Arbeitszeit — du siehst das höchste Potenzial bei „${profile.savingPotential_other || profile.savingPotential}".`
-              : `Your self-assessment: AI currently saves you ${profile.timeSaved} per day. Studies show knowledge workers save about ${STUDY.avgTimeSavedPct}% of work hours on average — you see the highest potential in "${profile.savingPotential_other || profile.savingPotential}".`}
+              ? `Deine Selbsteinschätzung: KI spart dir aktuell ${profile.timeSaved} pro Tag. In Studien sparen Wissensarbeiter im Schnitt rund ${STUDY.avgTimeSavedPct}% ihrer Arbeitszeit — Potenzial siehst du (nach Priorität) bei: ${fmtPotential(profile, lang)}.`
+              : `Your self-assessment: AI currently saves you ${profile.timeSaved} per day. Studies show knowledge workers save about ${STUDY.avgTimeSavedPct}% of work hours on average — you see potential (by priority) in: ${fmtPotential(profile, lang)}.`}
           </div>
         </div>
         <div style={{ fontFamily: mono, fontSize: 10.5, color: C.inkDim, marginTop: 14, lineHeight: 1.5 }}>{t.studyNote}</div>
@@ -1474,7 +1632,7 @@ function buildTrainingPrompt(lang, profile, dimScores, seniority, totalScore) {
     .map(([k, m]) => `- ${dn(k)}: ${m.pct}% (${m.correct}/${m.total})`).join("\n");
   const role = profile.role_other || profile.role;
   const area = profile.area_other || profile.area;
-  const potential = profile.savingPotential_other || profile.savingPotential;
+  const potential = fmtPotential(profile, lang);
   if (lang === "de") {
     return `Du bist mein persönlicher KI-Lerncoach. Erstelle mir einen konkreten, aktuellen 8-Wochen-Trainingsplan zum Aufbau meiner KI-Kompetenz als Führungskraft.
 

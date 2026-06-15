@@ -1,27 +1,37 @@
 [
   {
-    "version": "2.6.2",
-    "date": "2026-06-14",
-    "title": {
-      "de": "Patch: Zusatzfragen und neue Kategorie Firmenwissen mit opt-in",
-      "en": "Patch: Zusatzfragen und neue Kategorie Firmenwissen mit opt-in"
-    },
+    "version": "2.7.0",
+    "date": "2026-06-15",
+    "title": { "de": "LHIND-Rollen, Senioritäten & Feedback-Einarbeitung", "en": "LHIND roles, seniority & feedback round" },
     "notes": {
       "de": [
-        "Patch: Zusatzfragen und neue Kategorie Firmenwissen mit opt-in"
+        "Rollen: durchsuchbares Feld mit allen LHIND-Rollen (inkl. Head of) plus Freitext-Option.",
+        "Einstufung folgt jetzt dem LHIND-Senioritätsmodell (Junior / Professional / Senior / Expert).",
+        "Spar-/Nutzenpotenzial ist jetzt ein Ranking statt einer suggestiven Einzelauswahl.",
+        "Vertrags-Frage entschärft: richtige Antwort ist nun 'freigegebene Modelle/Tools klären'.",
+        "Sichtbarer Countdown-Balken; erste Frage erhält +10 Sekunden Bonuszeit.",
+        "Quelle aktualisiert: revidierte Bloom-Taxonomie (Anderson & Krathwohl, 2001) statt 1956.",
+        "Letztes Ergebnis bleibt auf dem Gerät abrufbar; klarer Hinweis zur geräteübergreifenden Speicherung.",
+        "Trainings ergänzt um LHG-LinkedIn-Learning-Bezüge.",
+        "10 zusätzliche Führungsfragen mit Fokus auf Befähigung (Zeit/Raum fürs Team, Change-Dauer, Multiplikatoren)."
       ],
       "en": [
-        "Patch: Zusatzfragen und neue Kategorie Firmenwissen mit opt-in"
+        "Roles: searchable field with all LHIND roles (incl. Head of) plus free-text option.",
+        "Tier now follows the LHIND seniority model (Junior / Professional / Senior / Expert).",
+        "Saving/value potential is now a ranking instead of a suggestive single choice.",
+        "Contract question reworded: correct answer is now 'clarify approved models/tools'.",
+        "Visible countdown bar; the first question gets +10 seconds bonus time.",
+        "Source updated: revised Bloom's taxonomy (Anderson & Krathwohl, 2001) instead of 1956.",
+        "Last result stays retrievable on the device; clear note on cross-device storage.",
+        "Trainings extended with LHG LinkedIn Learning references.",
+        "10 extra leadership questions focused on enablement (time/space for the team, change duration, multipliers)."
       ]
     }
   },
   {
     "version": "2.6.1",
     "date": "2026-06-14",
-    "title": {
-      "de": "LHIND-Fragen jetzt opt-in",
-      "en": "LHIND questions now opt-in"
-    },
+    "title": { "de": "LHIND-Fragen jetzt opt-in", "en": "LHIND questions now opt-in" },
     "notes": {
       "de": [
         "Die LHIND-spezifischen Firmenwissen-Fragen sind jetzt standardmäßig deaktiviert.",
@@ -36,10 +46,7 @@
   {
     "version": "2.6.0",
     "date": "2026-06-14",
-    "title": {
-      "de": "Firmenwissen-Kategorie & 60 neue Fragen",
-      "en": "Company knowledge category & 60 new questions"
-    },
+    "title": { "de": "Firmenwissen-Kategorie & 60 neue Fragen", "en": "Company knowledge category & 60 new questions" },
     "notes": {
       "de": [
         "Neue Kategorie 'Firmenwissen' mit LHIND-spezifischen Fragen (Portfolio, AI Services, ASE, verantwortungsvolle KI).",
@@ -60,10 +67,7 @@
   {
     "version": "2.5.0",
     "date": "2026-06-14",
-    "title": {
-      "de": "Plausiblere, gleich lange Antwortoptionen",
-      "en": "Plausible, length-balanced answer options"
-    },
+    "title": { "de": "Plausiblere, gleich lange Antwortoptionen", "en": "Plausible, length-balanced answer options" },
     "notes": {
       "de": [
         "Alle Fragen überarbeitet: Distraktoren sind jetzt fachlich plausible Fehlannahmen statt offensichtlich falscher Optionen.",
@@ -80,10 +84,7 @@
   {
     "version": "2.4.0",
     "date": "2026-06-14",
-    "title": {
-      "de": "Profil-Ansicht & dynamische Einstufung",
-      "en": "Profile view & dynamic tier"
-    },
+    "title": { "de": "Profil-Ansicht & dynamische Einstufung", "en": "Profile view & dynamic tier" },
     "notes": {
       "de": [
         "Neu: Profil-Ansicht — über den Avatar-Namen lassen sich frühere Ergebnisse jederzeit wieder aufrufen (Verlauf, Bestwert, Entwicklung).",
@@ -100,10 +101,7 @@
   {
     "version": "2.3.0",
     "date": "2026-06-14",
-    "title": {
-      "de": "Antwortmischung & schwerere Fragen",
-      "en": "Answer shuffling & harder questions"
-    },
+    "title": { "de": "Antwortmischung & schwerere Fragen", "en": "Answer shuffling & harder questions" },
     "notes": {
       "de": [
         "Bugfix: Antwortoptionen werden jetzt pro Durchlauf zufällig gemischt — die richtige Antwort ist nicht mehr fast immer B.",
@@ -120,10 +118,7 @@
   {
     "version": "2.2.0",
     "date": "2026-06-14",
-    "title": {
-      "de": "Verlinkte wissenschaftliche Quellen",
-      "en": "Linked scientific sources"
-    },
+    "title": { "de": "Verlinkte wissenschaftliche Quellen", "en": "Linked scientific sources" },
     "notes": {
       "de": [
         "Neu: aufklappbarer Quellen-Block auf der Startseite und im Ergebnisbericht.",
@@ -138,10 +133,7 @@
   {
     "version": "2.1.0",
     "date": "2026-06-14",
-    "title": {
-      "de": "Top-3-Tipps, Avatar-Verlauf & Verallgemeinerung",
-      "en": "Top 3 tips, avatar history & generalization"
-    },
+    "title": { "de": "Top-3-Tipps, Avatar-Verlauf & Verallgemeinerung", "en": "Top 3 tips, avatar history & generalization" },
     "notes": {
       "de": [
         "Neu: Top-3-Tipps am Ende, abgeleitet aus dem konkreten Ergebnis.",
@@ -162,10 +154,7 @@
   {
     "version": "2.0.0",
     "date": "2026-06-14",
-    "title": {
-      "de": "Sofort-Feedback, Fragen-Review & mehr Fragen",
-      "en": "Instant feedback, question review & more questions"
-    },
+    "title": { "de": "Sofort-Feedback, Fragen-Review & mehr Fragen", "en": "Instant feedback, question review & more questions" },
     "notes": {
       "de": [
         "Neu: Sofort-Feedback nach jeder Frage (richtig/falsch + Erläuterung).",
@@ -184,10 +173,7 @@
   {
     "version": "1.0.0",
     "date": "2026-06-14",
-    "title": {
-      "de": "Erstveröffentlichung",
-      "en": "Initial release"
-    },
+    "title": { "de": "Erstveröffentlichung", "en": "Initial release" },
     "notes": {
       "de": [
         "Anonymes KI-Kompetenz-Self-Assessment für Führungskräfte.",
