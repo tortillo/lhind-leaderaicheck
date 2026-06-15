@@ -1,5 +1,21 @@
 [
   {
+    "version": "2.7.2",
+    "date": "2026-06-15",
+    "title": {
+      "de": "Patch: file updated with new release logic",
+      "en": "Patch: file updated with new release logic"
+    },
+    "notes": {
+      "de": [
+        "Patch: file updated with new release logic"
+      ],
+      "en": [
+        "Patch: file updated with new release logic"
+      ]
+    }
+  },
+  {
     "version": "2.7.1",
     "date": "2026-06-15",
     "title": {
