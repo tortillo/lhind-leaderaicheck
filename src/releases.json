@@ -1,5 +1,21 @@
 [
   {
+    "version": "2.7.3",
+    "date": "2026-06-15",
+    "title": {
+      "de": "Patch: LHIND leader rollen angepasst / hinzugefügt",
+      "en": "Patch: LHIND leader rollen angepasst / hinzugefügt"
+    },
+    "notes": {
+      "de": [
+        "Patch: LHIND leader rollen angepasst / hinzugefügt"
+      ],
+      "en": [
+        "Patch: LHIND leader rollen angepasst / hinzugefügt"
+      ]
+    }
+  },
+  {
     "version": "2.7.2",
     "date": "2026-06-15",
     "title": {
