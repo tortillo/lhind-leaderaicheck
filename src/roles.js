@@ -3,6 +3,16 @@
 // Used by the onboarding role picker (searchable + free text).
 
 export const LHIND_ROLES = [
+  // --- Leadership levels (generic, on top so they surface immediately) ---
+  { name: "Team Lead", base: "Leadership" },
+  { name: "Head of (Abteilungsleitung)", base: "Leadership" },
+  { name: "Head of (Bereichsleitung)", base: "Leadership" },
+  { name: "Director", base: "Leadership" },
+  { name: "Senior Director", base: "Leadership" },
+  { name: "Vice President (VP)", base: "Leadership" },
+  { name: "Senior Vice President (SVP)", base: "Leadership" },
+  { name: "C-Level / CxO (CEO, CFO, CIO, CTO, COO)", base: "Leadership" },
+  { name: "Geschäftsführung / Managing Director", base: "Leadership" },
   { name: ".NET Developer", base: "Software Developer" },
   { name: "Account Manager", base: "n/a" },
   { name: "Agile Coach", base: "Agile Coach" },
