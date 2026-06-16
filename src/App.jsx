@@ -646,6 +646,84 @@ export default function App() {
 }
 
 // ---------- Scientific references block (reusable) ----------
+// Curated, well-known media recommendations for staying current on AI.
+// Grouped by channel type, each with a short bilingual description.
+// Deliberately a fixed, vetted list of widely recognized names.
+const MEDIA_RECS = [
+  {
+    group: { de: "Newsletter", en: "Newsletters" },
+    icon: "✉",
+    items: [
+      { name: "One Useful Thing — Ethan Mollick", url: "https://www.oneusefulthing.org/", desc: { de: "Wharton-Professor; pragmatische, fundierte Einordnung von KI für Arbeit und Führung.", en: "Wharton professor; pragmatic, well-grounded takes on AI for work and leadership." } },
+      { name: "The Batch — DeepLearning.AI (Andrew Ng)", url: "https://www.deeplearning.ai/the-batch/", desc: { de: "Wöchentliche, seriöse Zusammenfassung wichtiger KI-Entwicklungen.", en: "Weekly, reputable digest of the most important AI developments." } },
+      { name: "Import AI — Jack Clark", url: "https://importai.substack.com/", desc: { de: "Tiefer, technisch-politischer Blick auf Forschung und KI-Governance.", en: "In-depth, technical-and-policy view on research and AI governance." } },
+      { name: "TLDR AI", url: "https://tldr.tech/ai", desc: { de: "Sehr kompakte tägliche News für den schnellen Überblick.", en: "Very compact daily news for a quick overview." } },
+    ],
+  },
+  {
+    group: { de: "YouTube & Video", en: "YouTube & video" },
+    icon: "▶",
+    items: [
+      { name: "3Blue1Brown", url: "https://www.youtube.com/@3blue1brown", desc: { de: "Visuell herausragende Erklärungen zu neuronalen Netzen und Mathematik dahinter.", en: "Visually outstanding explanations of neural networks and the maths behind them." } },
+      { name: "Andrej Karpathy", url: "https://www.youtube.com/@AndrejKarpathy", desc: { de: "Mitgründer-Niveau: baut LLMs from scratch nach, exzellent für tiefes Verständnis.", en: "Builds LLMs from scratch; excellent for genuinely deep understanding." } },
+      { name: "Two Minute Papers", url: "https://www.youtube.com/@TwoMinutePapers", desc: { de: "Kurze, zugängliche Vorstellung aktueller KI-Forschungsergebnisse.", en: "Short, accessible walkthroughs of recent AI research results." } },
+    ],
+  },
+  {
+    group: { de: "LinkedIn & X (Stimmen)", en: "LinkedIn & X (voices)" },
+    icon: "✦",
+    items: [
+      { name: "Andrew Ng", url: "https://www.linkedin.com/in/andrewyng/", desc: { de: "Einer der einflussreichsten KI-Lehrer weltweit; nüchtern und praxisnah.", en: "One of the world's most influential AI educators; sober and practical." } },
+      { name: "Ethan Mollick", url: "https://www.linkedin.com/in/emollick/", desc: { de: "Konkrete Experimente und Implikationen von KI für Wissensarbeit.", en: "Concrete experiments and implications of AI for knowledge work." } },
+      { name: "Allie K. Miller", url: "https://www.linkedin.com/in/alliekmiller/", desc: { de: "Sehr zugängliche, anwendungsnahe Einordnung für Business-Anwender.", en: "Very accessible, application-oriented framing for business users." } },
+    ],
+  },
+  {
+    group: { de: "Podcasts", en: "Podcasts" },
+    icon: "🎧",
+    items: [
+      { name: "Latent Space", url: "https://www.latent.space/", desc: { de: "Technisch fundiert, für alle, die KI ernsthaft anwenden und bauen.", en: "Technically solid; for people who seriously apply and build AI." } },
+      { name: "Hard Fork (NYT)", url: "https://www.nytimes.com/column/hard-fork", desc: { de: "Wöchentliche Tech-Einordnung, gut verständlich und einordnend.", en: "Weekly tech discussion, approachable and good at context." } },
+    ],
+  },
+];
+
+function MediaRecs({ lang, compact }) {
+  const [open, setOpen] = useState(!compact);
+  return (
+    <div style={{ background: C.panelHi, border: `1px solid ${C.line}`, borderRadius: 10, padding: compact ? "14px 16px" : "16px 18px", margin: compact ? "0 0 22px" : "22px 0" }}>
+      <button onClick={() => setOpen((o) => !o)} style={{ background: "transparent", border: "none", color: C.violet, fontFamily: mono, fontSize: 11.5, letterSpacing: "0.06em", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 8, width: "100%", justifyContent: "space-between", padding: 0 }}>
+        <span>{lang === "de" ? "Am Ball bleiben: Newsletter, Kanäle & Stimmen" : "Stay current: newsletters, channels & voices"}</span>
+        <span style={{ opacity: 0.7 }}>{open ? "▲" : "▼"}</span>
+      </button>
+      {open && (
+        <div style={{ marginTop: 14, display: "grid", gap: 18 }}>
+          <div style={{ color: C.inkDim, fontSize: 12, lineHeight: 1.5 }}>
+            {lang === "de"
+              ? "Eine kuratierte Auswahl bekannter, seriöser Quellen, um nach dem Check dranzubleiben — kein vollständiges Ranking, keine Werbung."
+              : "A curated selection of well-known, reputable sources to keep going after the check — not an exhaustive ranking, not advertising."}
+          </div>
+          {MEDIA_RECS.map((grp, gi) => (
+            <div key={gi}>
+              <div style={{ fontFamily: mono, fontSize: 11, color: C.violet, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 9, display: "flex", alignItems: "center", gap: 7 }}>
+                <span style={{ opacity: 0.9 }}>{grp.icon}</span> {grp.group[lang]}
+              </div>
+              <div style={{ display: "grid", gap: 9 }}>
+                {grp.items.map((it, ii) => (
+                  <div key={ii} style={{ fontSize: 13, lineHeight: 1.5 }}>
+                    <a href={it.url} target="_blank" rel="noopener noreferrer" style={{ color: C.cyan, fontWeight: 600, textDecoration: "none" }}>{it.name} ↗</a>
+                    <span style={{ color: C.inkDim, display: "block", fontSize: 12, marginTop: 1 }}>{it.desc[lang]}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function References({ lang, compact }) {
   const [open, setOpen] = useState(!compact);
   return (
@@ -1539,6 +1617,9 @@ function Report({ t, lang, report, profile, onViewProfile }) {
 
       {/* Scientific references */}
       <References lang={lang} compact />
+
+      {/* Curated media recommendations: newsletters, channels, voices */}
+      <MediaRecs lang={lang} compact />
 
       {/* Profile */}
       <div style={{ margin: "26px 0" }}>
