@@ -31,8 +31,8 @@ const STR = {
     question: "FRAGE",
     privacyBanner: "Es werden keine personenbezogenen Daten gespeichert. Keine Namen, keine E-Mail, keine IP. Nur anonyme, aggregierte Kennzahlen für deinen Vergleich.",
     introEyebrow: "Selbsteinschätzung · 20 Fragen · ~12 Min",
-    introH1: "Wie KI-fit ist deine Führung?",
-    introP: "Ein anonymer Check zu KI-Grundwissen, Anwendung im Business und Führung im KI-Zeitalter — plus ein Praxistest. Am Ende: dein Score, ein Vergleich mit anderen Führungskräften und mit Studiendaten, sowie konkrete nächste Schritte.",
+    introH1: "Wie KI-fit bist du?",
+    introP: "Ein anonymer Check zu KI-Grundwissen, Anwendung im Business und — wenn du möchtest — Führung im KI-Zeitalter, plus ein Praxistest. Am Ende: dein Score, ein Vergleich mit anderen und mit Studiendaten, sowie konkrete nächste Schritte. Für Führungskräfte und Fach-/Projektrollen gleichermaßen.",
     fairnessTitle: "⚠ FAIRNESS & SPIELREGELN",
     fairnessText: "Pro Frage läuft ein Countdown — je schneller du richtig liegst, desto mehr Bonuspunkte. Der Test enthält Kontroll-Fragen und erkennt Tab-Wechsel & Einfügen. Die Fragen werden zufällig aus einem großen Pool gezogen, ein erneuter Versuch bringt also neue Fragen. Antworte ehrlich und ohne fremde Hilfe.",
     participantsSoFar: "Teilnehmer bisher",
@@ -85,6 +85,9 @@ const STR = {
     skills: "Praktische Fähigkeiten",
     books: "Bücher",
     restart: "Erneut starten (neue Fragen)",
+    practiceWeakTitle: "Gezielt üben",
+    practiceWeakHint: "Starte einen neuen Durchlauf mit Schwerpunkt auf deinen schwächsten Bereichen:",
+    practiceWeakBtn: "Schwächen jetzt üben →",
     savedNote: "Dein Ergebnis wurde anonym zur Kohorten-Auswertung gespeichert (Score, Seniorität, Rolle, Bereich, Altersgruppe, Selbsteinschätzung). Keine Namen, keine Antworten im Klartext.",
     admin: "Admin",
     adminTitle: "Admin-Dashboard",
@@ -98,6 +101,16 @@ const STR = {
     byAge: "Nach Altersgruppe",
     hardestQuestions: "Schwierigste Fragen (Trainingsbedarf)",
     hardestSub: "Fragen mit der niedrigsten Korrektquote — Kandidaten für gezielte Schulungen",
+    filtersTitle: "FILTER & DATENSCHUTZ",
+    filterDay: "Trainingstag",
+    filterAllDays: "Alle Trainingstage",
+    filterType: "Rollentyp",
+    filterAllTypes: "Alle Rollen",
+    filterMinGroup: "Mindest-Gruppe (k)",
+    privacyNote: "Datenschutz: Aggregierte Werte erscheinen erst ab der eingestellten Mindest-Gruppengröße. Kleinere Gruppen werden unterdrückt, damit keine Rückschlüsse auf Einzelne möglich sind. Es werden keine Klarnamen gespeichert.",
+    kAnonTitle: "ZU KLEINE GRUPPE — KEINE ANZEIGE",
+    dimAggTitle: "Kompetenz nach Dimension (aggregiert)",
+    dimAggSub: "Durchschnittliche Trefferquote je Dimension über die gefilterte Gruppe — zeigt kollektive Stärken und Lücken (schwächste zuerst).",
     correctRate: "Korrektquote",
     timesAsked: "Mal gestellt",
     resetAll: "Alle Daten zurücksetzen",
@@ -135,6 +148,14 @@ const STR = {
     avatarPlaceholder: "z. B. Falcon-7, Captain Nova …",
     excludeLeadLabel: "Führungs-spezifische Fragen ausschließen",
     excludeLeadHint: "Wenn aktiviert, werden Fragen zur Personalführung in diesem Durchlauf nicht gestellt. Sinnvoll für Fach- oder Projektrollen ohne disziplinarische Führung.",
+    roleTypeLabel: "Deine Rolle im Test",
+    roleTypeHint: "Bestimmt, ob Fragen zur Personalführung gestellt werden. Du kannst das frei wählen.",
+    roleTypeLead: "Führungskraft",
+    roleTypeIC: "Mitarbeiter:in / Fachrolle",
+    trainingDayLabel: "Trainingstag / Veranstaltung",
+    trainingDayHint: "Optional: Code deiner Schulung oder Veranstaltung (z. B. KI-TAG-2026-03). Hilft bei der anonymen Auswertung pro Veranstaltung.",
+    trainingDayFromLink: "Aus dem Einladungslink übernommen — du kannst ihn bei Bedarf anpassen.",
+    trainingDayPlaceholder: "z. B. KI-TAG-2026-03",
     includeCompanyLabel: "LHIND-spezifische Fragen einbeziehen",
     includeCompanyHint: "Wenn aktiviert, werden zusätzlich Fragen zum LHIND-Portfolio (AI Services, ASE, verantwortungsvolle KI) gestellt. Standardmäßig deaktiviert.",
     progressTitle: "Deine Entwicklung",
@@ -161,8 +182,8 @@ const STR = {
     question: "QUESTION",
     privacyBanner: "No personal data is stored. No names, no email, no IP. Only anonymous, aggregated metrics for your comparison.",
     introEyebrow: "Self-assessment · 20 questions · ~12 min",
-    introH1: "How AI-fit is your leadership?",
-    introP: "An anonymous check on AI fundamentals, business application and leadership in the AI era — plus a practical test. At the end: your score, a comparison with other leaders and with study data, and concrete next steps.",
+    introH1: "How AI-fit are you?",
+    introP: "An anonymous check on AI fundamentals, business application and — if you like — leadership in the AI era, plus a practical test. At the end: your score, a comparison with others and with study data, and concrete next steps. For leaders and expert/project roles alike.",
     fairnessTitle: "⚠ FAIRNESS & RULES",
     fairnessText: "Each question has a countdown — the faster you answer correctly, the more bonus points. The test includes control questions and detects tab switches & pasting. Questions are drawn randomly from a large pool, so a retry gives you new questions. Answer honestly and without outside help.",
     participantsSoFar: "participants so far",
@@ -215,6 +236,9 @@ const STR = {
     skills: "Practical skills",
     books: "Books",
     restart: "Restart (new questions)",
+    practiceWeakTitle: "Targeted practice",
+    practiceWeakHint: "Start a new run focused on your weakest areas:",
+    practiceWeakBtn: "Practice weak areas now →",
     savedNote: "Your result was stored anonymously for cohort analysis (score, seniority, role, area, age group, self-assessment). No names, no answers in plain text.",
     admin: "Admin",
     adminTitle: "Admin dashboard",
@@ -228,6 +252,16 @@ const STR = {
     byAge: "By age group",
     hardestQuestions: "Hardest questions (training needs)",
     hardestSub: "Questions with the lowest correct rate — candidates for targeted training",
+    filtersTitle: "FILTERS & PRIVACY",
+    filterDay: "Training day",
+    filterAllDays: "All training days",
+    filterType: "Role type",
+    filterAllTypes: "All roles",
+    filterMinGroup: "Min group (k)",
+    privacyNote: "Privacy: aggregated values appear only at or above the configured minimum group size. Smaller groups are suppressed so individuals can't be re-identified. No real names are stored.",
+    kAnonTitle: "GROUP TOO SMALL — HIDDEN",
+    dimAggTitle: "Competence by dimension (aggregated)",
+    dimAggSub: "Average correct rate per dimension across the filtered group — shows collective strengths and gaps (weakest first).",
     correctRate: "Correct rate",
     timesAsked: "times asked",
     resetAll: "Reset all data",
@@ -265,6 +299,14 @@ const STR = {
     avatarPlaceholder: "e.g. Falcon-7, Captain Nova …",
     excludeLeadLabel: "Exclude leadership-specific questions",
     excludeLeadHint: "If enabled, people-leadership questions won't be asked in this run. Useful for expert or project roles without line-management duties.",
+    roleTypeLabel: "Your role in the test",
+    roleTypeHint: "Determines whether people-leadership questions are asked. You're free to choose.",
+    roleTypeLead: "Leader / manager",
+    roleTypeIC: "Individual contributor / expert",
+    trainingDayLabel: "Training day / event",
+    trainingDayHint: "Optional: code of your training or event (e.g. AI-DAY-2026-03). Helps with anonymous per-event analysis.",
+    trainingDayFromLink: "Taken from your invitation link — you can adjust it if needed.",
+    trainingDayPlaceholder: "e.g. AI-DAY-2026-03",
     includeCompanyLabel: "Include LHIND-specific questions",
     includeCompanyHint: "If enabled, questions on the LHIND portfolio (AI services, ASE, responsible AI) are added. Disabled by default.",
     progressTitle: "Your development",
@@ -296,6 +338,18 @@ const DIMS = {
   lead: { de: "Führung", en: "Leadership", color: C.green },
   practice: { de: "Praxis", en: "Practice", color: C.red },
   company: { de: "Firmenwissen", en: "Company Knowledge", color: C.gold },
+};
+
+// Per-dimension "dive deeper" learning resource, shown with each question's
+// feedback so people can immediately follow up on a topic they got wrong.
+const DEEP_DIVE = {
+  understand: { label: { de: "Wie LLMs funktionieren (3Blue1Brown)", en: "How LLMs work (3Blue1Brown)" }, url: "https://www.youtube.com/watch?v=wjZofJX0v4M" },
+  apply: { label: { de: "AI for Everyone (Andrew Ng, Coursera)", en: "AI for Everyone (Andrew Ng, Coursera)" }, url: "https://www.coursera.org/learn/ai-for-everyone" },
+  evaluate: { label: { de: "KI-Output kritisch prüfen (Calling Bullshit)", en: "Critically evaluating AI output (Calling Bullshit)" }, url: "https://www.callingbullshit.org/" },
+  ethics: { label: { de: "EU AI Act — offizieller Überblick", en: "EU AI Act — official overview" }, url: "https://digital-strategy.ec.europa.eu/en/policies/regulatory-framework-ai" },
+  lead: { label: { de: "Führen im KI-Zeitalter (One Useful Thing)", en: "Leading in the AI era (One Useful Thing)" }, url: "https://www.oneusefulthing.org/" },
+  practice: { label: { de: "Prompt-Engineering-Leitfaden (Anthropic)", en: "Prompt engineering guide (Anthropic)" }, url: "https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/overview" },
+  company: { label: { de: "LHIND AI Services & ASE (Kontakt: ase@lhind.dlh.de)", en: "LHIND AI services & ASE (contact: ase@lhind.dlh.de)" }, url: "https://www.lhind.dlh.de/" },
 };
 
 // ---- onboarding option sets (value keys are stable; labels via lang) ----
@@ -486,15 +540,36 @@ export default function App() {
 
   useEffect(() => { loadCohort().then(setCohort); }, []);
 
+  // Read an optional training-day code from the URL (?t=KI-TAG-2026-03 or ?training=...).
+  // The code is prefilled into the profile and stored with each result, so admins
+  // can later filter statistics by training day. Manual entry remains possible.
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const raw = params.get("t") || params.get("training") || params.get("tag");
+      if (raw) {
+        const code = raw.trim().slice(0, 60);
+        if (code) setProfile((p) => ({ ...p, trainingDay: code, trainingDayLocked: true }));
+      }
+    } catch {}
+  }, []);
+
   const TIME_PER_Q = 25;
 
-  function beginTest() {
+  function beginTest(focusDims) {
+    // Guard: when used as an onClick/onDone handler, the first arg is an event,
+    // not a dimension array. Only treat real arrays as focus dimensions.
+    const focusList = Array.isArray(focusDims) ? focusDims : [];
     const excludeDims = [];
-    if (profile.excludeLead) excludeDims.push("lead");
+    // Individual contributors (non-leaders) don't get people-leadership questions.
+    // Leaders can still opt out via the manual checkbox.
+    if (profile.roleType === "ic" || profile.excludeLead) excludeDims.push("lead");
     // Company-specific (LHIND) questions are OPT-IN: excluded unless the
     // person actively enables them.
     if (!profile.includeCompany) excludeDims.push("company");
-    const drawn = drawItems(POOL, NQ, profile.area, Date.now() % 2147483647, excludeDims)
+    // Adaptive practice: never focus on an excluded dimension.
+    const focus = focusList.filter((d) => !excludeDims.includes(d));
+    const drawn = drawItems(POOL, NQ, profile.area, Date.now() % 2147483647, excludeDims, focus.length ? focus : undefined)
       .map((it) => ({ ...it, key: hashItem(it) }));
     setItems(drawn);
     setQi(0); setAnswers([]); setPoints(0); setStreak(0); setLastGain(null);
@@ -590,6 +665,8 @@ export default function App() {
       seniority: r.seniority.key, role: profile.role, area: profile.area,
       age: profile.age, self: profile.self, integrity: r.integrity.key,
       dims: r.dimScores, avatar: avatar || undefined, avatarKey: avatarKey || undefined,
+      trainingDay: (profile.trainingDay || "").trim() || undefined,
+      roleType: profile.roleType || undefined,
     };
     // Prior runs under the same avatar (computed from cohort BEFORE this run is added).
     if (avatarKey) {
@@ -636,7 +713,7 @@ export default function App() {
             revealed={revealed} onAdvance={advance}
             onPick={(i) => { setPicked(i); handleAnswer(i); }} />
         )}
-        {phase === "done" && report && <Report t={t} lang={lang} report={report} profile={profile} onViewProfile={(name) => { setProfileName(name); setPhase("profile"); }} />}
+        {phase === "done" && report && <Report t={t} lang={lang} report={report} profile={profile} onViewProfile={(name) => { setProfileName(name); setPhase("profile"); }} onFocusRetry={(dims) => beginTest(dims)} />}
         {phase === "admin" && <Admin t={t} lang={lang} onBack={() => setPhase("intro")} />}
         {phase === "profile" && <ProfileView t={t} lang={lang} name={profileName} onBack={() => setPhase("intro")} onStart={() => setPhase("onboard")} />}
         <VersionFooter lang={lang} />
@@ -971,7 +1048,10 @@ function Onboard({ t, lang, profile, setProfile, onDone }) {
   const labels = { role: t.role, age: t.age, area: t.area, leadExp: t.leadExp, teamSize: t.teamSize, self: t.self, timeSaved: t.timeSaved, savingPotential: t.savingPotential };
   const otherKey = (lang === "de" ? "Sonstige" : "Other");
   const otherKey2 = (lang === "de" ? "Sonstiges" : "Other");
-  const complete = !!profile.role && (Array.isArray(profile.savingPotential) && profile.savingPotential.length > 0) && FIELDS.every((f) => {
+  const isIC = profile.roleType === "ic";
+  // Individual contributors skip the people-leadership context fields.
+  const activeFields = FIELDS.filter((f) => !(isIC && (f === "leadExp" || f === "teamSize")));
+  const complete = !!profile.roleType && !!profile.role && (Array.isArray(profile.savingPotential) && profile.savingPotential.length > 0) && activeFields.every((f) => {
     const v = profile[f];
     if (!v) return false;
     if ((v === otherKey || v === otherKey2) && !profile[`${f}_other`]) return false;
@@ -982,6 +1062,37 @@ function Onboard({ t, lang, profile, setProfile, onDone }) {
       <Eyebrow color={C.cyan}>{t.step1}</Eyebrow>
       <h2 style={{ fontSize: 26, fontWeight: 800, margin: "12px 0 6px" }}>{t.onboardH2}</h2>
       <p style={{ color: C.inkDim, fontSize: 14, margin: "0 0 26px" }}>{t.onboardP}</p>
+
+      {/* Role type: leader vs individual contributor — drives whether
+          people-leadership questions are asked. */}
+      <div style={{ background: C.panel, border: `1px solid ${profile.roleType ? C.cyan : C.line}`, borderRadius: 12, padding: "16px 18px", marginBottom: 24 }}>
+        <div style={{ fontFamily: mono, fontSize: 11.5, color: C.cyan, letterSpacing: "0.08em", marginBottom: 6, textTransform: "uppercase" }}>{t.roleTypeLabel}</div>
+        <div style={{ color: C.inkDim, fontSize: 13, marginBottom: 12, lineHeight: 1.5 }}>{t.roleTypeHint}</div>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          {[{ k: "lead", label: t.roleTypeLead }, { k: "ic", label: t.roleTypeIC }].map((o) => {
+            const on = profile.roleType === o.k;
+            return (
+              <button key={o.k} onClick={() => setProfile((p) => ({ ...p, roleType: o.k }))} style={{
+                flex: "1 1 160px", padding: "12px 16px", borderRadius: 10, fontSize: 14, fontWeight: 600,
+                border: `1px solid ${on ? C.cyan : C.line}`,
+                background: on ? "rgba(54,201,217,0.14)" : C.panelHi, color: on ? C.ink : C.inkDim,
+              }}>{o.label}</button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Training day code: prefilled from the link if present, else editable.
+          Lets admins later filter statistics by training event. */}
+      <div style={{ background: C.panel, border: `1px solid ${profile.trainingDay ? C.green : C.line}`, borderRadius: 12, padding: "16px 18px", marginBottom: 24 }}>
+        <div style={{ fontFamily: mono, fontSize: 11.5, color: C.green, letterSpacing: "0.08em", marginBottom: 6, textTransform: "uppercase" }}>{t.trainingDayLabel}</div>
+        <div style={{ color: C.inkDim, fontSize: 13, marginBottom: 10, lineHeight: 1.5 }}>
+          {profile.trainingDayLocked ? t.trainingDayFromLink : t.trainingDayHint}
+        </div>
+        <input placeholder={t.trainingDayPlaceholder} value={profile.trainingDay || ""} maxLength={60}
+          onChange={(e) => setProfile((p) => ({ ...p, trainingDay: e.target.value }))}
+          style={{ width: "100%", maxWidth: 360, background: C.panelHi, border: `1px solid ${C.line}`, color: C.ink, borderRadius: 8, padding: "11px 13px", fontSize: 14, fontFamily: mono }} />
+      </div>
 
       {/* Optional avatar name — lets a person revisit their own progress, fully voluntary */}
       <div style={{ background: C.panel, border: `1px solid ${C.line}`, borderRadius: 12, padding: "16px 18px", marginBottom: 24 }}>
@@ -997,7 +1108,7 @@ function Onboard({ t, lang, profile, setProfile, onDone }) {
           <div style={{ fontFamily: mono, fontSize: 11.5, color: C.inkDim, letterSpacing: "0.08em", marginBottom: 9, textTransform: "uppercase" }}>{t.role}</div>
           <RoleSearch t={t} lang={lang} value={profile.role || ""} onChange={(v) => setProfile((p) => ({ ...p, role: v }))} />
         </div>
-        {FIELDS.map((f) => {
+        {activeFields.map((f) => {
           const opts = OPTS[f][lang];
           const sel = profile[f];
           const isOther = sel === otherKey || sel === otherKey2;
@@ -1037,7 +1148,8 @@ function Onboard({ t, lang, profile, setProfile, onDone }) {
         </div>
       </div>
 
-      {/* Optional: exclude leadership-specific questions */}
+      {/* Optional: exclude leadership-specific questions (only relevant for leaders) */}
+      {!isIC && (
       <label style={{ display: "flex", gap: 12, alignItems: "flex-start", marginTop: 24, cursor: "pointer", background: C.panel, border: `1px solid ${profile.excludeLead ? C.amber : C.line}`, borderRadius: 12, padding: "14px 16px" }}>
         <input type="checkbox" checked={!!profile.excludeLead}
           onChange={(e) => setProfile((p) => ({ ...p, excludeLead: e.target.checked }))}
@@ -1047,6 +1159,7 @@ function Onboard({ t, lang, profile, setProfile, onDone }) {
           <span style={{ display: "block", color: C.inkDim, fontSize: 13, marginTop: 3, lineHeight: 1.5 }}>{t.excludeLeadHint}</span>
         </span>
       </label>
+      )}
 
       {/* Optional opt-in: include LHIND company-specific questions (off by default) */}
       <label style={{ display: "flex", gap: 12, alignItems: "flex-start", marginTop: 12, cursor: "pointer", background: C.panel, border: `1px solid ${profile.includeCompany ? C.gold : C.line}`, borderRadius: 12, padding: "14px 16px" }}>
@@ -1196,7 +1309,13 @@ function TestView({ t, lang, cur, qi, total, timeLeft, timeMax, picked, points, 
                     : (lang === "de" ? "✕ Nicht ganz" : "✕ Not quite")}
                 </div>
                 <div style={{ color: C.ink, fontSize: 14, lineHeight: 1.55 }}>{L(revealed.expl, lang)}</div>
-                <button onClick={onAdvance} style={{ ...btnPrimary, marginTop: 16 }}>
+                {cur && DEEP_DIVE[cur.dim] && (
+                  <a href={DEEP_DIVE[cur.dim].url} target="_blank" rel="noopener noreferrer"
+                    style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 12, color: C.cyan, fontSize: 13, fontWeight: 600, textDecoration: "none", fontFamily: mono }}>
+                    {lang === "de" ? "↗ Tiefer eintauchen: " : "↗ Dive deeper: "}{L(DEEP_DIVE[cur.dim].label, lang)}
+                  </a>
+                )}
+                <button onClick={onAdvance} style={{ ...btnPrimary, marginTop: 16, display: "block" }}>
                   {qi + 1 >= total ? (lang === "de" ? "Ergebnis ansehen →" : "See result →") : (lang === "de" ? "Weiter →" : "Next →")}
                 </button>
               </div>
@@ -1480,12 +1599,19 @@ function narrative(t, lang, profile, dimScores, sen, score, integrity, traps) {
 // ============================================================
 // REPORT
 // ============================================================
-function Report({ t, lang, report, profile, onViewProfile }) {
+function Report({ t, lang, report, profile, onViewProfile, onFocusRetry }) {
   const { totalScore, dimScores, seniority, integrity, recs, traps, flags, cohort, points, top3, history, avatar, tier } = report;
   const scores = (cohort || []).map((r) => r.score).sort((a, b) => a - b);
   const better = scores.filter((s) => s < totalScore).length;
   const percentile = scores.length > 1 ? Math.round((better / scores.length) * 100) : null;
   const avg = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null;
+
+  // Weakest dimensions (for the adaptive practice retry) — up to 2, below 70%.
+  const weakDims = Object.entries(dimScores)
+    .filter(([, m]) => m.pct < 70)
+    .sort((a, b) => a[1].pct - b[1].pct)
+    .slice(0, 2)
+    .map(([k]) => k);
 
   // study comparison: self-reported saving potential vs adoption benchmark for age
   const adoption = STUDY.adoptionByAge[profile.age] ?? 30;
@@ -1695,6 +1821,17 @@ function Report({ t, lang, report, profile, onViewProfile }) {
 
       {/* Training-plan prompt generator */}
       <TrainingPrompt t={t} lang={lang} profile={profile} dimScores={dimScores} seniority={seniority} totalScore={totalScore} recs={recs} />
+
+      {/* Adaptive practice: focused retry on the weakest dimensions */}
+      {weakDims.length > 0 && onFocusRetry && (
+        <div style={{ background: C.panel, border: `1px solid ${C.amber}`, borderRadius: 12, padding: "16px 18px", margin: "8px 0 20px" }}>
+          <div style={{ fontFamily: mono, fontSize: 11, color: C.amber, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 6 }}>{t.practiceWeakTitle}</div>
+          <div style={{ color: C.inkDim, fontSize: 13, lineHeight: 1.5, marginBottom: 12 }}>
+            {t.practiceWeakHint} {weakDims.map((d) => DIMS[d][lang]).join(", ")}.
+          </div>
+          <button onClick={() => onFocusRetry(weakDims)} style={{ ...btnPrimary, background: C.amber }}>{t.practiceWeakBtn}</button>
+        </div>
+      )}
 
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
         <button onClick={() => window.location.reload()} style={btnSecondary}>{t.restart}</button>
@@ -1922,11 +2059,11 @@ function ProfileView({ t, lang, name, onBack, onStart }) {
   if (runs === null) return <div style={{ padding: 60, fontFamily: mono, color: C.inkDim }}>…</div>;
 
   const SEN = {
-    1: { de: "Orientierungsphase", en: "Orientation Phase", color: C.red },
-    2: { de: "Neugieriger Beobachter", en: "Curious Observer", color: C.violet },
-    3: { de: "Aufgeklärter Einsteiger", en: "Informed Beginner", color: C.amber },
-    4: { de: "Strategischer Anwender", en: "Strategic Practitioner", color: C.cyan },
-    5: { de: "AI-Native Leader", en: "AI-Native Leader", color: C.green },
+    1: { de: "Einstieg", en: "Entry", color: C.red },
+    2: { de: "Junior", en: "Junior", color: C.amber },
+    3: { de: "Professional", en: "Professional", color: C.cyan },
+    4: { de: "Senior", en: "Senior", color: C.green },
+    5: { de: "Expert", en: "Expert", color: C.gold },
   };
   const fmtDate = (ts) => new Date(ts).toLocaleDateString(lang === "de" ? "de-DE" : "en-GB", { day: "2-digit", month: "short", year: "numeric" });
 
@@ -2012,6 +2149,10 @@ function Admin({ t, lang, onBack }) {
   const [stats, setStats] = useState({});
   const [loaded, setLoaded] = useState(false);
   const [diag, setDiag] = useState(null);
+  // Privacy & filtering controls
+  const [minGroup, setMinGroup] = useState(5); // k-anonymity threshold (configurable)
+  const [dayFilter, setDayFilter] = useState("__all__"); // training-day filter
+  const [typeFilter, setTypeFilter] = useState("__all__"); // role-type filter
 
   useEffect(() => { if (authed) { Promise.all([loadCohort(), loadItemStats(), storageDiagnose()]).then(([c, s, d]) => { setCohort(c); setStats(s); setDiag(d); setLoaded(true); }); } }, [authed]);
 
@@ -2034,17 +2175,57 @@ function Admin({ t, lang, onBack }) {
 
   if (!loaded) return <div style={{ padding: 60, fontFamily: mono, color: C.inkDim }}>…</div>;
 
-  const n = cohort.length;
-  const scores = cohort.map((r) => r.score).sort((a, b) => a - b);
+  // ---- Build filter option lists from the full cohort ----
+  const allDays = Array.from(new Set(cohort.map((r) => r.trainingDay).filter(Boolean))).sort();
+
+  // ---- Apply filters (training day + role type) ----
+  const filtered = cohort.filter((r) => {
+    if (dayFilter !== "__all__" && (r.trainingDay || "") !== dayFilter) return false;
+    if (typeFilter !== "__all__" && (r.roleType || "__none__") !== typeFilter) return false;
+    return true;
+  });
+
+  // ---- k-Anonymity gate: never show aggregates for fewer than `minGroup` ----
+  const n = filtered.length;
+  const belowThreshold = n > 0 && n < minGroup;
+
+  const scores = filtered.map((r) => r.score).sort((a, b) => a - b);
   const avg = n ? Math.round(scores.reduce((a, b) => a + b, 0) / n) : 0;
   const median = n ? scores[Math.floor(n / 2)] : 0;
-  const cleanRate = n ? Math.round((cohort.filter((r) => r.integrity === "clean").length / n) * 100) : 0;
+  const cleanRate = n ? Math.round((filtered.filter((r) => r.integrity === "clean").length / n) * 100) : 0;
 
+  // Group helper with k-anonymity: groups below the threshold are merged into a
+  // single suppressed bucket so individuals can't be re-identified.
   const groupBy = (key) => {
     const g = {};
-    cohort.forEach((r) => { const v = r[key] || "—"; if (!g[v]) g[v] = []; g[v].push(r.score); });
-    return Object.entries(g).map(([k, arr]) => ({ k, n: arr.length, avg: Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) })).sort((a, b) => b.avg - a.avg);
+    filtered.forEach((r) => { const v = r[key] || "—"; if (!g[v]) g[v] = []; g[v].push(r.score); });
+    const rows = [];
+    let suppressedN = 0;
+    Object.entries(g).forEach(([k, arr]) => {
+      if (arr.length < minGroup) { suppressedN += arr.length; return; }
+      rows.push({ k, n: arr.length, avg: Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) });
+    });
+    rows.sort((a, b) => b.avg - a.avg);
+    if (suppressedN > 0) rows.push({ k: (lang === "de" ? `(zu kleine Gruppen: ${suppressedN})` : `(groups too small: ${suppressedN})`), n: suppressedN, avg: null, suppressed: true });
+    return rows;
   };
+
+  // Aggregated per-dimension averages across the filtered cohort — shows where
+  // the organization (or a training day) is collectively strong or weak.
+  const dimAgg = (() => {
+    const acc = {};
+    filtered.forEach((r) => {
+      const d = r.dims || {};
+      Object.entries(d).forEach(([k, m]) => {
+        if (!m || typeof m.pct !== "number") return;
+        if (!acc[k]) acc[k] = { sum: 0, n: 0 };
+        acc[k].sum += m.pct; acc[k].n += 1;
+      });
+    });
+    return Object.entries(acc)
+      .map(([k, v]) => ({ k, avg: Math.round(v.sum / v.n), n: v.n }))
+      .sort((a, b) => a.avg - b.avg); // weakest first
+  })();
 
   const hardest = Object.values(stats)
     .filter((s) => s.asked >= 1)
@@ -2081,7 +2262,48 @@ function Admin({ t, lang, onBack }) {
         </div>
       )}
 
-      {n === 0 ? <div style={{ padding: 24, color: C.inkDim, fontSize: 14 }}>{t.noData}</div> : (
+      {/* Filters & privacy controls */}
+      <div style={{ background: C.panelHi, border: `1px solid ${C.line}`, borderRadius: 10, padding: "14px 16px", margin: "18px 0", display: "grid", gap: 14 }}>
+        <div style={{ fontFamily: mono, fontSize: 10.5, letterSpacing: "0.12em", color: C.cyan }}>{t.filtersTitle}</div>
+        <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "flex-end" }}>
+          <label style={{ display: "grid", gap: 5 }}>
+            <span style={{ fontFamily: mono, fontSize: 11, color: C.inkDim }}>{t.filterDay}</span>
+            <select value={dayFilter} onChange={(e) => setDayFilter(e.target.value)}
+              style={{ background: C.panel, border: `1px solid ${C.line}`, color: C.ink, borderRadius: 8, padding: "9px 11px", fontSize: 13, fontFamily: mono, minWidth: 180 }}>
+              <option value="__all__">{t.filterAllDays}</option>
+              {allDays.map((d) => <option key={d} value={d}>{d}</option>)}
+            </select>
+          </label>
+          <label style={{ display: "grid", gap: 5 }}>
+            <span style={{ fontFamily: mono, fontSize: 11, color: C.inkDim }}>{t.filterType}</span>
+            <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}
+              style={{ background: C.panel, border: `1px solid ${C.line}`, color: C.ink, borderRadius: 8, padding: "9px 11px", fontSize: 13, fontFamily: mono, minWidth: 160 }}>
+              <option value="__all__">{t.filterAllTypes}</option>
+              <option value="lead">{t.roleTypeLead}</option>
+              <option value="ic">{t.roleTypeIC}</option>
+            </select>
+          </label>
+          <label style={{ display: "grid", gap: 5 }}>
+            <span style={{ fontFamily: mono, fontSize: 11, color: C.inkDim }}>{t.filterMinGroup}</span>
+            <input type="number" min={2} max={50} value={minGroup}
+              onChange={(e) => setMinGroup(Math.max(2, Math.min(50, parseInt(e.target.value || "5", 10))))}
+              style={{ background: C.panel, border: `1px solid ${C.line}`, color: C.ink, borderRadius: 8, padding: "9px 11px", fontSize: 13, fontFamily: mono, width: 90 }} />
+          </label>
+        </div>
+        <div style={{ color: C.inkDim, fontSize: 11.5, lineHeight: 1.5 }}>{t.privacyNote}</div>
+      </div>
+
+      {n === 0 ? <div style={{ padding: 24, color: C.inkDim, fontSize: 14 }}>{t.noData}</div>
+        : belowThreshold ? (
+          <div style={{ background: C.panel, border: `1px solid ${C.amber}`, borderRadius: 12, padding: "22px 20px", margin: "8px 0" }}>
+            <div style={{ fontFamily: mono, fontSize: 11, color: C.amber, letterSpacing: "0.1em", marginBottom: 8 }}>{t.kAnonTitle}</div>
+            <div style={{ color: C.ink, fontSize: 14, lineHeight: 1.55 }}>
+              {(lang === "de"
+                ? `Für diese Auswahl liegen nur ${n} Durchläufe vor — unterhalb der Mindest-Gruppengröße von ${minGroup}. Zum Schutz Einzelner werden keine aggregierten Werte angezeigt. Senke die Schwelle (nur wenn vertretbar) oder erweitere die Auswahl.`
+                : `Only ${n} runs match this selection — below the minimum group size of ${minGroup}. To protect individuals, no aggregated values are shown. Lower the threshold (only if justifiable) or broaden the selection.`)}
+            </div>
+          </div>
+        ) : (
         <>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(140px,1fr))", gap: 12, margin: "22px 0" }}>
             <Stat label={t.totalRuns} value={n} color={C.cyan} />
@@ -2089,6 +2311,23 @@ function Admin({ t, lang, onBack }) {
             <Stat label={t.medianScore} value={median} color={C.gold} />
             <Stat label={t.avgIntegrity} value={cleanRate + "%"} color={C.green} />
           </div>
+
+          {/* Aggregated competence by dimension (organization-level strengths/gaps) */}
+          {dimAgg.length > 0 && (
+            <div style={{ margin: "22px 0" }}>
+              <Eyebrow color={C.gold}>{t.dimAggTitle}</Eyebrow>
+              <div style={{ color: C.inkDim, fontSize: 12.5, margin: "6px 0 14px" }}>{t.dimAggSub}</div>
+              <div style={{ display: "grid", gap: 8 }}>
+                {dimAgg.map((r) => (
+                  <div key={r.k} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <span style={{ fontSize: 13, width: 170, color: DIMS[r.k] ? DIMS[r.k].color : C.ink }}>{DIMS[r.k] ? DIMS[r.k][lang] : r.k}</span>
+                    <div style={{ flex: 1 }}><Bar value={r.avg} color={r.avg < 50 ? C.red : r.avg < 70 ? C.amber : C.green} height={8} /></div>
+                    <span style={{ fontFamily: mono, fontSize: 12, color: C.inkDim, width: 70, textAlign: "right" }}>{r.avg}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <GroupTable title={t.byRole} rows={groupBy("role")} />
           <GroupTable title={t.byArea} rows={groupBy("area")} />
@@ -2130,16 +2369,16 @@ function Stat({ label, value, color }) {
 
 function GroupTable({ title, rows }) {
   if (!rows.length) return null;
-  const max = Math.max(...rows.map((r) => r.avg), 1);
+  const max = Math.max(...rows.filter((r) => r.avg != null).map((r) => r.avg), 1);
   return (
     <div style={{ margin: "22px 0" }}>
       <Eyebrow color={C.cyan}>{title}</Eyebrow>
       <div style={{ display: "grid", gap: 8, marginTop: 12 }}>
         {rows.map((r) => (
-          <div key={r.k} style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <span style={{ fontSize: 13, width: 170, color: C.ink, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.k}</span>
-            <div style={{ flex: 1 }}><Bar value={r.avg} max={max} color={C.cyan} height={8} /></div>
-            <span style={{ fontFamily: mono, fontSize: 12, color: C.inkDim, width: 70, textAlign: "right" }}>{r.avg} · n={r.n}</span>
+          <div key={r.k} style={{ display: "flex", alignItems: "center", gap: 12, opacity: r.suppressed ? 0.6 : 1 }}>
+            <span style={{ fontSize: 13, width: 170, color: r.suppressed ? C.inkDim : C.ink, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontStyle: r.suppressed ? "italic" : "normal" }}>{r.k}</span>
+            <div style={{ flex: 1 }}>{r.avg != null ? <Bar value={r.avg} max={max} color={C.cyan} height={8} /> : <div style={{ height: 8 }} />}</div>
+            <span style={{ fontFamily: mono, fontSize: 12, color: C.inkDim, width: 70, textAlign: "right" }}>{r.avg != null ? `${r.avg} · n=${r.n}` : `n=${r.n}`}</span>
           </div>
         ))}
       </div>

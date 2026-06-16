@@ -1180,8 +1180,9 @@ POOL.push(
 // ============================================================
 // SAMPLER — difficulty-balanced, ctx-aware, shuffles answer options
 // ============================================================
-export function drawItems(pool, n, area, rngSeed, excludeDims) {
+export function drawItems(pool, n, area, rngSeed, excludeDims, focusDims) {
   const excl = new Set(excludeDims || []);
+  const focus = new Set(focusDims || []);
   const base = pool.filter((q) => !excl.has(q.dim));
   let seed = rngSeed || (Date.now() % 2147483647);
   const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
@@ -1196,28 +1197,41 @@ export function drawItems(pool, n, area, rngSeed, excludeDims) {
 
   const traps = shuffle(base.filter((q) => q.trap));
   const nonTraps = base.filter((q) => !q.trap);
-  const wantTraps = Math.min(traps.length, Math.max(3, Math.round(n * 0.2)));
+  // In focus/adaptive mode, drop traps entirely — the point is targeted practice.
+  const wantTraps = focus.size ? 0 : Math.min(traps.length, Math.max(3, Math.round(n * 0.2)));
   const trapPick = traps.slice(0, wantTraps);
   const need = n - trapPick.length;
 
   // Dimension-balanced selection: round-robin across dimensions so a single
   // 20-question test spans all areas instead of over-sampling one. Context-
   // matching questions for the user's area are preferred within each dimension.
+  // In focus mode, weak dimensions are visited multiple times per round so the
+  // test is dominated by (but not exclusively) those topics.
   const byDim = {};
   for (const q of nonTraps) { (byDim[q.dim] = byDim[q.dim] || []).push(q); }
-  const dims = shuffle(Object.keys(byDim));
+  let dims = shuffle(Object.keys(byDim));
   for (const d of dims) {
     const ctxFirst = shuffle(byDim[d].filter((q) => q.ctx === area));
     const others = shuffle(byDim[d].filter((q) => q.ctx !== area));
     byDim[d] = [...ctxFirst, ...others];
   }
+  // Build the round-robin order; focus dims appear 3x per cycle, others 1x.
+  let order = dims;
+  if (focus.size) {
+    order = [];
+    for (const d of dims) {
+      const reps = focus.has(d) ? 3 : 1;
+      for (let i = 0; i < reps; i++) order.push(d);
+    }
+    order = shuffle(order);
+  }
   const picked = [];
   let added = true;
   while (picked.length < need && added) {
     added = false;
-    for (const d of dims) {
+    for (const d of order) {
       if (picked.length >= need) break;
-      if (byDim[d].length) { picked.push(byDim[d].shift()); added = true; }
+      if (byDim[d] && byDim[d].length) { picked.push(byDim[d].shift()); added = true; }
     }
   }
 

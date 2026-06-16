@@ -92,6 +92,23 @@ Environment variables*. Bei Drag&Drop vorher lokal mit ausgefüllter `.env` baue
 Der QR nutzt hohe Fehlerkorrektur — er funktioniert auch leicht verdeckt oder klein gedruckt.
 Eine fertige Beispielausgabe liegt als `beispiel-poster.png` bei.
 
+### Trainingstag/Veranstaltung pro Link mitgeben (für gefilterte Statistiken)
+
+Du kannst an jede App-URL einen **Trainingstag-Code** anhängen. Er wird im Onboarding
+automatisch vorbefüllt (und bleibt für Teilnehmende anpassbar) und mit jedem Ergebnis
+gespeichert. Im Admin-Panel kannst du die gesamte Auswertung dann nach diesem Tag filtern.
+
+Hänge dafür `?t=DEIN-CODE` an die URL an, z. B.:
+
+```
+https://lhind-leaderaicheck.vercel.app/?t=KI-TAG-2026-03
+https://lhind-leaderaicheck.vercel.app/?t=Workshop-Vertrieb-Q2
+```
+
+Tipp: Erzeuge pro Veranstaltung einen eigenen QR-Code mit eigenem `?t=...`-Wert. So sind
+die Ergebnisse später sauber pro Trainingstag auswertbar — ganz ohne Personenbezug.
+Erlaubte Schreibweise: Buchstaben, Zahlen, Bindestriche; keine Leerzeichen.
+
 ---
 
 ## Schritt 5 — Verteilen
