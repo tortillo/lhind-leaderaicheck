@@ -1,27 +1,25 @@
 [
   {
-    "version": "2.9.1",
-    "date": "2026-06-16",
-    "title": {
-      "de": "Release: Für alle Mitarbeitenden enabled, Trainingstag-Filter & Admin-Dashboard hinzugefügt",
-      "en": "Release: Für alle Mitarbeitenden enabled, Trainingstag-Filter & Admin-Dashboard hinzugefügt"
-    },
+    "version": "2.9.2",
+    "date": "2026-06-17",
+    "title": { "de": "Schnellerer Start & klarer Hinweis am Start-Button", "en": "Faster start & clear hint on the start button" },
     "notes": {
       "de": [
-        "Release: Für alle Mitarbeitenden enabled, Trainingstag-Filter & Admin-Dashboard hinzugefügt"
+        "Sofortiger Ladehinweis beim Öffnen, damit die App nicht 'leer' wirkt, während sie startet.",
+        "Schriften laden jetzt parallel (preconnect) und blockieren das erste Anzeigen nicht mehr — spürbar schnellerer Start.",
+        "Der ausgegraute 'Zum Test'-Button zeigt jetzt an, welche Pflichtangaben noch fehlen (z. B. Rollentyp, Bereich, Selbsteinschätzung)."
       ],
       "en": [
-        "Release: Für alle Mitarbeitenden enabled, Trainingstag-Filter & Admin-Dashboard hinzugefügt"
+        "Instant loading indicator on open, so the app no longer looks 'empty' while starting.",
+        "Fonts now load in parallel (preconnect) and no longer block first paint — noticeably faster start.",
+        "The disabled 'to the test' button now shows which required inputs are still missing (e.g. role type, area, self-assessment)."
       ]
     }
   },
   {
     "version": "2.9.0",
     "date": "2026-06-16",
-    "title": {
-      "de": "Für alle Mitarbeitenden, Trainingstag-Filter & Admin-Dashboard",
-      "en": "For all staff, training-day filter & admin dashboard"
-    },
+    "title": { "de": "Für alle Mitarbeitenden, Trainingstag-Filter & Admin-Dashboard", "en": "For all staff, training-day filter & admin dashboard" },
     "notes": {
       "de": [
         "Funktioniert jetzt auch für Nicht-Führungskräfte: Rollentyp-Auswahl am Start (Führungskraft / Mitarbeiter:in) — bei Fachrollen entfallen die Führungsfragen automatisch.",
@@ -46,10 +44,7 @@
   {
     "version": "2.8.0",
     "date": "2026-06-16",
-    "title": {
-      "de": "Schwierigere Fachfragen & Medien-Empfehlungen",
-      "en": "Harder technical questions & media recommendations"
-    },
+    "title": { "de": "Schwierigere Fachfragen & Medien-Empfehlungen", "en": "Harder technical questions & media recommendations" },
     "notes": {
       "de": [
         "70 neue, anspruchsvolle Fachfragen ergänzt (je 10 pro Kategorie) — Fokus auf tiefes technisches Wissen: Self-Attention, KV-Cache, RLHF, MoE, Embeddings, Decoding, RAG, EU AI Act, Differential Privacy u. v. m.",
@@ -70,10 +65,7 @@
   {
     "version": "2.7.1",
     "date": "2026-06-15",
-    "title": {
-      "de": "Führungsrollen ergänzt",
-      "en": "Leadership roles added"
-    },
+    "title": { "de": "Führungsrollen ergänzt", "en": "Leadership roles added" },
     "notes": {
       "de": [
         "Generische Führungsebenen ergänzt: Team Lead, Head of (Abteilungs-/Bereichsleitung), Director, Vice President (VP/SVP), C-Level/CxO und Geschäftsführung.",
@@ -88,10 +80,7 @@
   {
     "version": "2.7.0",
     "date": "2026-06-15",
-    "title": {
-      "de": "LHIND-Rollen, Senioritäten & Feedback-Einarbeitung",
-      "en": "LHIND roles, seniority & feedback round"
-    },
+    "title": { "de": "LHIND-Rollen, Senioritäten & Feedback-Einarbeitung", "en": "LHIND roles, seniority & feedback round" },
     "notes": {
       "de": [
         "Rollen: durchsuchbares Feld mit allen LHIND-Rollen (inkl. Head of) plus Freitext-Option.",
@@ -120,10 +109,7 @@
   {
     "version": "2.6.1",
     "date": "2026-06-14",
-    "title": {
-      "de": "LHIND-Fragen jetzt opt-in",
-      "en": "LHIND questions now opt-in"
-    },
+    "title": { "de": "LHIND-Fragen jetzt opt-in", "en": "LHIND questions now opt-in" },
     "notes": {
       "de": [
         "Die LHIND-spezifischen Firmenwissen-Fragen sind jetzt standardmäßig deaktiviert.",
@@ -138,10 +124,7 @@
   {
     "version": "2.6.0",
     "date": "2026-06-14",
-    "title": {
-      "de": "Firmenwissen-Kategorie & 60 neue Fragen",
-      "en": "Company knowledge category & 60 new questions"
-    },
+    "title": { "de": "Firmenwissen-Kategorie & 60 neue Fragen", "en": "Company knowledge category & 60 new questions" },
     "notes": {
       "de": [
         "Neue Kategorie 'Firmenwissen' mit LHIND-spezifischen Fragen (Portfolio, AI Services, ASE, verantwortungsvolle KI).",
@@ -162,10 +145,7 @@
   {
     "version": "2.5.0",
     "date": "2026-06-14",
-    "title": {
-      "de": "Plausiblere, gleich lange Antwortoptionen",
-      "en": "Plausible, length-balanced answer options"
-    },
+    "title": { "de": "Plausiblere, gleich lange Antwortoptionen", "en": "Plausible, length-balanced answer options" },
     "notes": {
       "de": [
         "Alle Fragen überarbeitet: Distraktoren sind jetzt fachlich plausible Fehlannahmen statt offensichtlich falscher Optionen.",
@@ -182,10 +162,7 @@
   {
     "version": "2.4.0",
     "date": "2026-06-14",
-    "title": {
-      "de": "Profil-Ansicht & dynamische Einstufung",
-      "en": "Profile view & dynamic tier"
-    },
+    "title": { "de": "Profil-Ansicht & dynamische Einstufung", "en": "Profile view & dynamic tier" },
     "notes": {
       "de": [
         "Neu: Profil-Ansicht — über den Avatar-Namen lassen sich frühere Ergebnisse jederzeit wieder aufrufen (Verlauf, Bestwert, Entwicklung).",
@@ -202,10 +179,7 @@
   {
     "version": "2.3.0",
     "date": "2026-06-14",
-    "title": {
-      "de": "Antwortmischung & schwerere Fragen",
-      "en": "Answer shuffling & harder questions"
-    },
+    "title": { "de": "Antwortmischung & schwerere Fragen", "en": "Answer shuffling & harder questions" },
     "notes": {
       "de": [
         "Bugfix: Antwortoptionen werden jetzt pro Durchlauf zufällig gemischt — die richtige Antwort ist nicht mehr fast immer B.",
@@ -222,10 +196,7 @@
   {
     "version": "2.2.0",
     "date": "2026-06-14",
-    "title": {
-      "de": "Verlinkte wissenschaftliche Quellen",
-      "en": "Linked scientific sources"
-    },
+    "title": { "de": "Verlinkte wissenschaftliche Quellen", "en": "Linked scientific sources" },
     "notes": {
       "de": [
         "Neu: aufklappbarer Quellen-Block auf der Startseite und im Ergebnisbericht.",
@@ -240,10 +211,7 @@
   {
     "version": "2.1.0",
     "date": "2026-06-14",
-    "title": {
-      "de": "Top-3-Tipps, Avatar-Verlauf & Verallgemeinerung",
-      "en": "Top 3 tips, avatar history & generalization"
-    },
+    "title": { "de": "Top-3-Tipps, Avatar-Verlauf & Verallgemeinerung", "en": "Top 3 tips, avatar history & generalization" },
     "notes": {
       "de": [
         "Neu: Top-3-Tipps am Ende, abgeleitet aus dem konkreten Ergebnis.",
@@ -264,10 +232,7 @@
   {
     "version": "2.0.0",
     "date": "2026-06-14",
-    "title": {
-      "de": "Sofort-Feedback, Fragen-Review & mehr Fragen",
-      "en": "Instant feedback, question review & more questions"
-    },
+    "title": { "de": "Sofort-Feedback, Fragen-Review & mehr Fragen", "en": "Instant feedback, question review & more questions" },
     "notes": {
       "de": [
         "Neu: Sofort-Feedback nach jeder Frage (richtig/falsch + Erläuterung).",
@@ -286,10 +251,7 @@
   {
     "version": "1.0.0",
     "date": "2026-06-14",
-    "title": {
-      "de": "Erstveröffentlichung",
-      "en": "Initial release"
-    },
+    "title": { "de": "Erstveröffentlichung", "en": "Initial release" },
     "notes": {
       "de": [
         "Anonymes KI-Kompetenz-Self-Assessment für Führungskräfte.",

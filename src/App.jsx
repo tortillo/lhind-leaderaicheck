@@ -56,6 +56,7 @@ const STR = {
     savingRankHint: "Tippe die Tätigkeiten in der Reihenfolge an, in der du das größte Potenzial siehst. Erneutes Antippen entfernt sie wieder.",
     otherPlaceholder: "Bitte angeben…",
     toTest: "Zum Test →",
+    stillNeeded: "Bitte noch ausfüllen",
     bauch: "Keine Korrektur sichtbar — antworte aus dem Bauch.",
     anomalies: "Auffälligkeit",
     anomaliesPl: "Auffälligkeiten",
@@ -207,6 +208,7 @@ const STR = {
     savingRankHint: "Tap the activities in the order you see the greatest potential. Tap again to remove.",
     otherPlaceholder: "Please specify…",
     toTest: "To the test →",
+    stillNeeded: "Please still complete",
     bauch: "No feedback shown — go with your gut.",
     anomalies: "anomaly",
     anomaliesPl: "anomalies",
@@ -689,7 +691,8 @@ export default function App() {
   return (
     <div style={{ background: C.bg, minHeight: "100vh", color: C.ink, fontFamily: sans }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+        /* Fonts are loaded via <link rel="preconnect"> + <link> in index.html
+           so they download in parallel and don't block first paint. */
         *{box-sizing:border-box;} button{font-family:inherit;cursor:pointer;}
         @keyframes scan{0%{transform:translateY(-100%)}100%{transform:translateY(2400%)}}
         @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
@@ -1051,12 +1054,18 @@ function Onboard({ t, lang, profile, setProfile, onDone }) {
   const isIC = profile.roleType === "ic";
   // Individual contributors skip the people-leadership context fields.
   const activeFields = FIELDS.filter((f) => !(isIC && (f === "leadExp" || f === "teamSize")));
-  const complete = !!profile.roleType && !!profile.role && (Array.isArray(profile.savingPotential) && profile.savingPotential.length > 0) && activeFields.every((f) => {
+  // Collect which required inputs are still missing, so we can tell the user
+  // exactly why the start button is disabled instead of leaving them guessing.
+  const missing = [];
+  if (!profile.roleType) missing.push(t.roleTypeLabel);
+  if (!profile.role) missing.push(t.role);
+  if (!(Array.isArray(profile.savingPotential) && profile.savingPotential.length > 0)) missing.push(t.savingPotential);
+  activeFields.forEach((f) => {
     const v = profile[f];
-    if (!v) return false;
-    if ((v === otherKey || v === otherKey2) && !profile[`${f}_other`]) return false;
-    return true;
+    if (!v) { missing.push(labels[f]); return; }
+    if ((v === otherKey || v === otherKey2) && !profile[`${f}_other`]) missing.push(labels[f]);
   });
+  const complete = missing.length === 0;
   return (
     <div className="fu" style={{ padding: "30px 0" }}>
       <Eyebrow color={C.cyan}>{t.step1}</Eyebrow>
@@ -1173,6 +1182,12 @@ function Onboard({ t, lang, profile, setProfile, onDone }) {
       </label>
 
       <button disabled={!complete} onClick={onDone} style={{ ...btnPrimary, marginTop: 24, opacity: complete ? 1 : 0.4, cursor: complete ? "pointer" : "not-allowed" }}>{t.toTest}</button>
+      {!complete && (
+        <div style={{ marginTop: 10, fontSize: 12.5, color: C.amber, lineHeight: 1.5, display: "flex", alignItems: "flex-start", gap: 6 }}>
+          <span style={{ flexShrink: 0 }}>ⓘ</span>
+          <span>{t.stillNeeded}: {missing.join(", ")}.</span>
+        </div>
+      )}
     </div>
   );
 }
